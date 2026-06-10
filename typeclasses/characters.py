@@ -1,26 +1,32 @@
-"""
-Characters
-
-Characters are (by default) Objects setup to be puppeted by Accounts.
-They are what you "see" in game. The Character class in this module
-is setup to be the "default" character type created by the default
-creation commands.
-
-"""
-
 from evennia.objects.objects import DefaultCharacter
 
 from .objects import ObjectParent
 
 
-class Character(ObjectParent, DefaultCharacter):
+class PlanetfallNPC(ObjectParent, DefaultCharacter):
     """
-    The Character just re-implements some of the Object's methods and hooks
-    to represent a Character entity in-game.
-
-    See mygame/typeclasses/objects.py for a list of
-    properties and methods available on all Object child classes like this.
-
+    NPC typeclass. In ZIL all actors are objects with ACTORBIT, so this mirrors
+    PlanetfallObject's db schema. Real behaviour lives in handler routines
+    (e.g. FLOYD-F, BLATHER-F) dispatched by the action field.
     """
 
+    def at_object_creation(self):
+        super().at_object_creation()
+        self.db.zil_id = None
+        self.db.obj_flags = []          # includes ACTORBIT, VOWELBIT, etc.
+        self.db.action = None           # handler routine name e.g. "FLOYD-F"
+        self.db.size = None
+        self.db.capacity = None
+        self.db.value = None
+        self.db.obj_text = None
+        self.db.fdesc = None
+        self.db.fdesc_seen = False
+        self.db.synonyms = []
+        self.db.adjectives = []
+        self.db.is_open = False
+        self.db.is_locked = False
+
+
+class Character(PlanetfallNPC):
+    """Player character. Inherits NPC schema; puppeted by an Account."""
     pass
