@@ -1,0 +1,3416 @@
+[
+  {
+    "id": "BRIG",
+    "desc": "Brig",
+    "ldesc": "You are in the Feinstein's brig. Graffiti cover\nthe walls. The cell door to the south is locked.",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "blocked",
+        "message": "The cell door is locked."
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "GRAFFITI",
+        "object": "GRAFFITI-PSEUDO"
+      },
+      {
+        "word": "DOOR",
+        "object": "DOOR-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "DECK-NINE",
+    "desc": "Deck Nine",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "conditional",
+        "destination": "REACTOR-LOBBY",
+        "flag": "CORRIDOR-DOOR",
+        "state": "OPEN"
+      },
+      "west": {
+        "type": "conditional",
+        "destination": "ESCAPE-POD",
+        "flag": "POD-DOOR",
+        "state": "OPEN"
+      },
+      "up": {
+        "type": "conditional",
+        "destination": "GANGWAY",
+        "flag": "GANGWAY-DOOR",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "POD-DOOR",
+      "CORRIDOR-DOOR",
+      "GANGWAY-DOOR",
+      "STAIRS",
+      "GLOBAL-POD"
+    ],
+    "pseudo": [
+      {
+        "word": "TRANSL",
+        "object": "TRANSLATOR-PSEUDO"
+      },
+      {
+        "word": "SLIME",
+        "object": "SLIME-PSEUDO"
+      }
+    ],
+    "action": "DECK-NINE-F"
+  },
+  {
+    "id": "REACTOR-LOBBY",
+    "desc": "Reactor Lobby",
+    "ldesc": "The corridor widens here as it nears the main drive area. To starboard is\nthe Ion Reactor that powers the vessel, and aft of here is the Auxiliary\nControl Room. The corridor continues to port.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "conditional",
+        "destination": "DECK-NINE",
+        "flag": "CORRIDOR-DOOR",
+        "state": "OPEN"
+      },
+      "south": {
+        "type": "blocked",
+        "message": "Ensign Blather pushes you roughly back toward your post."
+      },
+      "east": {
+        "type": "blocked",
+        "message": "Ensign Blather blocks your way, snarling angrily."
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "CORRIDOR-DOOR"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "GANGWAY",
+    "desc": "Gangway",
+    "ldesc": "This is a steep metal gangway connecting Deck Eight, above, and Deck\nNine, below.",
+    "location": "ROOMS",
+    "exits": {
+      "up": {
+        "type": "to",
+        "destination": "DECK-EIGHT"
+      },
+      "down": {
+        "type": "conditional",
+        "destination": "DECK-NINE",
+        "flag": "GANGWAY-DOOR",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "GANGWAY-DOOR",
+      "STAIRS"
+    ],
+    "pseudo": [],
+    "action": "GANGWAY-F"
+  },
+  {
+    "id": "DECK-EIGHT",
+    "desc": "Deck Eight",
+    "ldesc": "This is a featureless corridor leading port and starboard. A gangway leads\ndown, and to fore is the Hyperspatial Jump Machinery Room.",
+    "location": "ROOMS",
+    "exits": {
+      "down": {
+        "type": "to",
+        "destination": "GANGWAY"
+      },
+      "east": {
+        "type": "blocked",
+        "message": "Blather throws you to the deck and makes you do 20 push-ups."
+      },
+      "west": {
+        "type": "blocked",
+        "message": "Blather throws you to the deck and makes you do 20 push-ups."
+      },
+      "north": {
+        "type": "blocked",
+        "message": "Blather blocks your path, growling about extra galley duty."
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "STAIRS"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "ESCAPE-POD",
+    "desc": "Escape Pod",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "per",
+        "routine": "POD-EXIT-F"
+      },
+      "out": {
+        "type": "per",
+        "routine": "POD-EXIT-F"
+      },
+      "up": {
+        "type": "per",
+        "routine": "POD-EXIT-F"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "POD-DOOR",
+      "CONTROLS",
+      "LIGHTS",
+      "GLOBAL-POD",
+      "WINDOW"
+    ],
+    "pseudo": [],
+    "action": "ESCAPE-POD-F",
+    "value": 3
+  },
+  {
+    "id": "SHUTTLE-CAR-ALFIE",
+    "desc": "Shuttle Car Alfie",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "per",
+        "routine": "SHUTTLE-EXIT-F"
+      },
+      "east": {
+        "type": "to",
+        "destination": "ALFIE-CONTROL-EAST"
+      },
+      "west": {
+        "type": "to",
+        "destination": "ALFIE-CONTROL-WEST"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "GLOBAL-SHUTTLE",
+      "SHUTTLE-DOOR"
+    ],
+    "pseudo": [],
+    "action": "SHUTTLE-CAR-F"
+  },
+  {
+    "id": "ALFIE-CONTROL-EAST",
+    "desc": "Alfie Control East",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "conditional",
+        "destination": "SHUTTLE-CAR-ALFIE",
+        "flag": "SHUTTLE-DOOR",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "SLOT",
+      "WINDOW",
+      "LEVER",
+      "SHUTTLE-DOOR",
+      "GLOBAL-SHUTTLE"
+    ],
+    "pseudo": [],
+    "action": "CONTROL-CABIN-F"
+  },
+  {
+    "id": "ALFIE-CONTROL-WEST",
+    "desc": "Alfie Control West",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "conditional",
+        "destination": "SHUTTLE-CAR-ALFIE",
+        "flag": "SHUTTLE-DOOR",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "SLOT",
+      "LEVER",
+      "WINDOW",
+      "SHUTTLE-DOOR",
+      "GLOBAL-SHUTTLE"
+    ],
+    "pseudo": [],
+    "action": "CONTROL-CABIN-F"
+  },
+  {
+    "id": "SHUTTLE-CAR-BETTY",
+    "desc": "Shuttle Car Betty",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "per",
+        "routine": "SHUTTLE-EXIT-F"
+      },
+      "east": {
+        "type": "to",
+        "destination": "BETTY-CONTROL-EAST"
+      },
+      "west": {
+        "type": "to",
+        "destination": "BETTY-CONTROL-WEST"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "GLOBAL-SHUTTLE",
+      "SHUTTLE-DOOR"
+    ],
+    "pseudo": [],
+    "action": "SHUTTLE-CAR-F"
+  },
+  {
+    "id": "BETTY-CONTROL-EAST",
+    "desc": "Betty Control East",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "conditional",
+        "destination": "SHUTTLE-CAR-BETTY",
+        "flag": "SHUTTLE-DOOR",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "GLOBAL-SHUTTLE",
+      "SLOT",
+      "WINDOW",
+      "LEVER",
+      "SHUTTLE-DOOR"
+    ],
+    "pseudo": [],
+    "action": "CONTROL-CABIN-F"
+  },
+  {
+    "id": "BETTY-CONTROL-WEST",
+    "desc": "Betty Control West",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "conditional",
+        "destination": "SHUTTLE-CAR-BETTY",
+        "flag": "SHUTTLE-DOOR",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "GLOBAL-SHUTTLE",
+      "SLOT",
+      "LEVER",
+      "WINDOW",
+      "SHUTTLE-DOOR"
+    ],
+    "pseudo": [],
+    "action": "CONTROL-CABIN-F"
+  },
+  {
+    "id": "UNDERWATER",
+    "desc": "Underwater",
+    "ldesc": "You are momentarily disoriented as you enter the turbulent waters.\nCurrents buffet you against the sharp rocks of an underwater\ncliff. A dim light filters down from above.",
+    "location": "ROOMS",
+    "exits": {
+      "up": {
+        "type": "to",
+        "destination": "CRAG"
+      },
+      "down": {
+        "type": "to",
+        "destination": "UNDERWATER"
+      },
+      "west": {
+        "type": "to",
+        "destination": "UNDERWATER"
+      },
+      "north": {
+        "type": "to",
+        "destination": "UNDERWATER"
+      },
+      "south": {
+        "type": "to",
+        "destination": "UNDERWATER"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RWATERBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": "UNDERWATER-F"
+  },
+  {
+    "id": "CRAG",
+    "desc": "Crag",
+    "ldesc": "You have reached a cleft in the cliff wall where the island rises from the\nwater. The edge of the cleft displays recently exposed rock where it collapsed\nunder the weight of the escape pod. About two meters below, turbulent waters\nswirl against sharp rocks. A small structure clings to the face of the cliff\nabout eight meters above you. Even an out-of-shape Ensign Seventh Class could\nprobably climb up to it.",
+    "location": "ROOMS",
+    "exits": {
+      "down": {
+        "type": "to",
+        "destination": "UNDERWATER"
+      },
+      "up": {
+        "type": "to",
+        "destination": "BALCONY"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "CLIFF",
+      "OCEAN"
+    ],
+    "pseudo": [
+      {
+        "word": "STRUCTURE",
+        "object": "STRUCTURE-PSEUDO"
+      },
+      {
+        "word": "CLEFT",
+        "object": "CLEFT-PSEUDO"
+      }
+    ],
+    "action": "CRAG-F",
+    "value": 3
+  },
+  {
+    "id": "BALCONY",
+    "desc": "Balcony",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "down": {
+        "type": "per",
+        "routine": "WATER-LEVEL-F"
+      },
+      "up": {
+        "type": "to",
+        "destination": "WINDING-STAIR"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "CLIFF",
+      "OCEAN",
+      "STAIRS",
+      "WINDOW"
+    ],
+    "pseudo": [
+      {
+        "word": "PLAQUE",
+        "object": "PLAQUE-PSEUDO"
+      }
+    ],
+    "action": "BALCONY-F"
+  },
+  {
+    "id": "WINDING-STAIR",
+    "desc": "Winding Stair",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "down": {
+        "type": "per",
+        "routine": "WATER-LEVEL-F"
+      },
+      "up": {
+        "type": "to",
+        "destination": "COURTYARD"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "CLIFF",
+      "STAIRS"
+    ],
+    "pseudo": [],
+    "action": "WINDING-STAIR-F"
+  },
+  {
+    "id": "COURTYARD",
+    "desc": "Courtyard",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "down": {
+        "type": "to",
+        "destination": "WINDING-STAIR"
+      },
+      "south": {
+        "type": "to",
+        "destination": "WINDING-STAIR"
+      },
+      "west": {
+        "type": "to",
+        "destination": "WEST-WING"
+      },
+      "north": {
+        "type": "to",
+        "destination": "PLAIN-HALL"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT",
+      "FLOYDBIT"
+    ],
+    "globals": [
+      "STAIRS"
+    ],
+    "pseudo": [
+      {
+        "word": "CASTLE",
+        "object": "CASTLE-PSEUDO"
+      },
+      {
+        "word": "RUBBLE",
+        "object": "RUBBLE-PSEUDO"
+      }
+    ],
+    "action": "COURTYARD-F"
+  },
+  {
+    "id": "WEST-WING",
+    "desc": "West Wing",
+    "ldesc": "This was once the west wing of the castle, but the walls are now mostly\nrubble, allowing a view of the cliff and ocean below. Rubble blocks all exits\nsave one, eastward to the courtyard.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "COURTYARD"
+      },
+      "down": {
+        "type": "blocked",
+        "message": "Certain death."
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT",
+      "FLOYDBIT"
+    ],
+    "globals": [
+      "CLIFF",
+      "OCEAN"
+    ],
+    "pseudo": [
+      {
+        "word": "CASTLE",
+        "object": "CASTLE-PSEUDO"
+      },
+      {
+        "word": "RUBBLE",
+        "object": "RUBBLE-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "PLAIN-HALL",
+    "desc": "Plain Hall",
+    "ldesc": "This is a featureless hall leading north and south. Although the hallway is\nold and dusty, the construction is of a much more modern style than the\ncastle to the south. A similar hall branches off to the northeast.",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "COURTYARD"
+      },
+      "north": {
+        "type": "to",
+        "destination": "REC-AREA"
+      },
+      "northeast": {
+        "type": "to",
+        "destination": "REC-CORRIDOR"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "REC-AREA",
+    "desc": "Rec Area",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "conditional",
+        "destination": "CONFERENCE-ROOM",
+        "flag": "CONFERENCE-DOOR",
+        "state": "OPEN"
+      },
+      "south": {
+        "type": "to",
+        "destination": "PLAIN-HALL"
+      },
+      "east": {
+        "type": "to",
+        "destination": "REC-CORRIDOR"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT",
+      "FLOYDBIT"
+    ],
+    "globals": [
+      "CONFERENCE-DOOR"
+    ],
+    "pseudo": [
+      {
+        "word": "GAMES",
+        "object": "GAMES-PSEUDO"
+      },
+      {
+        "word": "TAPES",
+        "object": "TAPES-PSEUDO"
+      }
+    ],
+    "action": "REC-AREA-F"
+  },
+  {
+    "id": "CONFERENCE-ROOM",
+    "desc": "Conference Room",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "conditional",
+        "destination": "REC-AREA",
+        "flag": "CONFERENCE-DOOR",
+        "state": "OPEN"
+      },
+      "out": {
+        "type": "conditional",
+        "destination": "REC-AREA",
+        "flag": "CONFERENCE-DOOR",
+        "state": "OPEN"
+      },
+      "north": {
+        "type": "to",
+        "destination": "BOOTH-1"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "CONFERENCE-DOOR",
+      "TABLES"
+    ],
+    "pseudo": [
+      {
+        "word": "BOOTH",
+        "object": "NEAR-BOOTH-PSEUDO"
+      }
+    ],
+    "action": "CONFERENCE-ROOM-F"
+  },
+  {
+    "id": "BOOTH-1",
+    "desc": "Booth 1",
+    "ldesc": "This is a tiny room with a large \"1\" painted on the wall. A panel contains\na slot about ten centimeters wide, a beige button labelled \"2\" and a tan\nbutton labelled \"3.\"",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "CONFERENCE-ROOM"
+      },
+      "out": {
+        "type": "to",
+        "destination": "CONFERENCE-ROOM"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "CONTROLS",
+      "SLOT",
+      "TELEPORTATION-BUTTON-2",
+      "TELEPORTATION-BUTTON-3"
+    ],
+    "pseudo": [
+      {
+        "word": "BOOTH",
+        "object": "IN-BOOTH-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "REC-CORRIDOR",
+    "desc": "Rec Corridor",
+    "ldesc": "This is a wide, east-west hallway. Portals lead north and south, and another\ncorridor branches southwest.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "REC-AREA"
+      },
+      "north": {
+        "type": "to",
+        "destination": "DORM-B"
+      },
+      "south": {
+        "type": "to",
+        "destination": "DORM-A"
+      },
+      "east": {
+        "type": "to",
+        "destination": "MESS-CORRIDOR"
+      },
+      "southwest": {
+        "type": "to",
+        "destination": "PLAIN-HALL"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "DORM-A",
+    "desc": "Dorm A",
+    "ldesc": "This is a very long room lined with multi-tiered bunks. Flimsy partitions\nbetween the tiers may have provided a modicum of privacy. These spartan\nliving quarters could have once housed many hundreds, but it seems quite\ndeserted now. There are openings at the north and south ends of the room.",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "SANFAC-A"
+      },
+      "north": {
+        "type": "to",
+        "destination": "REC-CORRIDOR"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "BED"
+    ],
+    "pseudo": [
+      {
+        "word": "PARTITION",
+        "object": "PARTITION-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "SANFAC-A",
+    "desc": "SanFac A",
+    "ldesc": "This must be the sanitary facility for the adjacent dormitory. The fixtures\nare dry and dusty, the room dead and deserted. You marvel at how little the\nmillenia and cultural gulfs have changed toilet bowl design. The only exit is\nnorth.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "DORM-A"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT",
+      "FLOYDBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "FIXTURES",
+        "object": "TOILET-PSEUDO"
+      },
+      {
+        "word": "TOILET",
+        "object": "TOILET-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "DORM-B",
+    "desc": "Dorm B",
+    "ldesc": "This is a very long room lined with multi-tiered bunks. Flimsy partitions\nbetween the tiers may have provided a modicum of privacy. These spartan\nliving quarters could have once housed many hundreds, but it seems quite\ndeserted now. There are openings at the north and south ends of the room.",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "REC-CORRIDOR"
+      },
+      "north": {
+        "type": "to",
+        "destination": "SANFAC-B"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "BED"
+    ],
+    "pseudo": [
+      {
+        "word": "PARTITION",
+        "object": "PARTITION-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "SANFAC-B",
+    "desc": "SanFac B",
+    "ldesc": "This must be the sanitary facility for the adjacent dormitory. The fixtures\nare dry and dusty, the room dead and deserted. You marvel at how little the\nmillenia and cultural gulfs have changed toilet bowl design. The only exit is\nsouth.",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "DORM-B"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "FIXTURES",
+        "object": "TOILET-PSEUDO"
+      },
+      {
+        "word": "TOILET",
+        "object": "TOILET-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "DORM-C",
+    "desc": "Dorm C",
+    "ldesc": "This is a very long room lined with multi-tiered bunks. Flimsy partitions\nbetween the tiers may have provided a modicum of privacy. These spartan\nliving quarters could have once housed many hundreds, but it seems quite\ndeserted now. There are openings at the north and south ends of the room.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "DORM-CORRIDOR"
+      },
+      "south": {
+        "type": "to",
+        "destination": "SANFAC-C"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "FLOYDBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "BED"
+    ],
+    "pseudo": [
+      {
+        "word": "PARTITION",
+        "object": "PARTITION-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "SANFAC-C",
+    "desc": "SanFac C",
+    "ldesc": "This must be the sanitary facility for the adjacent dormitory. The fixtures\nare dry and dusty, the room dead and deserted. You marvel at how little the\nmillenia and cultural gulfs have changed toilet bowl design. The only exit is\nnorth.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "DORM-C"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "FIXTURES",
+        "object": "TOILET-PSEUDO"
+      },
+      {
+        "word": "TOILET",
+        "object": "TOILET-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "DORM-D",
+    "desc": "Dorm D",
+    "ldesc": "This is a very long room lined with multi-tiered bunks. Flimsy partitions\nbetween the tiers may have provided a modicum of privacy. These spartan\nliving quarters could have once housed many hundreds, but it seems quite\ndeserted now. There are openings at the north and south ends of the room.",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "DORM-CORRIDOR"
+      },
+      "north": {
+        "type": "to",
+        "destination": "SANFAC-D"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "BED"
+    ],
+    "pseudo": [
+      {
+        "word": "PARTITION",
+        "object": "PARTITION-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "SANFAC-D",
+    "desc": "SanFac D",
+    "ldesc": "This must be the sanitary facility for the adjacent dormitory. The fixtures\nare dry and dusty, the room dead and deserted. You marvel at how little the\nmillenia and cultural gulfs have changed toilet bowl design. The only exit is\nsouth.",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "DORM-D"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "FLOYDBIT",
+      "RLANDBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "FIXTURES",
+        "object": "TOILET-PSEUDO"
+      },
+      {
+        "word": "TOILET",
+        "object": "TOILET-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "MESS-CORRIDOR",
+    "desc": "Mess Corridor",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "MESS-HALL"
+      },
+      "north": {
+        "type": "conditional",
+        "destination": "STORAGE-WEST",
+        "flag": "STORAGE-WEST-DOOR",
+        "state": "OPEN"
+      },
+      "east": {
+        "type": "to",
+        "destination": "DORM-CORRIDOR"
+      },
+      "west": {
+        "type": "to",
+        "destination": "REC-CORRIDOR"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "STORAGE-WEST-DOOR"
+    ],
+    "pseudo": [],
+    "action": "MESS-CORRIDOR-F"
+  },
+  {
+    "id": "STORAGE-WEST",
+    "desc": "Storage West",
+    "ldesc": "This is a small room obviously intended as a storage area.",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "conditional",
+        "destination": "MESS-CORRIDOR",
+        "flag": "STORAGE-WEST-DOOR",
+        "state": "OPEN"
+      },
+      "out": {
+        "type": "conditional",
+        "destination": "MESS-CORRIDOR",
+        "flag": "STORAGE-WEST-DOOR",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "SHELVES",
+      "STORAGE-WEST-DOOR"
+    ],
+    "pseudo": [],
+    "action": null,
+    "value": 4
+  },
+  {
+    "id": "DORM-CORRIDOR",
+    "desc": "Dorm Corridor",
+    "ldesc": "This is a wide, east-west hallway with openings to the north and south.\nTo the east, the corridor stretches off into the distance. That section of\nthe hallway is lined with a motorized walkway (no longer running) that\nwas probably intended to transport people or cargo down that tremendously\nlong hall.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "DORM-D"
+      },
+      "south": {
+        "type": "to",
+        "destination": "DORM-C"
+      },
+      "west": {
+        "type": "to",
+        "destination": "MESS-CORRIDOR"
+      },
+      "east": {
+        "type": "per",
+        "routine": "LONG-HALL-F"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "WALKWAY",
+        "object": "WALKWAY-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "MESS-HALL",
+    "desc": "Mess Hall",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "MESS-CORRIDOR"
+      },
+      "out": {
+        "type": "to",
+        "destination": "MESS-CORRIDOR"
+      },
+      "south": {
+        "type": "conditional",
+        "destination": "KITCHEN",
+        "flag": "KITCHEN-DOOR",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "FLOYDBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "TABLES",
+      "KITCHEN-DOOR",
+      "SLOT"
+    ],
+    "pseudo": [
+      {
+        "word": "BENCH",
+        "object": "BENCH-PSEUDO"
+      },
+      {
+        "word": "BENCHE",
+        "object": "BENCH-PSEUDO"
+      }
+    ],
+    "action": "MESS-HALL-F"
+  },
+  {
+    "id": "KITCHEN",
+    "desc": "Kitchen",
+    "ldesc": "This is the food production and dispensary area for the dining hall to the\nnorth. Of particular interest is a machine near the door. You should probably\nexamine it more closely.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "MESS-HALL"
+      },
+      "out": {
+        "type": "to",
+        "destination": "MESS-HALL"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "KITCHEN-DOOR"
+    ],
+    "pseudo": [
+      {
+        "word": "SPOUT",
+        "object": "SPOUT-PSEUDO"
+      },
+      {
+        "word": "BUTTON",
+        "object": "BUTTON-PSEUDO"
+      }
+    ],
+    "action": null,
+    "value": 4
+  },
+  {
+    "id": "CORRIDOR-JUNCTION",
+    "desc": "Corridor Junction",
+    "ldesc": "A north-south corridor intersects the main corridor here. To the west, the\nmain corridor extends as far as you can see; a non-working walkway from\nthat direction ends here. To the east, the corridor widens into a well-lit\narea.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "ADMIN-CORRIDOR-S"
+      },
+      "south": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR-N"
+      },
+      "west": {
+        "type": "per",
+        "routine": "LONG-HALL-F"
+      },
+      "east": {
+        "type": "to",
+        "destination": "ELEVATOR-LOBBY"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "WALKWAY",
+        "object": "WALKWAY-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "ADMIN-CORRIDOR-S",
+    "desc": "Admin Corridor South",
+    "ldesc": "This section of hallway seems to have suffered some minor structural\ndamage. The walls are cracked, and a jagged crevice crosses the floor.\nAn opening leads east and the corridor heads north and south.",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "CORRIDOR-JUNCTION"
+      },
+      "north": {
+        "type": "to",
+        "destination": "ADMIN-CORRIDOR"
+      },
+      "east": {
+        "type": "to",
+        "destination": "SANFAC-E"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": "ADMIN-CORRIDOR-S-F"
+  },
+  {
+    "id": "ADMIN-CORRIDOR",
+    "desc": "Admin Corridor",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "ADMIN-CORRIDOR-S"
+      },
+      "north": {
+        "type": "per",
+        "routine": "LADDER-EXIT-F"
+      },
+      "west": {
+        "type": "to",
+        "destination": "SYSTEMS-MONITORS"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "RIFT"
+    ],
+    "pseudo": [
+      {
+        "word": "RUBBLE",
+        "object": "RUBBLE-PSEUDO"
+      }
+    ],
+    "action": "ADMIN-CORRIDOR-F"
+  },
+  {
+    "id": "ADMIN-CORRIDOR-N",
+    "desc": "Admin Corridor North",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "per",
+        "routine": "LADDER-EXIT-F"
+      },
+      "north": {
+        "type": "to",
+        "destination": "TRANSPORTATION-SUPPLY"
+      },
+      "east": {
+        "type": "to",
+        "destination": "PLAN-ROOM"
+      },
+      "west": {
+        "type": "to",
+        "destination": "SMALL-OFFICE"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "RIFT"
+    ],
+    "pseudo": [],
+    "action": "ADMIN-CORRIDOR-N-F",
+    "value": 4
+  },
+  {
+    "id": "SANFAC-E",
+    "desc": "SanFac E",
+    "ldesc": "Here is another sanitary facility. Like the others, it is dusty and\nnon-functional.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "ADMIN-CORRIDOR-S"
+      },
+      "out": {
+        "type": "to",
+        "destination": "ADMIN-CORRIDOR-S"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "FIXTURES",
+        "object": "TOILET-PSEUDO"
+      },
+      {
+        "word": "TOILET",
+        "object": "TOILET-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "SYSTEMS-MONITORS",
+    "desc": "Systems Monitors",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "ADMIN-CORRIDOR"
+      },
+      "out": {
+        "type": "to",
+        "destination": "ADMIN-CORRIDOR"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "TABLES"
+    ],
+    "pseudo": [
+      {
+        "word": "MONITORS",
+        "object": "MONITORS-PSEUDO"
+      },
+      {
+        "word": "EQUIPM",
+        "object": "EQUIPMENT-PSEUDO"
+      }
+    ],
+    "action": "SYSTEMS-MONITORS-F"
+  },
+  {
+    "id": "PLAN-ROOM",
+    "desc": "Plan Room",
+    "ldesc": "This is a small room whose far wall is covered with many small cubbyholes,\nall empty. The left wall is covered with an enormous map, labelled\n\"Kalamontee Kompleks\", showing two installations connected by a long\nhallway. Near the upper part of this map is a red arrow saying \"Yuu ar\nheer.\" The right wall is covered with a similar map, labelled \"Lawanda\nKompleks\", showing two installations, one apparently buried deep\nunderground.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "ADMIN-CORRIDOR-N"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT",
+      "FLOYDBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "CUBBYHOLE",
+        "object": "CUBBYHOLE-PSEUDO"
+      },
+      {
+        "word": "MAPS",
+        "object": "MAPS-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "TRANSPORTATION-SUPPLY",
+    "desc": "Transportation Supply",
+    "ldesc": "You have just located a serious bug.",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "ADMIN-CORRIDOR-N"
+      },
+      "north": {
+        "type": "to",
+        "destination": "TRANSPORTATION-SUPPLY"
+      },
+      "east": {
+        "type": "to",
+        "destination": "TRANSPORTATION-SUPPLY"
+      },
+      "west": {
+        "type": "to",
+        "destination": "TRANSPORTATION-SUPPLY"
+      },
+      "out": {
+        "type": "to",
+        "destination": "ADMIN-CORRIDOR-N"
+      }
+    },
+    "flags": [
+      "RLANDBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "SMALL-OFFICE",
+    "desc": "Small Office",
+    "ldesc": "You have entered a small office of some sort. A small desk faces the main\ndoorway which lies to the east. Another exit leads west.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "ADMIN-CORRIDOR-N"
+      },
+      "west": {
+        "type": "to",
+        "destination": "LARGE-OFFICE"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "LARGE-OFFICE",
+    "desc": "Large Office",
+    "ldesc": "This is a large, plush office. The far wall is one large picture window,\nscratched but unbroken, offering a view of this installation and the ocean\nbeyond. In front of the window is a wide wooden desk. The only exit is east.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "SMALL-OFFICE"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "WINDOW",
+      "OCEAN"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "MECH-CORRIDOR-N",
+    "desc": "Mech Corridor North",
+    "ldesc": "Entrances to rooms lie to the east and west from this north-south hall.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "STORAGE-EAST"
+      },
+      "west": {
+        "type": "to",
+        "destination": "PHYSICAL-PLANT"
+      },
+      "north": {
+        "type": "to",
+        "destination": "CORRIDOR-JUNCTION"
+      },
+      "south": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "MECH-CORRIDOR",
+    "desc": "Mech Corridor",
+    "ldesc": "Entrances to rooms lie to the east and west from this north-south hall.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "REACTOR-CONTROL"
+      },
+      "west": {
+        "type": "to",
+        "destination": "PHYSICAL-PLANT"
+      },
+      "north": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR-N"
+      },
+      "south": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR-S"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "MECH-CORRIDOR-S",
+    "desc": "Mech Corridor South",
+    "ldesc": "The corridor ends here with doorways to the southwest, south, and southeast.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR"
+      },
+      "southwest": {
+        "type": "to",
+        "destination": "TOOL-ROOM"
+      },
+      "south": {
+        "type": "to",
+        "destination": "MACHINE-SHOP"
+      },
+      "southeast": {
+        "type": "to",
+        "destination": "ROBOT-SHOP"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "STORAGE-EAST",
+    "desc": "Storage East",
+    "ldesc": "A small room for storage. The exit is to the west.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR-N"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "SHELVES"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "PHYSICAL-PLANT",
+    "desc": "Physical Plant",
+    "ldesc": "This is a huge, dim room with exits in the northeast and southeast\ncorners. The room is criss-crossed with catwalks and is filled with\nheavy equipment presumably intended to heat and ventilate this complex.\nHardly any of the equipment is still operating.",
+    "location": "ROOMS",
+    "exits": {
+      "northeast": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR-N"
+      },
+      "southeast": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "EQUIPM",
+        "object": "EQUIPMENT-PSEUDO"
+      },
+      {
+        "word": "CATWALK",
+        "object": "CATWALK-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "REACTOR-CONTROL",
+    "desc": "Reactor Control",
+    "ldesc": "This room contains many dials and gauges for controlling a massive planetary\npower reactor which, according to a diagram on the wall, must be buried far\nbelow this very complex. The exit is to the west. To the east is a metal door,\nand next to it, a button. A dark stairway winds downward.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR"
+      },
+      "east": {
+        "type": "conditional",
+        "destination": "REACTOR-ELEVATOR",
+        "flag": "REACTOR-ELEVATOR-DOOR",
+        "state": "OPEN"
+      },
+      "down": {
+        "type": "to",
+        "destination": "REACTOR-ACCESS-STAIRS"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "CONTROLS",
+      "STAIRS",
+      "REACTOR-ELEVATOR-DOOR"
+    ],
+    "pseudo": [
+      {
+        "word": "BUTTON",
+        "object": "REACTOR-BUTTON-PSEUDO"
+      },
+      {
+        "word": "DIAGRAM",
+        "object": "DIAGRAM-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "REACTOR-ACCESS-STAIRS",
+    "desc": "Reactor Access Stairs",
+    "ldesc": "You have just located a serious bug.",
+    "location": "ROOMS",
+    "exits": {
+      "down": {
+        "type": "to",
+        "destination": "REACTOR-ACCESS-STAIRS"
+      },
+      "up": {
+        "type": "to",
+        "destination": "REACTOR-CONTROL"
+      }
+    },
+    "flags": [
+      "RLANDBIT"
+    ],
+    "globals": [
+      "STAIRS"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "REACTOR-ELEVATOR",
+    "desc": "Reactor Elevator",
+    "ldesc": "This is an elevator with a door to the west, currently open. A control panel\ncontains an Up button, a Down button, and a small slot.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "REACTOR-CONTROL"
+      },
+      "out": {
+        "type": "to",
+        "destination": "REACTOR-CONTROL"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "REACTOR-ELEVATOR-DOOR",
+      "SLOT",
+      "ELEVATOR-BUTTON",
+      "CONTROLS"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "TOOL-ROOM",
+    "desc": "Tool Room",
+    "ldesc": "This is apparently a storage room for tools. Exits lead northeast and east.",
+    "location": "ROOMS",
+    "exits": {
+      "northeast": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR-S"
+      },
+      "east": {
+        "type": "to",
+        "destination": "MACHINE-SHOP"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "SHELVES"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "MACHINE-SHOP",
+    "desc": "Machine Shop",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR-S"
+      },
+      "east": {
+        "type": "to",
+        "destination": "ROBOT-SHOP"
+      },
+      "west": {
+        "type": "to",
+        "destination": "TOOL-ROOM"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "SPOUT",
+        "object": "CHEM-SPOUT-PSEUDO"
+      }
+    ],
+    "action": "MACHINE-SHOP-F"
+  },
+  {
+    "id": "ROBOT-SHOP",
+    "desc": "Robot Shop",
+    "ldesc": "This room, with exits west and northwest, is filled with robot-like\ndevices of every conceivable description, all in various states of\ndisassembly.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "MACHINE-SHOP"
+      },
+      "northwest": {
+        "type": "to",
+        "destination": "MECH-CORRIDOR-S"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "DEVICE",
+        "object": "DEVICES-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "ELEVATOR-LOBBY",
+    "desc": "Elevator Lobby",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "per",
+        "routine": "ELEVATOR-ENTER-F"
+      },
+      "south": {
+        "type": "per",
+        "routine": "ELEVATOR-ENTER-F"
+      },
+      "west": {
+        "type": "to",
+        "destination": "CORRIDOR-JUNCTION"
+      },
+      "east": {
+        "type": "to",
+        "destination": "BOOTH-2"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "UPPER-ELEVATOR-DOOR",
+      "LOWER-ELEVATOR-DOOR"
+    ],
+    "pseudo": [
+      {
+        "word": "BOOTH",
+        "object": "NEAR-BOOTH-PSEUDO"
+      }
+    ],
+    "action": "ELEVATOR-LOBBY-F"
+  },
+  {
+    "id": "UPPER-ELEVATOR",
+    "desc": "Upper Elevator",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "out": {
+        "type": "per",
+        "routine": "ELEVATOR-EXIT-F"
+      },
+      "south": {
+        "type": "per",
+        "routine": "ELEVATOR-EXIT-F"
+      },
+      "up": {
+        "type": "blocked",
+        "message": "You'll have to use the elevator controls."
+      },
+      "down": {
+        "type": "blocked",
+        "message": "You'll have to use the elevator controls."
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "LIGHTS",
+      "CONTROLS",
+      "SLOT",
+      "ELEVATOR-BUTTON",
+      "UPPER-ELEVATOR-DOOR"
+    ],
+    "pseudo": [],
+    "action": "UPPER-ELEVATOR-F"
+  },
+  {
+    "id": "LOWER-ELEVATOR",
+    "desc": "Lower Elevator",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "per",
+        "routine": "ELEVATOR-EXIT-F"
+      },
+      "out": {
+        "type": "per",
+        "routine": "ELEVATOR-EXIT-F"
+      },
+      "up": {
+        "type": "blocked",
+        "message": "You'll have to use the elevator controls."
+      },
+      "down": {
+        "type": "blocked",
+        "message": "You'll have to use the elevator controls."
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "LIGHTS",
+      "CONTROLS",
+      "SLOT",
+      "ELEVATOR-BUTTON",
+      "LOWER-ELEVATOR-DOOR"
+    ],
+    "pseudo": [],
+    "action": "LOWER-ELEVATOR-F"
+  },
+  {
+    "id": "BOOTH-2",
+    "desc": "Booth 2",
+    "ldesc": "This is a tiny room with a large \"2\" painted on the wall. A panel contains\na slot about ten centimeters wide, a brown button labelled \"1\" and a tan\nbutton labelled \"3.\"",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "ELEVATOR-LOBBY"
+      },
+      "out": {
+        "type": "to",
+        "destination": "ELEVATOR-LOBBY"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "CONTROLS",
+      "SLOT",
+      "TELEPORTATION-BUTTON-1",
+      "TELEPORTATION-BUTTON-3"
+    ],
+    "pseudo": [
+      {
+        "word": "BOOTH",
+        "object": "IN-BOOTH-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "TOWER-CORE",
+    "desc": "Tower Core",
+    "ldesc": "This is a small, circular room. A sliding door leads north, and a spiral\nstaircase heads upwards. Other exits lie to the northeast and southwest.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "UPPER-ELEVATOR"
+      },
+      "up": {
+        "type": "to",
+        "destination": "HELIPAD"
+      },
+      "southwest": {
+        "type": "to",
+        "destination": "OBSERVATION-DECK"
+      },
+      "northeast": {
+        "type": "to",
+        "destination": "COMM-ROOM"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "STAIRS",
+      "UPPER-ELEVATOR-DOOR"
+    ],
+    "pseudo": [],
+    "action": null,
+    "value": 4
+  },
+  {
+    "id": "HELIPAD",
+    "desc": "Helipad",
+    "ldesc": "You are at the center of a wide, flat area atop the tower. A fence\nprevents you from approaching the perimeter, so your view is limited to\ncloud-filled sky. A large vehicle, severely weathered and topped with rotor\nblades, lies nearby. A spiral staircase leads down into the tower.",
+    "location": "ROOMS",
+    "exits": {
+      "down": {
+        "type": "to",
+        "destination": "TOWER-CORE"
+      },
+      "east": {
+        "type": "blocked",
+        "message": "A fence keeps you away from the edge, where you would probably\nbe swept over the brink by the high winds."
+      },
+      "west": {
+        "type": "blocked",
+        "message": "A fence keeps you away from the edge, where you would probably\nbe swept over the brink by the high winds."
+      },
+      "north": {
+        "type": "blocked",
+        "message": "A fence keeps you away from the edge, where you would probably\nbe swept over the brink by the high winds."
+      },
+      "south": {
+        "type": "blocked",
+        "message": "A fence keeps you away from the edge, where you would probably\nbe swept over the brink by the high winds."
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "STAIRS",
+      "HELICOPTER-OBJECT"
+    ],
+    "pseudo": [
+      {
+        "word": "FENCE",
+        "object": "FENCE-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "HELICOPTER",
+    "desc": "Helicopter",
+    "ldesc": "This is a large vehicle with a lot of cargo space. A complex control panel\nis closed and locked. Everything is covered with a thick layer of rust.\nThrough the windows of the vehicle you can see a wide Helipad, and beyond\nthat, endless ocean far below. Several doors lead out to the Helipad.",
+    "location": "ROOMS",
+    "exits": {
+      "out": {
+        "type": "to",
+        "destination": "HELIPAD"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "OCEAN",
+      "CONTROLS",
+      "WINDOW",
+      "HELICOPTER-OBJECT"
+    ],
+    "pseudo": [
+      {
+        "word": "LOCK",
+        "object": "LOCK-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "COMM-ROOM",
+    "desc": "Comm Room",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "southwest": {
+        "type": "to",
+        "destination": "TOWER-CORE"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "LIGHTS"
+    ],
+    "pseudo": [
+      {
+        "word": "CABLES",
+        "object": "CABLES-PSEUDO"
+      },
+      {
+        "word": "ENUNCI",
+        "object": "ENUNCIATOR-PSEUDO"
+      }
+    ],
+    "action": "COMM-ROOM-F"
+  },
+  {
+    "id": "OBSERVATION-DECK",
+    "desc": "Observation Deck",
+    "ldesc": "This is a balcony girdling the tower. The view is breathtaking; the tower\nmust be half a kilometer tall. From here it is clear that you are on an\nisland. The dormitory section of the complex is visible on the other side\nof the island, and the rest of the complex sprawls out directly below. In\nthe distance, about 20 kilometers to the east, you can spot another island\nsimilar to this one. The only exit is a doorway leading northeast.",
+    "location": "ROOMS",
+    "exits": {
+      "northeast": {
+        "type": "to",
+        "destination": "TOWER-CORE"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "OCEAN"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "WAITING-AREA",
+    "desc": "Waiting Area",
+    "ldesc": "This is a concrete platform sparsely furnished with benches. The platform\ncontinues to the east, and to the south is a metal door.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "KALAMONTEE-PLATFORM"
+      },
+      "south": {
+        "type": "per",
+        "routine": "OTHER-ELEVATOR-ENTER-F"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "LOWER-ELEVATOR-DOOR"
+    ],
+    "pseudo": [
+      {
+        "word": "BENCH",
+        "object": "BENCH-PSEUDO"
+      },
+      {
+        "word": "BENCHE",
+        "object": "BENCH-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "KALAMONTEE-PLATFORM",
+    "desc": "Kalamontee Platform",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "WAITING-AREA"
+      },
+      "south": {
+        "type": "per",
+        "routine": "SHUTTLE-ENTER-F"
+      },
+      "north": {
+        "type": "per",
+        "routine": "SHUTTLE-ENTER-F"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "GLOBAL-SHUTTLE"
+    ],
+    "pseudo": [],
+    "action": "KALAMONTEE-PLATFORM-F",
+    "value": 4
+  },
+  {
+    "id": "LAWANDA-PLATFORM",
+    "desc": "Lawanda Platform",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "per",
+        "routine": "SHUTTLE-ENTER-F"
+      },
+      "south": {
+        "type": "per",
+        "routine": "SHUTTLE-ENTER-F"
+      },
+      "east": {
+        "type": "to",
+        "destination": "ESCALATOR"
+      },
+      "up": {
+        "type": "to",
+        "destination": "ESCALATOR"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "GLOBAL-SHUTTLE",
+      "STAIRS"
+    ],
+    "pseudo": [
+      {
+        "word": "ESCALATOR",
+        "object": "ESCALATOR-PSEUDO"
+      }
+    ],
+    "action": "LAWANDA-PLATFORM-F",
+    "value": 4
+  },
+  {
+    "id": "ESCALATOR",
+    "desc": "Escalator",
+    "ldesc": "You are in the middle of a long mechanical stairway. It is not running,\nand seems to be in disrepair.",
+    "location": "ROOMS",
+    "exits": {
+      "up": {
+        "type": "to",
+        "destination": "FORK"
+      },
+      "east": {
+        "type": "to",
+        "destination": "FORK"
+      },
+      "down": {
+        "type": "to",
+        "destination": "LAWANDA-PLATFORM"
+      },
+      "west": {
+        "type": "to",
+        "destination": "LAWANDA-PLATFORM"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "STAIRS"
+    ],
+    "pseudo": [
+      {
+        "word": "ESCALATOR",
+        "object": "ESCALATOR-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "FORK",
+    "desc": "Fork",
+    "ldesc": "This is a hallway which forks to the northeast and southeast. To the west\nis the top of a long escalator.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "ESCALATOR"
+      },
+      "down": {
+        "type": "to",
+        "destination": "ESCALATOR"
+      },
+      "northeast": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-WEST"
+      },
+      "southeast": {
+        "type": "to",
+        "destination": "PROJECT-CORRIDOR-WEST"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "STAIRS"
+    ],
+    "pseudo": [
+      {
+        "word": "ESCALATOR",
+        "object": "ESCALATOR-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "INFIRMARY",
+    "desc": "Infirmary",
+    "ldesc": "You have entered a clean, well-lighted place. There are a number of beds,\nsome complicated looking equipment, and many shelves that are mostly bare.",
+    "location": "ROOMS",
+    "exits": {
+      "southeast": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-WEST"
+      },
+      "out": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-WEST"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "BED",
+      "SHELVES"
+    ],
+    "pseudo": [
+      {
+        "word": "EQUIPM",
+        "object": "EQUIPMENT-PSEUDO"
+      },
+      {
+        "word": "MACHIN",
+        "object": "EQUIPMENT-PSEUDO"
+      }
+    ],
+    "action": "INFIRMARY-F"
+  },
+  {
+    "id": "REPAIR-ROOM",
+    "desc": "Repair Room",
+    "ldesc": "You are in a dimly lit room, filled with strange machines and wide storage\ncabinets, all locked. To the south, a narrow stairway leads upward. On the\nnorth wall of the room is a very small doorway.",
+    "location": "ROOMS",
+    "exits": {
+      "up": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-WEST"
+      },
+      "south": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-WEST"
+      },
+      "north": {
+        "type": "blocked",
+        "message": "It is a robot-sized doorway -- a bit too small for you."
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "STAIRS"
+    ],
+    "pseudo": [
+      {
+        "word": "CABINETS",
+        "object": "CABINETS-PSEUDO"
+      },
+      {
+        "word": "MACHIN",
+        "object": "EQUIPMENT-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "SYSTEMS-CORRIDOR-WEST",
+    "desc": "Systems Corridor West",
+    "ldesc": "The corridor bends here, leading east and southwest. A doorway opens\nto the northwest, and a narrow stairway leads down to the north.",
+    "location": "ROOMS",
+    "exits": {
+      "northwest": {
+        "type": "to",
+        "destination": "INFIRMARY"
+      },
+      "north": {
+        "type": "to",
+        "destination": "REPAIR-ROOM"
+      },
+      "down": {
+        "type": "to",
+        "destination": "REPAIR-ROOM"
+      },
+      "east": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR"
+      },
+      "southwest": {
+        "type": "to",
+        "destination": "FORK"
+      }
+    },
+    "flags": [
+      "ONBIT",
+      "RLANDBIT"
+    ],
+    "globals": [
+      "STAIRS"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "SYSTEMS-CORRIDOR",
+    "desc": "Systems Corridor",
+    "ldesc": "This section of hallway has a doorway to the north labelled \"Planateree\nDeefens.\" The corridor continues east and west.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "PLANETARY-DEFENSE"
+      },
+      "west": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-WEST"
+      },
+      "east": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-EAST"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "SYSTEMS-CORRIDOR-EAST",
+    "desc": "Systems Corridor East",
+    "ldesc": "The hallway ends here with a large doorway leading east, and smaller doorways\nto the north and south. The northern doorway is labelled \"Planateree Kors\nKontrool.\" The hallway itself leads west.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR"
+      },
+      "south": {
+        "type": "to",
+        "destination": "LIBRARY-LOBBY"
+      },
+      "north": {
+        "type": "to",
+        "destination": "PLANETARY-COURSE-CONTROL"
+      },
+      "east": {
+        "type": "to",
+        "destination": "PHYSICAL-PLANT-TWO"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "PHYSICAL-PLANT-TWO",
+    "desc": "Physical Plant",
+    "ldesc": "This is an enormous room full of environmental control equipment presumably\nintended to heat and ventilate the Lawanda Complex. Oddly, although the\nLawanda Complex is slightly smaller than its counterpart, this plant is much\nlarger than the one in the Kalamontee Complex. The only exit is westward.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-EAST"
+      },
+      "out": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-EAST"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "EQUIPM",
+        "object": "EQUIPMENT-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "PLANETARY-DEFENSE",
+    "desc": "Planetary Defense",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR"
+      },
+      "out": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "CONTROLS",
+      "LIGHTS"
+    ],
+    "pseudo": [],
+    "action": "PLANETARY-DEFENSE-F"
+  },
+  {
+    "id": "PLANETARY-COURSE-CONTROL",
+    "desc": "Course Control",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-EAST"
+      },
+      "out": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-EAST"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "CONTROLS",
+      "LIGHTS"
+    ],
+    "pseudo": [],
+    "action": "PLANETARY-COURSE-CONTROL-F"
+  },
+  {
+    "id": "LIBRARY-LOBBY",
+    "desc": "Library Lobby",
+    "ldesc": "This is a carpeted room, thick with dust, with exits to the north and south.\nTo the west, up a few steps, is a wide doorway. A small booth lies to the\neast.",
+    "location": "ROOMS",
+    "exits": {
+      "up": {
+        "type": "to",
+        "destination": "LIBRARY"
+      },
+      "west": {
+        "type": "to",
+        "destination": "LIBRARY"
+      },
+      "north": {
+        "type": "to",
+        "destination": "SYSTEMS-CORRIDOR-EAST"
+      },
+      "south": {
+        "type": "to",
+        "destination": "PROJECT-CORRIDOR-EAST"
+      },
+      "east": {
+        "type": "to",
+        "destination": "BOOTH-3"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "TABLES",
+      "STAIRS"
+    ],
+    "pseudo": [
+      {
+        "word": "CARPET",
+        "object": "CARPET-PSEUDO"
+      },
+      {
+        "word": "BOOTH",
+        "object": "NEAR-BOOTH-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "BOOTH-3",
+    "desc": "Booth 3",
+    "ldesc": "This is a tiny room with a large \"3\" painted on the wall. A panel contains\na slot about ten centimeters wide, a brown button labelled \"1\" and a beige\nbutton labelled \"2.\"",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "LIBRARY-LOBBY"
+      },
+      "out": {
+        "type": "to",
+        "destination": "LIBRARY-LOBBY"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "CONTROLS",
+      "SLOT",
+      "TELEPORTATION-BUTTON-1",
+      "TELEPORTATION-BUTTON-2"
+    ],
+    "pseudo": [
+      {
+        "word": "BOOTH",
+        "object": "IN-BOOTH-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "LIBRARY",
+    "desc": "Library",
+    "ldesc": "This is a large carpeted room with a desk and many small tables. The sole\nexit is down a few steps to the east.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "LIBRARY-LOBBY"
+      },
+      "out": {
+        "type": "to",
+        "destination": "LIBRARY-LOBBY"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT",
+      "FLOYDBIT"
+    ],
+    "globals": [
+      "TABLES",
+      "STAIRS"
+    ],
+    "pseudo": [
+      {
+        "word": "CARPET",
+        "object": "CARPET-PSEUDO"
+      },
+      {
+        "word": "DESK",
+        "object": "DESK-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "PROJECT-CORRIDOR-WEST",
+    "desc": "Project Corridor West",
+    "ldesc": "This is a curving hallway leading east and northwest. There is an opening\nto the west.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "SANFAC-F"
+      },
+      "east": {
+        "type": "to",
+        "destination": "PROJECT-CORRIDOR"
+      },
+      "northwest": {
+        "type": "to",
+        "destination": "FORK"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "SANFAC-F",
+    "desc": "SanFac F",
+    "ldesc": "This is another dusty sanitary facility. Unlike the ones near the dorms,\nthis one is smaller and has no bathing fixtures.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "PROJECT-CORRIDOR-WEST"
+      },
+      "out": {
+        "type": "to",
+        "destination": "PROJECT-CORRIDOR-WEST"
+      }
+    },
+    "flags": [
+      "FLOYDBIT",
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "FIXTURES",
+        "object": "TOILET-PSEUDO"
+      },
+      {
+        "word": "TOILET",
+        "object": "TOILET-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "PROJECT-CORRIDOR",
+    "desc": "Project Corridor",
+    "ldesc": "You are at the center of a long east-west hallway. A doorway, labelled\n\"PrajKon Awfis\", opens to the south.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "PROJECT-CORRIDOR-EAST"
+      },
+      "west": {
+        "type": "to",
+        "destination": "PROJECT-CORRIDOR-WEST"
+      },
+      "south": {
+        "type": "to",
+        "destination": "PROJCON-OFFICE"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "PROJCON-OFFICE",
+    "desc": "ProjCon Office",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "PROJECT-CORRIDOR"
+      },
+      "south": {
+        "type": "conditional",
+        "destination": "CRYO-ELEVATOR",
+        "flag": "CRYO-ELEVATOR-DOOR",
+        "state": "OPEN"
+      },
+      "east": {
+        "type": "to",
+        "destination": "COMPUTER-ROOM"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "CRYO-ELEVATOR-DOOR"
+    ],
+    "pseudo": [
+      {
+        "word": "MURAL",
+        "object": "MURAL-PSEUDO"
+      },
+      {
+        "word": "LOGO",
+        "object": "LOGO-PSEUDO"
+      }
+    ],
+    "action": "PROJCON-OFFICE-F"
+  },
+  {
+    "id": "CRYO-ELEVATOR",
+    "desc": "Cryo-Elevator",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "per",
+        "routine": "CRYO-EXIT-F"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "CRYO-ELEVATOR-DOOR"
+    ],
+    "pseudo": [
+      {
+        "word": "BUTTON",
+        "object": "CRYO-BUTTON-PSEUDO"
+      }
+    ],
+    "action": "CRYO-ELEVATOR-F"
+  },
+  {
+    "id": "CRYO-ANTEROOM",
+    "desc": "Cryo-Anteroom",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {},
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": "CRYO-ANTEROOM-F"
+  },
+  {
+    "id": "PROJECT-CORRIDOR-EAST",
+    "desc": "Project Corridor East",
+    "ldesc": "The hallway ends here but continues back toward the west. Doorways lead\nnorth, south and east.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "LIBRARY-LOBBY"
+      },
+      "south": {
+        "type": "to",
+        "destination": "COMPUTER-ROOM"
+      },
+      "west": {
+        "type": "to",
+        "destination": "PROJECT-CORRIDOR"
+      },
+      "east": {
+        "type": "to",
+        "destination": "MAIN-LAB"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "COMPUTER-ROOM",
+    "desc": "Computer Room",
+    "ldesc": "This is the main computer room for the Project. The only sign of activity is\na glowing red light. The exits are north, west, and northeast. To the south\nis a small booth.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "PROJECT-CORRIDOR-EAST"
+      },
+      "west": {
+        "type": "to",
+        "destination": "PROJCON-OFFICE"
+      },
+      "south": {
+        "type": "to",
+        "destination": "MINI-BOOTH"
+      },
+      "northeast": {
+        "type": "to",
+        "destination": "MAIN-LAB"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "LIGHTS"
+    ],
+    "pseudo": [
+      {
+        "word": "BOOTH",
+        "object": "NEAR-BOOTH-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "MINI-BOOTH",
+    "desc": "Miniaturization Booth",
+    "ldesc": "This is a small room barely large enough for one person. Mounted on the wall\nis a small slot, and next to it a keyboard with numeric keys. The exit is to\nthe north.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "COMPUTER-ROOM"
+      },
+      "out": {
+        "type": "to",
+        "destination": "COMPUTER-ROOM"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "SLOT"
+    ],
+    "pseudo": [
+      {
+        "word": "KEYBOARD",
+        "object": "KEYBOARD-PSEUDO"
+      },
+      {
+        "word": "BOOTH",
+        "object": "IN-BOOTH-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "MAIN-LAB",
+    "desc": "Main Lab",
+    "ldesc": "This is the heart of the Project's vast laboratory complex. There are exits\nto the west and southwest, and heavy metal doors to the northeast and\nsoutheast. A small doorway leads south.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "to",
+        "destination": "PROJECT-CORRIDOR-EAST"
+      },
+      "south": {
+        "type": "to",
+        "destination": "LAB-STORAGE"
+      },
+      "southwest": {
+        "type": "to",
+        "destination": "COMPUTER-ROOM"
+      },
+      "southeast": {
+        "type": "conditional",
+        "destination": "BIO-LOCK-WEST",
+        "flag": "BIO-DOOR-WEST",
+        "state": "OPEN"
+      },
+      "northeast": {
+        "type": "conditional",
+        "destination": "RADIATION-LOCK-WEST",
+        "flag": "RAD-DOOR-WEST",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "BIO-DOOR-WEST",
+      "RAD-DOOR-WEST"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "LAB-STORAGE",
+    "desc": "Lab Storage",
+    "ldesc": "This is a tiny room for the storage of laboratory supplies. The sole exit is\nto the north.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "MAIN-LAB"
+      },
+      "out": {
+        "type": "to",
+        "destination": "MAIN-LAB"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "FLOYDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "SHELVES"
+    ],
+    "pseudo": [
+      {
+        "word": "RACK",
+        "object": "CARPET-PSEUDO"
+      },
+      {
+        "word": "SUPPLIES",
+        "object": "SUPPLIES-PSEUDO"
+      }
+    ],
+    "action": null
+  },
+  {
+    "id": "BIO-LOCK-WEST",
+    "desc": "Bio Lock West",
+    "ldesc": "This is the first half of a sterilization chamber to prevent contamination\nof the delicate biological experiments in the Bio Lab which lies beyond. The\ndoor to the west leads to the main lab, and the bio lock continues eastward.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "BIO-LOCK-EAST"
+      },
+      "west": {
+        "type": "conditional",
+        "destination": "MAIN-LAB",
+        "flag": "BIO-DOOR-WEST",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "BIO-DOOR-WEST"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "BIO-LOCK-EAST",
+    "desc": "Bio Lock East",
+    "ldesc": "The is the second half of the sterilization chamber leading from the main\nlab to the Bio Lab. The door to the east, leading to the Bio Lab, has a\nwindow. The bio lock continues to the west.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "conditional",
+        "destination": "BIO-LAB",
+        "flag": "BIO-DOOR-EAST",
+        "state": "OPEN"
+      },
+      "west": {
+        "type": "to",
+        "destination": "BIO-LOCK-WEST"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "BIO-DOOR-EAST",
+      "WINDOW"
+    ],
+    "pseudo": [],
+    "action": "BIO-LOCK-EAST-F"
+  },
+  {
+    "id": "RADIATION-LOCK-WEST",
+    "desc": "Radiation Lock West",
+    "ldesc": "This is the western half of a decontamination chamber to prevent dangerous\nradioactive materials from leaving the Radiation Lab which lies to the east.\nThe door leads west to the main lab.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "RADIATION-LOCK-EAST"
+      },
+      "west": {
+        "type": "conditional",
+        "destination": "MAIN-LAB",
+        "flag": "RAD-DOOR-WEST",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "RAD-DOOR-WEST"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "RADIATION-LOCK-EAST",
+    "desc": "Radiation Lock East",
+    "ldesc": "This is the eastern half of the decontamination chamber. The door to the\neast leads to the Radiation Lab, and the chamber continues westward. A sign\non the wall reads \"WORNEENG! Raadeeaashun suuts must bee worn beeyond xis\npoint.\"",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "conditional",
+        "destination": "RADIATION-LAB",
+        "flag": "RAD-DOOR-EAST",
+        "state": "OPEN"
+      },
+      "west": {
+        "type": "to",
+        "destination": "RADIATION-LOCK-WEST"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "RAD-DOOR-EAST"
+    ],
+    "pseudo": [],
+    "action": null
+  },
+  {
+    "id": "BIO-LAB",
+    "desc": "Bio Lab",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "conditional",
+        "destination": "LAB-OFFICE",
+        "flag": "OFFICE-DOOR",
+        "state": "OPEN"
+      },
+      "west": {
+        "type": "conditional",
+        "destination": "BIO-LOCK-EAST",
+        "flag": "BIO-DOOR-EAST",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "BIO-DOOR-EAST",
+      "WINDOW",
+      "OFFICE-DOOR"
+    ],
+    "pseudo": [
+      {
+        "word": "CRACK",
+        "object": "CRACK-PSEUDO"
+      }
+    ],
+    "action": "BIO-LAB-F"
+  },
+  {
+    "id": "RADIATION-LAB",
+    "desc": "Radiation Lab",
+    "ldesc": "This room is filled with unfathomable equipment and large canisters bearing\nradioactive warnings. Many of the canisters are split open. You can see the\nBio Lab through a large crack in the south wall. Sinister-looking forms move\nabout within the Bio Lab. Although the lights here are off, the room is\nsuffused with a pale blue glow.",
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "conditional",
+        "destination": "RADIATION-LOCK-EAST",
+        "flag": "RAD-DOOR-EAST",
+        "state": "OPEN"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "TABLES",
+      "RAD-DOOR-EAST"
+    ],
+    "pseudo": [
+      {
+        "word": "CRACK",
+        "object": "CRACK-PSEUDO"
+      },
+      {
+        "word": "EQUIPM",
+        "object": "EQUIPMENT-PSEUDO"
+      }
+    ],
+    "action": "RADIATION-LAB-F"
+  },
+  {
+    "id": "LAB-OFFICE",
+    "desc": "Lab Office",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "west": {
+        "type": "conditional",
+        "destination": "BIO-LAB",
+        "flag": "OFFICE-DOOR",
+        "state": "OPEN"
+      },
+      "south": {
+        "type": "to",
+        "destination": "AUXILIARY-BOOTH"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "OFFICE-DOOR"
+    ],
+    "pseudo": [
+      {
+        "word": "FILES",
+        "object": "CABINETS-PSEUDO"
+      },
+      {
+        "word": "BOOTH",
+        "object": "NEAR-BOOTH-PSEUDO"
+      }
+    ],
+    "action": "LAB-OFFICE-F"
+  },
+  {
+    "id": "AUXILIARY-BOOTH",
+    "desc": "Auxiliary Booth",
+    "ldesc": "This is another small booth. Unlike the Miniaturization Booth, this room\nhas no slot or keyboard, so presumably it is intended only as a receiving\nstation. The exit is on the northern side.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "LAB-OFFICE"
+      },
+      "out": {
+        "type": "to",
+        "destination": "LAB-OFFICE"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [],
+    "pseudo": [
+      {
+        "word": "BOOTH",
+        "object": "IN-BOOTH-PSEUDO"
+      }
+    ],
+    "action": null,
+    "value": 4
+  },
+  {
+    "id": "STATION-384",
+    "desc": "Station 384",
+    "ldesc": "You are standing on a square plate of heavy metal. Above your head, parallel\nto the plate beneath you, is an identical metal plate. To the east is a wide,\nmetallic strip.",
+    "location": "ROOMS",
+    "exits": {
+      "east": {
+        "type": "to",
+        "destination": "STRIP-NEAR-STATION"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "STRIP"
+    ],
+    "pseudo": [
+      {
+        "word": "PLATE",
+        "object": "PLATE-PSEUDO"
+      },
+      {
+        "word": "PLATES",
+        "object": "PLATE-PSEUDO"
+      }
+    ],
+    "action": "STATION-384-F"
+  },
+  {
+    "id": "STRIP-NEAR-STATION",
+    "desc": "Strip Near Station",
+    "ldesc": "You are standing on a silicon filament, which looks to you like a wide\nmetal highway. South of here, the filament makes a right angle and heads\nstraight down, like a cliff overlooking a black void. The filament can be\nfollowed north, however. Station 384 lies westward.",
+    "location": "ROOMS",
+    "exits": {
+      "south": {
+        "type": "blocked",
+        "message": "The plunge would probably be fatal."
+      },
+      "east": {
+        "type": "blocked",
+        "message": "The plunge would probably be fatal."
+      },
+      "north": {
+        "type": "to",
+        "destination": "MIDDLE-OF-STRIP"
+      },
+      "west": {
+        "type": "to",
+        "destination": "STATION-384"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "STRIP"
+    ],
+    "pseudo": [
+      {
+        "word": "VOID",
+        "object": "VOID-PSEUDO"
+      }
+    ],
+    "action": null,
+    "value": 4
+  },
+  {
+    "id": "MIDDLE-OF-STRIP",
+    "desc": "Middle of Strip",
+    "ldesc": "You are standing on a section of the strip with a bottomless void stretching\nout on both sides. The strip continues to the north and south.",
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "to",
+        "destination": "STRIP-NEAR-RELAY"
+      },
+      "south": {
+        "type": "conditional",
+        "destination": "STRIP-NEAR-STATION",
+        "flag": "NO-MICROBE",
+        "state": "Not a chance -- unless,\nof course, you don't mind walking into the gullet of a hungry microbe."
+      },
+      "east": {
+        "type": "blocked",
+        "message": "Do you have a penchant for bottomless voids?"
+      },
+      "west": {
+        "type": "blocked",
+        "message": "Do you have a penchant for bottomless voids?"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "STRIP"
+    ],
+    "pseudo": [
+      {
+        "word": "VOID",
+        "object": "VOID-PSEUDO"
+      }
+    ],
+    "action": "MIDDLE-OF-STRIP-F"
+  },
+  {
+    "id": "STRIP-NEAR-RELAY",
+    "desc": "Strip Near Relay",
+    "ldesc": null,
+    "location": "ROOMS",
+    "exits": {
+      "north": {
+        "type": "blocked",
+        "message": "There is a huge featureless wall there, remember?"
+      },
+      "south": {
+        "type": "conditional",
+        "destination": "MIDDLE-OF-STRIP",
+        "flag": "NO-MICROBE",
+        "state": "Not a chance -- unless,\nof course, you don't mind walking into the gullet of a hungry microbe."
+      },
+      "east": {
+        "type": "per",
+        "routine": "RELAY-EXIT-F"
+      },
+      "west": {
+        "type": "blocked",
+        "message": "Do you have a penchant for bottomless voids?"
+      }
+    },
+    "flags": [
+      "RLANDBIT",
+      "ONBIT"
+    ],
+    "globals": [
+      "STRIP"
+    ],
+    "pseudo": [
+      {
+        "word": "VOID",
+        "object": "VOID-PSEUDO"
+      }
+    ],
+    "action": "STRIP-NEAR-RELAY-F"
+  }
+]

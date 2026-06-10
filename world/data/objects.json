@@ -1,0 +1,3281 @@
+[
+  {
+    "id": "INTNUM",
+    "desc": "number",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "GLOBAL-OBJECTS",
+    "synonyms": [
+      "INTNUM"
+    ],
+    "adjectives": [],
+    "flags": [],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "STAIRS",
+    "desc": "stairway",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "STAIRS",
+      "STEPS",
+      "GANGWAY",
+      "STAIRWAY"
+    ],
+    "adjectives": [],
+    "flags": [
+      "NDESCBIT",
+      "CLIMBBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "GROUND",
+    "desc": "floor",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "GLOBAL-OBJECTS",
+    "synonyms": [
+      "GROUND",
+      "EARTH",
+      "FLOOR",
+      "DECK"
+    ],
+    "adjectives": [],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GROUND-F"
+  },
+  {
+    "id": "WINDOW",
+    "desc": "window",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "WINDOW",
+      "PORT",
+      "VIEWPORT"
+    ],
+    "adjectives": [
+      "VIEW"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "WINDOW-F"
+  },
+  {
+    "id": "CLIFF",
+    "desc": "cliff",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "CLIFF"
+    ],
+    "adjectives": [],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CLIFF-F"
+  },
+  {
+    "id": "OCEAN",
+    "desc": "ocean",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "OCEAN"
+    ],
+    "adjectives": [
+      "ENDLESS"
+    ],
+    "flags": [
+      "VOWELBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "OCEAN-F"
+  },
+  {
+    "id": "TABLES",
+    "desc": "table",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "TABLE",
+      "TABLES"
+    ],
+    "adjectives": [
+      "ROUND",
+      "CONFERENCE",
+      "SMALL",
+      "WIDE",
+      "LONG"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "TABLES-F"
+  },
+  {
+    "id": "SHELVES",
+    "desc": "shelf",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "SHELF",
+      "SHELVES"
+    ],
+    "adjectives": [],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "SHELVES-F"
+  },
+  {
+    "id": "LIGHTS",
+    "desc": "light",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "LIGHT",
+      "LIGHTS"
+    ],
+    "adjectives": [
+      "RED",
+      "DAZZLI",
+      "GLOWIN",
+      "BLINKI",
+      "WARNIN",
+      "BRIGHT",
+      "COLORE",
+      "FLASHI"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "LIGHTS-F"
+  },
+  {
+    "id": "GLOBAL-DOORWAY",
+    "desc": "doorway",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "GLOBAL-OBJECTS",
+    "synonyms": [
+      "DOORWA",
+      "PORTAL",
+      "OPENIN"
+    ],
+    "adjectives": [
+      "NORTH",
+      "SOUTH",
+      "EAST",
+      "WEST",
+      "NE",
+      "SE",
+      "NW",
+      "SW"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GLOBAL-DOORWAY-F"
+  },
+  {
+    "id": "CONTROLS",
+    "desc": "set of controls",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "CONTRO",
+      "PANEL",
+      "DIALS",
+      "GAUGES"
+    ],
+    "adjectives": [
+      "CONTRO",
+      "COMPLEX"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CONTROLS-F"
+  },
+  {
+    "id": "GLOBAL-GAMES",
+    "desc": "game",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "GLOBAL-OBJECTS",
+    "synonyms": [
+      "BOCCI",
+      "CHESS",
+      "HIDER-",
+      "HUCKA-"
+    ],
+    "adjectives": [],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GLOBAL-GAMES-F"
+  },
+  {
+    "id": "HANDS",
+    "desc": "pair of hands",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "GLOBAL-OBJECTS",
+    "synonyms": [
+      "PAIR",
+      "HANDS"
+    ],
+    "adjectives": [
+      "BARE"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "HANDS-F"
+  },
+  {
+    "id": "SLEEP",
+    "desc": "sacred act of sleeping",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "GLOBAL-OBJECTS",
+    "synonyms": [
+      "SLEEP"
+    ],
+    "adjectives": [],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "SLEEP-F"
+  },
+  {
+    "id": "ADVENTURER",
+    "desc": "player",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "DECK-NINE",
+    "synonyms": [
+      "ADMIRA",
+      "SMITHE",
+      "SPAM",
+      "EGGS"
+    ],
+    "adjectives": [
+      "ORANGE",
+      "OPENER"
+    ],
+    "flags": [
+      "NDESCBIT",
+      "INVISIBLE"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "NOT-HERE-OBJECT",
+    "desc": "such thing",
+    "fdesc": null,
+    "ldesc": null,
+    "location": null,
+    "synonyms": [],
+    "adjectives": [],
+    "flags": [],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "NOT-HERE-OBJECT-F"
+  },
+  {
+    "id": "SCRUB-BRUSH",
+    "desc": "Patrol-issue self-contained multi-purpose scrub brush",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "ADVENTURER",
+    "synonyms": [
+      "BRUSH",
+      "SCRUBB",
+      "SCRUBR"
+    ],
+    "adjectives": [
+      "SCRUB",
+      "PATROL",
+      "SELF-CONTAINED",
+      "MULTI"
+    ],
+    "flags": [
+      "TAKEBIT"
+    ],
+    "size": 10,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "CHRONOMETER",
+    "desc": "chronometer",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "ADVENTURER",
+    "synonyms": [
+      "CHRONOMETER",
+      "WRISTWATCH",
+      "WATCH"
+    ],
+    "adjectives": [
+      "WRIST"
+    ],
+    "flags": [
+      "MUNGBIT",
+      "TAKEBIT",
+      "WEARBIT",
+      "WORNBIT"
+    ],
+    "size": 10,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHRONOMETER-F"
+  },
+  {
+    "id": "ID-CARD",
+    "desc": "ID card",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "PATROL-UNIFORM",
+    "synonyms": [
+      "CARD",
+      "CARDS"
+    ],
+    "adjectives": [
+      "PATROL",
+      "ID",
+      "IDENTIFICATION"
+    ],
+    "flags": [
+      "VOWELBIT",
+      "TAKEBIT",
+      "READBIT"
+    ],
+    "size": 3,
+    "capacity": null,
+    "value": null,
+    "text": "\"STELLAR PATROL|\nSpecial Assignment Task Force|\nID Number:  6172-531-541\"",
+    "action": null
+  },
+  {
+    "id": "PATROL-UNIFORM",
+    "desc": "Patrol uniform",
+    "fdesc": null,
+    "ldesc": "A slightly wrinkled Patrol uniform is lying here.",
+    "location": "ADVENTURER",
+    "synonyms": [
+      "UNIFORM",
+      "POCKET",
+      "SUIT"
+    ],
+    "adjectives": [
+      "PATROL",
+      "WRINKLED"
+    ],
+    "flags": [
+      "TAKEBIT",
+      "WORNBIT",
+      "WEARBIT",
+      "CONTBIT",
+      "SEARCHBIT",
+      "OPENBIT"
+    ],
+    "size": null,
+    "capacity": 10,
+    "value": null,
+    "text": null,
+    "action": "PATROL-UNIFORM-F"
+  },
+  {
+    "id": "CELERY",
+    "desc": "piece of celery",
+    "fdesc": null,
+    "ldesc": null,
+    "location": null,
+    "synonyms": [
+      "CELERY",
+      "PIECE",
+      "STALK"
+    ],
+    "adjectives": [],
+    "flags": [
+      "NDESCBIT",
+      "FOODBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CELERY-F"
+  },
+  {
+    "id": "BROCHURE",
+    "desc": "brochure",
+    "fdesc": null,
+    "ldesc": "Unfortunately, one of those stupid Blow'k-bibben-Gordo brochures is here.",
+    "location": null,
+    "synonyms": [
+      "BROCHURE",
+      "PAMPHLET",
+      "LEAFLET"
+    ],
+    "adjectives": [],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT",
+      "READBIT"
+    ],
+    "size": 4,
+    "capacity": null,
+    "value": null,
+    "text": "\"The leading export of Blow'k-bibben-Gordo is the adventure game|\n|\n          *** PLANETFALL ***|\n|\nwritten by S. Eric Meretzky.|\nBuy one today. Better yet, buy a thousand.\"",
+    "action": null
+  },
+  {
+    "id": "GLOBAL-POD",
+    "desc": "escape pod",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "POD"
+    ],
+    "adjectives": [
+      "EMERGENCY",
+      "ESCAPE",
+      "PRIMARY"
+    ],
+    "flags": [
+      "VOWELBIT",
+      "VEHBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GLOBAL-POD-F"
+  },
+  {
+    "id": "SAFETY-WEB",
+    "desc": "safety web",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "ESCAPE-POD",
+    "synonyms": [
+      "MASS",
+      "WEB",
+      "WEBBING",
+      "NET"
+    ],
+    "adjectives": [
+      "SAFETY"
+    ],
+    "flags": [
+      "CLIMBBIT",
+      "VEHBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "SAFETY-WEB-F"
+  },
+  {
+    "id": "TOWEL",
+    "desc": "towel",
+    "fdesc": null,
+    "ldesc": null,
+    "location": null,
+    "synonyms": [
+      "TOWEL"
+    ],
+    "adjectives": [],
+    "flags": [
+      "READBIT",
+      "TAKEBIT"
+    ],
+    "size": 10,
+    "capacity": null,
+    "value": null,
+    "text": "\"S.P.S. FEINSTEIN|\n  Escape Pod #42|\n   Don't Panic!\"",
+    "action": "TOWEL-F"
+  },
+  {
+    "id": "FOOD-KIT",
+    "desc": "survival kit",
+    "fdesc": null,
+    "ldesc": null,
+    "location": null,
+    "synonyms": [
+      "PROVISIONS",
+      "KIT"
+    ],
+    "adjectives": [
+      "SURVIVAL",
+      "EMERGENCY"
+    ],
+    "flags": [
+      "TAKEBIT",
+      "CONTBIT",
+      "SEARCHBIT"
+    ],
+    "size": 10,
+    "capacity": 25,
+    "value": null,
+    "text": null,
+    "action": "FOOD-KIT-F"
+  },
+  {
+    "id": "RED-GOO",
+    "desc": "blob of red goo",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "FOOD-KIT",
+    "synonyms": [
+      "GOO",
+      "BLOB",
+      "FOOD",
+      "PIE"
+    ],
+    "adjectives": [
+      "RED",
+      "CHERRY"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "FOODBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GOO-F"
+  },
+  {
+    "id": "BROWN-GOO",
+    "desc": "blob of brown goo",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "FOOD-KIT",
+    "synonyms": [
+      "GOO",
+      "BLOB",
+      "FOOD",
+      "STEW"
+    ],
+    "adjectives": [
+      "BROWN",
+      "BEEF"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "FOODBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GOO-F"
+  },
+  {
+    "id": "GREEN-GOO",
+    "desc": "blob of green goo",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "FOOD-KIT",
+    "synonyms": [
+      "GOO",
+      "BLOB",
+      "FOOD",
+      "BEANS"
+    ],
+    "adjectives": [
+      "GREEN",
+      "LIMA"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "FOODBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GOO-F"
+  },
+  {
+    "id": "POD-DOOR",
+    "desc": "escape pod bulkhead",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR",
+      "BULKHEAD"
+    ],
+    "adjectives": [
+      "EMERGENCY",
+      "ESCAPE",
+      "POD"
+    ],
+    "flags": [
+      "VOWELBIT",
+      "DOORBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "POD-DOOR-F"
+  },
+  {
+    "id": "CORRIDOR-DOOR",
+    "desc": "wide bulkhead",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR",
+      "BULKHEAD"
+    ],
+    "adjectives": [
+      "EMERGENCY",
+      "WIDE"
+    ],
+    "flags": [
+      "INVISIBLE",
+      "DOORBIT",
+      "OPENBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GANGWAY-DOOR-F"
+  },
+  {
+    "id": "GANGWAY-DOOR",
+    "desc": "narrow bulkhead",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR",
+      "BULKHEAD"
+    ],
+    "adjectives": [
+      "EMERGENCY",
+      "NARROW"
+    ],
+    "flags": [
+      "INVISIBLE",
+      "DOORBIT",
+      "OPENBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GANGWAY-DOOR-F"
+  },
+  {
+    "id": "SLOT",
+    "desc": "slot",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "SLOT"
+    ],
+    "adjectives": [
+      "SMALL"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "SLOT-F"
+  },
+  {
+    "id": "TELEPORTATION-BUTTON-1",
+    "desc": "brown button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "BROWN",
+      "FIRST"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "TELEPORTATION-BUTTON-1-F"
+  },
+  {
+    "id": "TELEPORTATION-BUTTON-2",
+    "desc": "beige button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "BEIGE",
+      "SECOND"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "TELEPORTATION-BUTTON-2-F"
+  },
+  {
+    "id": "TELEPORTATION-BUTTON-3",
+    "desc": "tan button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "TAN",
+      "THIRD"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "TELEPORTATION-BUTTON-3-F"
+  },
+  {
+    "id": "GLOBAL-SHUTTLE",
+    "desc": "shuttle car",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "CAR",
+      "SHUTTL"
+    ],
+    "adjectives": [
+      "SHUTTL"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GLOBAL-SHUTTLE-F"
+  },
+  {
+    "id": "LEVER",
+    "desc": "lever",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "LEVER"
+    ],
+    "adjectives": [],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "LEVER-F"
+  },
+  {
+    "id": "SHUTTLE-DOOR",
+    "desc": "door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [],
+    "flags": [
+      "DOORBIT",
+      "OPENBIT",
+      "INVISIBLE"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "SHUTTLE-DOOR-F"
+  },
+  {
+    "id": "BED",
+    "desc": "bed",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "BUNK",
+      "BED"
+    ],
+    "adjectives": [
+      "MULTI",
+      "TIERED",
+      "BUNK"
+    ],
+    "flags": [
+      "NDESCBIT",
+      "CLIMBBIT",
+      "VEHBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "BED-F"
+  },
+  {
+    "id": "CONFERENCE-DOOR",
+    "desc": "door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [],
+    "flags": [
+      "DOORBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CONFERENCE-DOOR-F"
+  },
+  {
+    "id": "COMBINATION-DIAL",
+    "desc": "combination dial",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "REC-AREA",
+    "synonyms": [
+      "DIAL"
+    ],
+    "adjectives": [
+      "COMBINATION"
+    ],
+    "flags": [
+      "MUNGBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "COMBINATION-DIAL-F"
+  },
+  {
+    "id": "STORAGE-WEST-DOOR",
+    "desc": "door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [],
+    "flags": [
+      "DOORBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "STORAGE-WEST-DOOR-F"
+  },
+  {
+    "id": "PADLOCK",
+    "desc": "padlock",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "MESS-CORRIDOR",
+    "synonyms": [
+      "PADLOCK",
+      "PAD",
+      "LOCK"
+    ],
+    "adjectives": [
+      "SIMPLE",
+      "STEEL",
+      "METAL"
+    ],
+    "flags": [
+      "MUNGBIT",
+      "NDESCBIT",
+      "TAKEBIT",
+      "TRYTAKEBIT"
+    ],
+    "size": 10,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "PADLOCK-F"
+  },
+  {
+    "id": "CAN",
+    "desc": "tin can",
+    "fdesc": "On a small shelf is a large, unopened tin can. It has a plain white\nlabel which reads \"Spam and Egz.\"",
+    "ldesc": "There is a large tin can, labelled \"Spam and Egz,\" sitting here.",
+    "location": "STORAGE-WEST",
+    "synonyms": [
+      "CAN"
+    ],
+    "adjectives": [
+      "LARGE",
+      "TIN",
+      "UNOPENED"
+    ],
+    "flags": [
+      "TAKEBIT"
+    ],
+    "size": 15,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CAN-F"
+  },
+  {
+    "id": "LADDER",
+    "desc": "ladder",
+    "fdesc": "A heavy-duty extendable ladder is leaning against the rear wall.",
+    "ldesc": "There is a large aluminum ladder here.",
+    "location": "STORAGE-WEST",
+    "synonyms": [
+      "LADDER"
+    ],
+    "adjectives": [
+      "HEAVY",
+      "DUTY",
+      "ALUMINUM",
+      "LARGE"
+    ],
+    "flags": [
+      "TAKEBIT"
+    ],
+    "size": 80,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "LADDER-F"
+  },
+  {
+    "id": "KITCHEN-DOOR",
+    "desc": "door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [
+      "KITCHEN"
+    ],
+    "flags": [
+      "DOORBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "KITCHEN-DOOR-F"
+  },
+  {
+    "id": "DISPENSER",
+    "desc": "dispenser unit",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "KITCHEN",
+    "synonyms": [
+      "UNIT",
+      "NICHE",
+      "MACHIN",
+      "DISPEN"
+    ],
+    "adjectives": [
+      "DISPEN"
+    ],
+    "flags": [
+      "MUNGBIT",
+      "CONTBIT",
+      "SEARCHBIT",
+      "OPENBIT",
+      "TRANSBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "DISPENSER-F"
+  },
+  {
+    "id": "CANTEEN",
+    "desc": "canteen",
+    "fdesc": "Although the room is quite barren, an octagonally-shaped\ncanteen is sitting on one of the benches.",
+    "ldesc": null,
+    "location": "MESS-HALL",
+    "synonyms": [
+      "CANTEEN"
+    ],
+    "adjectives": [
+      "OCTAGONAL"
+    ],
+    "flags": [
+      "TAKEBIT",
+      "CONTBIT",
+      "SEARCHBIT"
+    ],
+    "size": 10,
+    "capacity": 5,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "HIGH-PROTEIN",
+    "desc": "quantity of protein-rich liquid",
+    "fdesc": null,
+    "ldesc": null,
+    "location": null,
+    "synonyms": [
+      "LIQUID",
+      "FLUID",
+      "FOOD",
+      "QUANTITY"
+    ],
+    "adjectives": [
+      "BROWN",
+      "PROTEIN-RICH"
+    ],
+    "flags": [
+      "FOODBIT"
+    ],
+    "size": 5,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "HIGH-PROTEIN-F"
+  },
+  {
+    "id": "CREVICE",
+    "desc": "crevice",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "ADMIN-CORRIDOR-S",
+    "synonyms": [
+      "CREVICE",
+      "CRACK",
+      "HOLE"
+    ],
+    "adjectives": [
+      "NARROW",
+      "JAGGED"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CREVICE-F"
+  },
+  {
+    "id": "KEY",
+    "desc": "key",
+    "fdesc": "Lying at the bottom of a narrow crevice is a shiny object.",
+    "ldesc": null,
+    "location": "ADMIN-CORRIDOR-S",
+    "synonyms": [
+      "KEY",
+      "METAL",
+      "OBJECT"
+    ],
+    "adjectives": [
+      "PIECE",
+      "STEEL",
+      "IRON",
+      "SHINY"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT",
+      "TOOLBIT",
+      "INVISIBLE",
+      "TRYTAKEBIT"
+    ],
+    "size": 3,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "KEY-F"
+  },
+  {
+    "id": "RIFT",
+    "desc": "rift",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "RIFT",
+      "GULF",
+      "PRECIPICE",
+      "HOLE"
+    ],
+    "adjectives": [
+      "WIDE",
+      "DEEP",
+      "GAPING"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "RIFT-F"
+  },
+  {
+    "id": "SMALL-DESK",
+    "desc": "small desk",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "SMALL-OFFICE",
+    "synonyms": [
+      "DESK",
+      "DRAWER"
+    ],
+    "adjectives": [
+      "SMALL"
+    ],
+    "flags": [
+      "NDESCBIT",
+      "CONTBIT",
+      "SEARCHBIT"
+    ],
+    "size": null,
+    "capacity": 10,
+    "value": null,
+    "text": null,
+    "action": "DESK-F"
+  },
+  {
+    "id": "KITCHEN-CARD",
+    "desc": "kitchen access card",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "SMALL-DESK",
+    "synonyms": [
+      "CARD",
+      "CARDS"
+    ],
+    "adjectives": [
+      "KITCHEN",
+      "ACCESS"
+    ],
+    "flags": [
+      "TAKEBIT",
+      "READBIT"
+    ],
+    "size": 3,
+    "capacity": null,
+    "value": 1,
+    "text": "The card is embossed \"kitcin akses kard.\"",
+    "action": null
+  },
+  {
+    "id": "UPPER-ELEVATOR-CARD",
+    "desc": "upper elevator access card",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "SMALL-DESK",
+    "synonyms": [
+      "CARD",
+      "CARDS"
+    ],
+    "adjectives": [
+      "UPPER",
+      "ELEVATOR",
+      "ACCESS"
+    ],
+    "flags": [
+      "VOWELBIT",
+      "TAKEBIT",
+      "READBIT"
+    ],
+    "size": 3,
+    "capacity": null,
+    "value": 1,
+    "text": "The card is embossed \"upur elivaatur akses kard.\"",
+    "action": null
+  },
+  {
+    "id": "SHUTTLE-CARD",
+    "desc": "shuttle access card",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LARGE-DESK",
+    "synonyms": [
+      "CARD",
+      "CARDS"
+    ],
+    "adjectives": [
+      "SHUTTL",
+      "ACCESS"
+    ],
+    "flags": [
+      "TAKEBIT",
+      "READBIT"
+    ],
+    "size": 3,
+    "capacity": null,
+    "value": 1,
+    "text": "The card is embossed \"shutul akses kard.\"",
+    "action": null
+  },
+  {
+    "id": "LOWER-ELEVATOR-CARD",
+    "desc": "lower elevator access card",
+    "fdesc": null,
+    "ldesc": null,
+    "location": null,
+    "synonyms": [
+      "CARD",
+      "CARDS"
+    ],
+    "adjectives": [
+      "LOWER",
+      "ELEVATOR",
+      "ACCESS"
+    ],
+    "flags": [
+      "TAKEBIT",
+      "READBIT"
+    ],
+    "size": 3,
+    "capacity": null,
+    "value": 1,
+    "text": "The card is embossed \"loowur elivaatur akses kard.\"",
+    "action": null
+  },
+  {
+    "id": "LARGE-DESK",
+    "desc": "large desk",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LARGE-OFFICE",
+    "synonyms": [
+      "DESK",
+      "DRAWER"
+    ],
+    "adjectives": [
+      "LARGE",
+      "WIDE",
+      "WOODEN"
+    ],
+    "flags": [
+      "CONTBIT",
+      "SEARCHBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": 20,
+    "value": null,
+    "text": null,
+    "action": "DESK-F"
+  },
+  {
+    "id": "OIL-CAN",
+    "desc": "oil can",
+    "fdesc": "One dusty shelf, otherwise bare, holds a small oil can.",
+    "ldesc": null,
+    "location": "STORAGE-EAST",
+    "synonyms": [
+      "CAN"
+    ],
+    "adjectives": [
+      "SMALL",
+      "OIL"
+    ],
+    "flags": [
+      "VOWELBIT",
+      "TAKEBIT"
+    ],
+    "size": 10,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "OIL-CAN-F"
+  },
+  {
+    "id": "CARTON",
+    "desc": "cardboard box",
+    "fdesc": "On the floor beneath the shelves sits a small cardboard box.",
+    "ldesc": null,
+    "location": "STORAGE-EAST",
+    "synonyms": [
+      "BOX",
+      "CARTON"
+    ],
+    "adjectives": [
+      "SMALL",
+      "CARDBOARD"
+    ],
+    "flags": [
+      "TAKEBIT",
+      "CONTBIT",
+      "SEARCHBIT",
+      "OPENBIT"
+    ],
+    "size": 10,
+    "capacity": 50,
+    "value": null,
+    "text": null,
+    "action": "CARTON-F"
+  },
+  {
+    "id": "CRACKED-BOARD",
+    "desc": "cracked seventeen-centimeter fromitz board",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "CARTON",
+    "synonyms": [
+      "BOARD",
+      "BOARDS"
+    ],
+    "adjectives": [
+      "CRACKED",
+      "SEVENTEEN",
+      "CENTIMETER",
+      "FROMITZ"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT"
+    ],
+    "size": 10,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CRACKED-BOARD-F"
+  },
+  {
+    "id": "MEGAFUSE-B",
+    "desc": "B-series megafuse",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "CARTON",
+    "synonyms": [
+      "FUSE",
+      "MEGAFUSE"
+    ],
+    "adjectives": [
+      "B-SERIES",
+      "B",
+      "SERIES",
+      "MEGA"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT"
+    ],
+    "size": 5,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "MEGAFUSE-K",
+    "desc": "K-series megafuse",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "CARTON",
+    "synonyms": [
+      "FUSE",
+      "MEGAFUSE"
+    ],
+    "adjectives": [
+      "K-SERIES",
+      "K",
+      "SERIES",
+      "MEGA"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT"
+    ],
+    "size": 5,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "GOOD-BEDISTOR",
+    "desc": "good ninety-ohm bedistor",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "CARTON",
+    "synonyms": [
+      "BEDISTOR"
+    ],
+    "adjectives": [
+      "GOOD",
+      "NINETY",
+      "OHM"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT"
+    ],
+    "size": 8,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GOOD-BEDISTOR-F"
+  },
+  {
+    "id": "REACTOR-ELEVATOR-DOOR",
+    "desc": "reactor elevator door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [
+      "REACTOR",
+      "ELEVATOR"
+    ],
+    "flags": [
+      "DOORBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "REACTOR-ELEVATOR-DOOR-F"
+  },
+  {
+    "id": "FLASK",
+    "desc": "glass flask",
+    "fdesc": "Sitting on the floor below the lowest shelf is a large glass flask.",
+    "ldesc": null,
+    "location": "TOOL-ROOM",
+    "synonyms": [
+      "FLASK"
+    ],
+    "adjectives": [
+      "GLASS",
+      "LARGE",
+      "PLASTIC"
+    ],
+    "flags": [
+      "CONTBIT",
+      "SEARCHBIT",
+      "OPENBIT",
+      "TAKEBIT"
+    ],
+    "size": 10,
+    "capacity": 2,
+    "value": null,
+    "text": null,
+    "action": "FLASK-F"
+  },
+  {
+    "id": "MAGNET",
+    "desc": "curved metal bar",
+    "fdesc": "On an upper shelf is a metal bar, curved into a U-shape.",
+    "ldesc": null,
+    "location": "TOOL-ROOM",
+    "synonyms": [
+      "MAGNET",
+      "BAR"
+    ],
+    "adjectives": [
+      "CURVED",
+      "METAL",
+      "HORSESHOE"
+    ],
+    "flags": [
+      "TRYTAKEBIT",
+      "TAKEBIT"
+    ],
+    "size": 10,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "MAGNET-F"
+  },
+  {
+    "id": "PLIERS",
+    "desc": "pair of wide-nosed pliers",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "TOOL-ROOM",
+    "synonyms": [
+      "PAIR",
+      "PLIERS"
+    ],
+    "adjectives": [
+      "WIDE-NOSED",
+      "WIDE",
+      "NOSED"
+    ],
+    "flags": [
+      "TAKEBIT"
+    ],
+    "size": 15,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "CHEMICAL-DISPENSER",
+    "desc": "chemical dispenser",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "MACHINE-SHOP",
+    "synonyms": [
+      "DISPEN",
+      "MACHIN"
+    ],
+    "adjectives": [
+      "DISPEN",
+      "LARGE",
+      "CHEMICAL"
+    ],
+    "flags": [
+      "MUNGBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHEMICAL-DISPENSER-F"
+  },
+  {
+    "id": "RED-BUTTON",
+    "desc": "red button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "MACHINE-SHOP",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "RED"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHEM-BUTTON-F"
+  },
+  {
+    "id": "BLUE-BUTTON",
+    "desc": "blue button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "MACHINE-SHOP",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "BLUE"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHEM-BUTTON-F"
+  },
+  {
+    "id": "GREEN-BUTTON",
+    "desc": "green button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "MACHINE-SHOP",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "GREEN"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHEM-BUTTON-F"
+  },
+  {
+    "id": "YELLOW-BUTTON",
+    "desc": "yellow button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "MACHINE-SHOP",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "YELLOW"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHEM-BUTTON-F"
+  },
+  {
+    "id": "GRAY-BUTTON",
+    "desc": "gray button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "MACHINE-SHOP",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "GRAY",
+      "GREY"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHEM-BUTTON-F"
+  },
+  {
+    "id": "BROWN-BUTTON",
+    "desc": "brown button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "MACHINE-SHOP",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "BROWN"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHEM-BUTTON-F"
+  },
+  {
+    "id": "BLACK-BUTTON",
+    "desc": "black button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "MACHINE-SHOP",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "BLACK"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHEM-BUTTON-F"
+  },
+  {
+    "id": "ROUND-WHITE-BUTTON",
+    "desc": "round white button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "MACHINE-SHOP",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "WHITE",
+      "ROUND"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHEM-BUTTON-F"
+  },
+  {
+    "id": "SQUARE-WHITE-BUTTON",
+    "desc": "square white button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "MACHINE-SHOP",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "SQUARE",
+      "WHITE"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHEM-BUTTON-F"
+  },
+  {
+    "id": "FLOYD",
+    "desc": "multiple purpose robot",
+    "fdesc": "Only one robot, about four feet high, looks even remotely close to being\nin working order.",
+    "ldesc": null,
+    "location": "ROBOT-SHOP",
+    "synonyms": [
+      "FLOYD",
+      "COMPAR",
+      "ROBOT",
+      "COMPAN"
+    ],
+    "adjectives": [
+      "MULTIP",
+      "PURPOS",
+      "DIM-",
+      "DIM",
+      "WITTED"
+    ],
+    "flags": [
+      "CONTBIT",
+      "SEARCHBIT",
+      "TRANSBIT",
+      "OPENBIT",
+      "LIGHTBIT"
+    ],
+    "size": null,
+    "capacity": 5,
+    "value": null,
+    "text": null,
+    "action": "FLOYD-F"
+  },
+  {
+    "id": "DEAD-FLOYD",
+    "desc": "mangled robot",
+    "fdesc": null,
+    "ldesc": "Your former companion, Floyd, is lying on the ground in a pool of oil.",
+    "location": null,
+    "synonyms": [
+      "FLOYD",
+      "ROBOT",
+      "COMPAN"
+    ],
+    "adjectives": [
+      "MANGLE",
+      "DEAD",
+      "FORMER"
+    ],
+    "flags": [],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "DEAD-FLOYD-F"
+  },
+  {
+    "id": "UPPER-ELEVATOR-DOOR",
+    "desc": "blue door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [
+      "UPPER",
+      "ELEVATOR",
+      "BLUE"
+    ],
+    "flags": [
+      "NDESCBIT",
+      "DOORBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "UPPER-ELEVATOR-DOOR-F"
+  },
+  {
+    "id": "LOWER-ELEVATOR-DOOR",
+    "desc": "red door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [
+      "RED",
+      "LOWER",
+      "ELEVATOR",
+      "METAL"
+    ],
+    "flags": [
+      "NDESCBIT",
+      "DOORBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "LOWER-ELEVATOR-DOOR-F"
+  },
+  {
+    "id": "BLUE-ELEVATOR-BUTTON",
+    "desc": "blue button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "ELEVATOR-LOBBY",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "BLUE",
+      "NORTH"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "BLUE-ELEVATOR-BUTTON-F"
+  },
+  {
+    "id": "RED-ELEVATOR-BUTTON",
+    "desc": "red button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "ELEVATOR-LOBBY",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "RED",
+      "SOUTH"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "RED-ELEVATOR-BUTTON-F"
+  },
+  {
+    "id": "ELEVATOR-BUTTON",
+    "desc": "button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "ELEVATOR-BUTTON-F"
+  },
+  {
+    "id": "HELICOPTER-OBJECT",
+    "desc": "large vehicle",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "VEHICLE",
+      "HELICOPTER"
+    ],
+    "adjectives": [
+      "LARGE"
+    ],
+    "flags": [
+      "VEHBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "HELICOPTER-OBJECT-F"
+  },
+  {
+    "id": "RECEIVE-CONSOLE",
+    "desc": "communications receive console",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "COMM-ROOM",
+    "synonyms": [
+      "CONSOLE",
+      "CONTRO"
+    ],
+    "adjectives": [
+      "COMMUNICATIONS",
+      "RECEIVE",
+      "LEFT",
+      "FIRST"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "PLAYBACK-BUTTON",
+    "desc": "glowing button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "COMM-ROOM",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "GLOWIN",
+      "PLAYBA"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "PLAYBACK-BUTTON-F"
+  },
+  {
+    "id": "SEND-CONSOLE",
+    "desc": "communication send console",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "COMM-ROOM",
+    "synonyms": [
+      "CONSOLE",
+      "CONTRO"
+    ],
+    "adjectives": [
+      "COMMUNICATIONS",
+      "SEND",
+      "RIGHT",
+      "SECOND"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "COMM-SCREEN",
+    "desc": "screen",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "COMM-ROOM",
+    "synonyms": [
+      "COMMUNICATIONS",
+      "MESSAGE",
+      "SCREEN"
+    ],
+    "adjectives": [],
+    "flags": [
+      "NDESCBIT",
+      "READBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": "\"Tuu enee ship uv xe Sekund Galaktik Yuunyun: Planitwiid plaag haz struk\nentiir popyuulaashun. Tiim iz kritikul. Eemurjensee asistins reekwestid.\n<reepeet mesij>\"",
+    "action": null
+  },
+  {
+    "id": "FUNNEL-HOLE",
+    "desc": "funnel-shaped hole",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "COMM-ROOM",
+    "synonyms": [
+      "HOLE"
+    ],
+    "adjectives": [
+      "FUNNEL",
+      "SHAPED"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "CHEMICAL-FLUID",
+    "desc": "quantity of chemical fluid",
+    "fdesc": null,
+    "ldesc": null,
+    "location": null,
+    "synonyms": [
+      "QUANTITY",
+      "LIQUID",
+      "FLUID",
+      "CHEMICAL"
+    ],
+    "adjectives": [
+      "MILKY",
+      "WHITE",
+      "CHEMICAL"
+    ],
+    "flags": [],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CHEMICAL-FLUID-F"
+  },
+  {
+    "id": "LAZARUS-PART",
+    "desc": "medical robot breastplate",
+    "fdesc": null,
+    "ldesc": null,
+    "location": null,
+    "synonyms": [
+      "LAZARUS",
+      "PART",
+      "BREAST",
+      "PLATE"
+    ],
+    "adjectives": [
+      "MEDICAL",
+      "BREAST"
+    ],
+    "flags": [
+      "TAKEBIT"
+    ],
+    "size": 35,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "RED-SPOOL",
+    "desc": "red spool",
+    "fdesc": "Lying on one of the beds is a small red spool.",
+    "ldesc": null,
+    "location": "INFIRMARY",
+    "synonyms": [
+      "SPOOL",
+      "SPOOLS",
+      "OBJECT"
+    ],
+    "adjectives": [
+      "RED",
+      "SMALL"
+    ],
+    "flags": [
+      "TAKEBIT",
+      "ACIDBIT",
+      "READBIT"
+    ],
+    "size": 3,
+    "capacity": null,
+    "value": null,
+    "text": "The spool is labelled \"Simptumz uv Xe Dizeez.\"",
+    "action": "RED-SPOOL-F"
+  },
+  {
+    "id": "MEDICINE-BOTTLE",
+    "desc": "medicine bottle",
+    "fdesc": "On a low shelf is a translucent bottle with a small white label.",
+    "ldesc": null,
+    "location": "INFIRMARY",
+    "synonyms": [
+      "BOTTLE",
+      "LABEL"
+    ],
+    "adjectives": [
+      "MEDICINE",
+      "SMALL",
+      "WHITE",
+      "TRANSL"
+    ],
+    "flags": [
+      "CONTBIT",
+      "SEARCHBIT",
+      "TAKEBIT",
+      "TRANSBIT",
+      "READBIT"
+    ],
+    "size": 7,
+    "capacity": 7,
+    "value": null,
+    "text": "\"Dizeez supreshun medisin -- eksperimentul\"",
+    "action": null
+  },
+  {
+    "id": "MEDICINE",
+    "desc": "quantity of medicine",
+    "fdesc": "At the bottom of the bottle is a small quantity of medicine.",
+    "ldesc": null,
+    "location": "MEDICINE-BOTTLE",
+    "synonyms": [
+      "MEDICINE"
+    ],
+    "adjectives": [
+      "SMALL",
+      "QUANTITY",
+      "EXPERIMENTAL"
+    ],
+    "flags": [
+      "FOODBIT"
+    ],
+    "size": 7,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "MEDICINE-F"
+  },
+  {
+    "id": "ACHILLES",
+    "desc": "broken robot",
+    "fdesc": null,
+    "ldesc": "Lying face down at the bottom of the stairs is a motionless robot. It\nappears to be damaged beyond repair.",
+    "location": "REPAIR-ROOM",
+    "synonyms": [
+      "ROBOT",
+      "ACHILLES"
+    ],
+    "adjectives": [
+      "BROKEN",
+      "DEAD"
+    ],
+    "flags": [],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "ROBOT-HOLE",
+    "desc": "small doorway",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "REPAIR-ROOM",
+    "synonyms": [
+      "DOOR",
+      "DOORWA",
+      "HOLE"
+    ],
+    "adjectives": [
+      "SMALL",
+      "VERY"
+    ],
+    "flags": [
+      "NDESCBIT",
+      "TRANSBIT",
+      "CONTBIT"
+    ],
+    "size": null,
+    "capacity": 0,
+    "value": null,
+    "text": null,
+    "action": "ROBOT-HOLE-F"
+  },
+  {
+    "id": "GOOD-BOARD",
+    "desc": "shiny seventeen-centimeter fromitz board",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "ROBOT-HOLE",
+    "synonyms": [
+      "BOARD",
+      "BOARDS"
+    ],
+    "adjectives": [
+      "SHINY",
+      "GOOD",
+      "SEVENTEEN",
+      "CENTIMETER",
+      "FROMITZ"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "INVISIBLE",
+      "NDESCBIT"
+    ],
+    "size": 10,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GOOD-BOARD-F"
+  },
+  {
+    "id": "ACCESS-PANEL",
+    "desc": "access panel",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "PLANETARY-DEFENSE",
+    "synonyms": [
+      "PANEL",
+      "DOOR",
+      "SOCKET"
+    ],
+    "adjectives": [
+      "SMALL",
+      "ACCESS",
+      "REPAIR"
+    ],
+    "flags": [
+      "VOWELBIT",
+      "NDESCBIT",
+      "CONTBIT",
+      "SEARCHBIT"
+    ],
+    "size": null,
+    "capacity": 40,
+    "value": null,
+    "text": null,
+    "action": "ACCESS-PANEL-F"
+  },
+  {
+    "id": "FIRST-BOARD",
+    "desc": "first seventeen-centimeter fromitz board",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "ACCESS-PANEL",
+    "synonyms": [
+      "BOARD",
+      "BOARDS"
+    ],
+    "adjectives": [
+      "FIRST",
+      "SEVENTEEN",
+      "CENTIMETER",
+      "FROMITZ"
+    ],
+    "flags": [],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "BOARD-F"
+  },
+  {
+    "id": "FOURTH-BOARD",
+    "desc": "fourth seventeen-centimeter fromitz board",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "ACCESS-PANEL",
+    "synonyms": [
+      "BOARD",
+      "BOARDS"
+    ],
+    "adjectives": [
+      "FOURTH",
+      "SEVENTEEN",
+      "CENTIMETER",
+      "FROMITZ"
+    ],
+    "flags": [],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "BOARD-F"
+  },
+  {
+    "id": "THIRD-BOARD",
+    "desc": "third seventeen-centimeter fromitz board",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "ACCESS-PANEL",
+    "synonyms": [
+      "BOARD",
+      "BOARDS"
+    ],
+    "adjectives": [
+      "THIRD",
+      "SEVENTEEN",
+      "CENTIMETER",
+      "FROMITZ"
+    ],
+    "flags": [],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "BOARD-F"
+  },
+  {
+    "id": "SECOND-BOARD",
+    "desc": "second seventeen-centimeter fromitz board",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "ACCESS-PANEL",
+    "synonyms": [
+      "BOARD",
+      "BOARDS"
+    ],
+    "adjectives": [
+      "SECOND",
+      "SEVENTEEN",
+      "CENTIMETER",
+      "FROMITZ"
+    ],
+    "flags": [
+      "TRYTAKEBIT",
+      "TAKEBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "BOARD-F"
+  },
+  {
+    "id": "FRIED-BOARD",
+    "desc": "fried seventeen-centimeter fromitz board",
+    "fdesc": null,
+    "ldesc": null,
+    "location": null,
+    "synonyms": [
+      "BOARD",
+      "BOARDS"
+    ],
+    "adjectives": [
+      "FRIED",
+      "SEVENTEEN",
+      "CENTIMETER",
+      "FROMITZ"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT"
+    ],
+    "size": 10,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "FRIED-BOARD-F"
+  },
+  {
+    "id": "CUBE",
+    "desc": "large metal cube",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "PLANETARY-COURSE-CONTROL",
+    "synonyms": [
+      "CUBE",
+      "LID",
+      "SOCKET"
+    ],
+    "adjectives": [
+      "LARGE",
+      "METAL"
+    ],
+    "flags": [
+      "MUNGBIT",
+      "NDESCBIT",
+      "CONTBIT",
+      "SEARCHBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CUBE-F"
+  },
+  {
+    "id": "BAD-BEDISTOR",
+    "desc": "fused ninety-ohm bedistor",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "CUBE",
+    "synonyms": [
+      "BEDISTOR"
+    ],
+    "adjectives": [
+      "FUSED",
+      "NINETY",
+      "OHM"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TRYTAKEBIT",
+      "TAKEBIT"
+    ],
+    "size": 8,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "BAD-BEDISTOR-F"
+  },
+  {
+    "id": "GREEN-SPOOL",
+    "desc": "green spool",
+    "fdesc": "You catch a glimpse of a small object nestled among the dust.",
+    "ldesc": null,
+    "location": "LIBRARY-LOBBY",
+    "synonyms": [
+      "SPOOL",
+      "SPOOLS",
+      "OBJECT"
+    ],
+    "adjectives": [
+      "GREEN",
+      "SMALL"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT",
+      "READBIT"
+    ],
+    "size": 3,
+    "capacity": null,
+    "value": null,
+    "text": "The spool is labelled \"Helikoptur Opuraateeng Manyuuwul.\"",
+    "action": "GREEN-SPOOL-F"
+  },
+  {
+    "id": "TERMINAL",
+    "desc": "terminal",
+    "fdesc": "Sitting on a wide table is a machine of sorts, consisting of a video\nscreen and a keyboard. It is currently turned off.",
+    "ldesc": "On the table is a computer terminal.",
+    "location": "LIBRARY-LOBBY",
+    "synonyms": [
+      "TERMINAL",
+      "KEYBOARD",
+      "SCREEN",
+      "MACHIN"
+    ],
+    "adjectives": [
+      "COMPUTER",
+      "VIDEO"
+    ],
+    "flags": [
+      "LIGHTBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "TERMINAL-F"
+  },
+  {
+    "id": "SPOOL-READER",
+    "desc": "microfilm reader",
+    "fdesc": "On the desk is a machine with a screen and a small circular opening. It\nseems to be turned off.",
+    "ldesc": "There is a microfilm reader on one of the tables.",
+    "location": "LIBRARY",
+    "synonyms": [
+      "READER",
+      "SCREEN",
+      "OPENIN",
+      "MACHIN"
+    ],
+    "adjectives": [
+      "MICROF",
+      "SMALL",
+      "CIRCUL"
+    ],
+    "flags": [
+      "LIGHTBIT",
+      "CONTBIT",
+      "SEARCHBIT",
+      "OPENBIT"
+    ],
+    "size": null,
+    "capacity": 3,
+    "value": null,
+    "text": null,
+    "action": "SPOOL-READER-F"
+  },
+  {
+    "id": "CRYO-ELEVATOR-DOOR",
+    "desc": "cryo-elevator door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [
+      "CRYO-ELEVATOR",
+      "ELEVATOR"
+    ],
+    "flags": [
+      "NDESCBIT",
+      "INVISIBLE"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "PRINT-OUT",
+    "desc": "pile of computer output",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "COMPUTER-ROOM",
+    "synonyms": [
+      "PILE",
+      "PAPER",
+      "OUTPUT",
+      "PRINTOUT"
+    ],
+    "adjectives": [
+      "COMPUTER"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT",
+      "READBIT"
+    ],
+    "size": 20,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "PRINT-OUT-F"
+  },
+  {
+    "id": "MINI-CARD",
+    "desc": "miniaturization access card",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "BIO-LOCK-EAST",
+    "synonyms": [
+      "CARD",
+      "CARDS"
+    ],
+    "adjectives": [
+      "MINIAT",
+      "MINI",
+      "ACCESS"
+    ],
+    "flags": [
+      "TAKEBIT",
+      "NDESCBIT",
+      "INVISIBLE",
+      "READBIT"
+    ],
+    "size": 3,
+    "capacity": null,
+    "value": 1,
+    "text": "The card is embossed \"minitcurizaashun akses kard.\"",
+    "action": "MINI-CARD-F"
+  },
+  {
+    "id": "LAB-UNIFORM",
+    "desc": "lab uniform",
+    "fdesc": "Hanging on a rack is a pale blue lab uniform. Sewn onto its pocket is a\nnon-descript logo.",
+    "ldesc": null,
+    "location": "LAB-STORAGE",
+    "synonyms": [
+      "UNIFORM",
+      "SUIT",
+      "POCKET",
+      "LOGO"
+    ],
+    "adjectives": [
+      "PALE",
+      "BLUE",
+      "LAB"
+    ],
+    "flags": [
+      "TAKEBIT",
+      "CONTBIT",
+      "SEARCHBIT",
+      "WEARBIT"
+    ],
+    "size": 10,
+    "capacity": 5,
+    "value": null,
+    "text": null,
+    "action": "LAB-UNIFORM-F"
+  },
+  {
+    "id": "TELEPORTATION-CARD",
+    "desc": "teleportation access card",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LAB-UNIFORM",
+    "synonyms": [
+      "CARD",
+      "CARDS"
+    ],
+    "adjectives": [
+      "TELEPO",
+      "ACCESS"
+    ],
+    "flags": [
+      "TAKEBIT",
+      "READBIT"
+    ],
+    "size": 3,
+    "capacity": null,
+    "value": null,
+    "text": "The card is embossed \"teliportaashun akses kard.\"",
+    "action": null
+  },
+  {
+    "id": "COMBINATION-PAPER",
+    "desc": "piece of paper",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LAB-UNIFORM",
+    "synonyms": [
+      "PIECE",
+      "PAPER"
+    ],
+    "adjectives": [],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT",
+      "READBIT"
+    ],
+    "size": 2,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "COMBINATION-PAPER-F"
+  },
+  {
+    "id": "BIO-DOOR-EAST",
+    "desc": "lab door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [
+      "LAB"
+    ],
+    "flags": [
+      "DOORBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "BIO-DOOR-EAST-F"
+  },
+  {
+    "id": "BIO-DOOR-WEST",
+    "desc": "bio-lock door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [
+      "BIO-LOCK"
+    ],
+    "flags": [
+      "DOORBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "BIO-DOOR-WEST-F"
+  },
+  {
+    "id": "RAD-DOOR-EAST",
+    "desc": "lab door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [
+      "LAB"
+    ],
+    "flags": [
+      "DOORBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "RAD-DOOR-EAST-F"
+  },
+  {
+    "id": "RAD-DOOR-WEST",
+    "desc": "radiation-lock door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [
+      "RADIATION"
+    ],
+    "flags": [
+      "DOORBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "RAD-DOOR-WEST-F"
+  },
+  {
+    "id": "BROWN-SPOOL",
+    "desc": "brown spool",
+    "fdesc": "Sitting on a long table is a small brown spool.",
+    "ldesc": null,
+    "location": "RADIATION-LAB",
+    "synonyms": [
+      "SPOOL",
+      "SPOOLS",
+      "OBJECT"
+    ],
+    "adjectives": [
+      "BROWN",
+      "SMALL"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT",
+      "READBIT"
+    ],
+    "size": 3,
+    "capacity": null,
+    "value": null,
+    "text": "The spool is labelled \"Instrukshunz foor Reepaareeng Reepaar Roobots.\"",
+    "action": null
+  },
+  {
+    "id": "LAMP",
+    "desc": "portable lamp",
+    "fdesc": "There is a powerful portable lamp here, currently off.",
+    "ldesc": null,
+    "location": "RADIATION-LAB",
+    "synonyms": [
+      "LAMP",
+      "LANTERN",
+      "LIGHT"
+    ],
+    "adjectives": [
+      "POWERFUL",
+      "PORTABLE"
+    ],
+    "flags": [
+      "TAKEBIT"
+    ],
+    "size": 20,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "LAMP-F"
+  },
+  {
+    "id": "OFFICE-DOOR",
+    "desc": "office door",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "DOOR"
+    ],
+    "adjectives": [
+      "OFFICE"
+    ],
+    "flags": [
+      "VOWELBIT",
+      "DOORBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "LAB-DESK",
+    "desc": "desk",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LAB-OFFICE",
+    "synonyms": [
+      "DESK"
+    ],
+    "adjectives": [
+      "LARGE",
+      "MESSY"
+    ],
+    "flags": [
+      "CONTBIT",
+      "SEARCHBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": 10,
+    "value": null,
+    "text": null,
+    "action": "LAB-DESK-F"
+  },
+  {
+    "id": "GAS-MASK",
+    "desc": "gas mask",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LAB-DESK",
+    "synonyms": [
+      "MASK"
+    ],
+    "adjectives": [
+      "GAS"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT",
+      "WEARBIT"
+    ],
+    "size": 10,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "MEMO",
+    "desc": "memo",
+    "fdesc": null,
+    "ldesc": null,
+    "location": null,
+    "synonyms": [
+      "MEMO"
+    ],
+    "adjectives": [],
+    "flags": [
+      "READBIT",
+      "ACIDBIT",
+      "TAKEBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": "\"Memoo tuu awl lab pursunel: Duu tuu xe daanjuris naatshur uv xe biioo\neksperiments, an eemurjensee sistum haz bin instawld. Xis sistum wud flud\nxe entiir Biioo Lab wic aa dedlee fungasiid. Propur preecawshunz shud bee\ntaakin if xis sistum iz evur yuuzd.\"",
+    "action": null
+  },
+  {
+    "id": "LIGHT-BUTTON",
+    "desc": "white button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LAB-OFFICE",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "WHITE",
+      "LIGHT"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "LIGHT-BUTTON-F"
+  },
+  {
+    "id": "DARK-BUTTON",
+    "desc": "black button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LAB-OFFICE",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "BLACK",
+      "DARK",
+      "DARKNESS"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "DARK-BUTTON-F"
+  },
+  {
+    "id": "FUNGICIDE-BUTTON",
+    "desc": "red button",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LAB-OFFICE",
+    "synonyms": [
+      "BUTTON"
+    ],
+    "adjectives": [
+      "RED",
+      "FUNGICIDE",
+      "EMERGENCY"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "FUNGICIDE-BUTTON-F"
+  },
+  {
+    "id": "RELAY",
+    "desc": "micro-relay",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "STRIP-NEAR-RELAY",
+    "synonyms": [
+      "MICRO",
+      "RELAY"
+    ],
+    "adjectives": [
+      "MICRO"
+    ],
+    "flags": [
+      "NDESCBIT",
+      "TRANSBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "RELAY-F"
+  },
+  {
+    "id": "SPECK",
+    "desc": "speck",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "RELAY",
+    "synonyms": [
+      "SPECK",
+      "BOULDER",
+      "IMPURITY"
+    ],
+    "adjectives": [
+      "BLUE"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "LASER",
+    "desc": "laser",
+    "fdesc": "A small device, labelled \"Akmee Portabul Laazur\", is resting on one of\nthe lower shelves.",
+    "ldesc": null,
+    "location": "TOOL-ROOM",
+    "synonyms": [
+      "DEVICE",
+      "LASER",
+      "UNIT",
+      "DEPRES"
+    ],
+    "adjectives": [
+      "PORTABLE",
+      "ACME"
+    ],
+    "flags": [
+      "MUNGBIT",
+      "TAKEBIT",
+      "OPENBIT",
+      "TRANSBIT",
+      "CONTBIT"
+    ],
+    "size": 25,
+    "capacity": 5,
+    "value": null,
+    "text": null,
+    "action": "LASER-F"
+  },
+  {
+    "id": "LASER-DIAL",
+    "desc": "laser setting dial",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LASER",
+    "synonyms": [
+      "DIAL"
+    ],
+    "adjectives": [
+      "LASER",
+      "SETTING"
+    ],
+    "flags": [
+      "MUNGBIT",
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "LASER-DIAL-F"
+  },
+  {
+    "id": "OLD-BATTERY",
+    "desc": "old battery",
+    "fdesc": null,
+    "ldesc": "There is a worn-out laser battery here.",
+    "location": "LASER",
+    "synonyms": [
+      "BATTERY"
+    ],
+    "adjectives": [
+      "LASER",
+      "WORN-OUT",
+      "OLD"
+    ],
+    "flags": [
+      "VOWELBIT",
+      "ACIDBIT",
+      "TAKEBIT"
+    ],
+    "size": 5,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "NEW-BATTERY",
+    "desc": "new battery",
+    "fdesc": "The odds and ends on the shelves include a small round object, which closer\ninspection reveals to be a fresh laser battery.",
+    "ldesc": null,
+    "location": "LAB-STORAGE",
+    "synonyms": [
+      "OBJECT",
+      "BATTERY"
+    ],
+    "adjectives": [
+      "LASER",
+      "SMALL",
+      "ROUND",
+      "FRESH",
+      "NEW"
+    ],
+    "flags": [
+      "ACIDBIT",
+      "TAKEBIT"
+    ],
+    "size": 5,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "STRIP",
+    "desc": "silicon strip",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "LOCAL-GLOBALS",
+    "synonyms": [
+      "STRIP",
+      "SIDE",
+      "EDGE"
+    ],
+    "adjectives": [
+      "SILICON"
+    ],
+    "flags": [
+      "NDESCBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "STRIP-F"
+  }
+]

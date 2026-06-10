@@ -1,0 +1,3263 @@
+[
+  {
+    "verb": "BRIEF",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-BRIEF",
+    "pre_handler": null
+  },
+  {
+    "verb": "SUPER",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-SUPER-BRIEF",
+    "pre_handler": null
+  },
+  {
+    "verb": "DIAGNOSE",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-DIAGNOSE",
+    "pre_handler": null
+  },
+  {
+    "verb": "INVENTORY",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-INVENTORY",
+    "pre_handler": null
+  },
+  {
+    "verb": "QUIT",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-QUIT",
+    "pre_handler": null
+  },
+  {
+    "verb": "RESTAR",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-RESTART",
+    "pre_handler": null
+  },
+  {
+    "verb": "RESTOR",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-RESTORE",
+    "pre_handler": null
+  },
+  {
+    "verb": "SAVE",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-SAVE",
+    "pre_handler": null
+  },
+  {
+    "verb": "SCORE",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-SCORE",
+    "pre_handler": null
+  },
+  {
+    "verb": "SCRIPT",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-SCRIPT",
+    "pre_handler": null
+  },
+  {
+    "verb": "UNSCRIPT",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-UNSCRIPT",
+    "pre_handler": null
+  },
+  {
+    "verb": "$VERIFY",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-$VERIFY",
+    "pre_handler": null
+  },
+  {
+    "verb": "$VERIFY",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-$VERIFY",
+    "pre_handler": null
+  },
+  {
+    "verb": "VERSION",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-VERSION",
+    "pre_handler": null
+  },
+  {
+    "verb": "VERBOSE",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-VERBOSE",
+    "pre_handler": null
+  },
+  {
+    "verb": "\\#",
+    "pattern": [
+      "RANDOM",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-$RANDOM",
+    "pre_handler": null
+  },
+  {
+    "verb": "\\#",
+    "pattern": [
+      "COMMAND"
+    ],
+    "object_filters": [],
+    "handler": "V-$COMMAND",
+    "pre_handler": null
+  },
+  {
+    "verb": "\\#",
+    "pattern": [
+      "RECORD"
+    ],
+    "object_filters": [],
+    "handler": "V-$RECORD",
+    "pre_handler": null
+  },
+  {
+    "verb": "\\#",
+    "pattern": [
+      "UNRECORD"
+    ],
+    "object_filters": [],
+    "handler": "V-$UNRECORD",
+    "pre_handler": null
+  },
+  {
+    "verb": "AGAIN",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-AGAIN",
+    "pre_handler": null
+  },
+  {
+    "verb": "ANSWER",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-ANSWER",
+    "pre_handler": null
+  },
+  {
+    "verb": "ANSWER",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-REPLY",
+    "pre_handler": null
+  },
+  {
+    "verb": "APPLY",
+    "pattern": [
+      "OBJECT",
+      "TO",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUT",
+    "pre_handler": "PRE-PUT"
+  },
+  {
+    "verb": "ATTACK",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-ATTACK",
+    "pre_handler": null
+  },
+  {
+    "verb": "ATTACK",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HAVE"
+      ]
+    ],
+    "handler": "V-ATTACK",
+    "pre_handler": null
+  },
+  {
+    "verb": "BOARD",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "VEHBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-BOARD",
+    "pre_handler": "PRE-BOARD"
+  },
+  {
+    "verb": "CLIMB",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-GO-UP",
+    "pre_handler": null
+  },
+  {
+    "verb": "CLIMB",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "CLIMBBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-CLIMB-ON",
+    "pre_handler": null
+  },
+  {
+    "verb": "CLIMB",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "RMUNGBIT"
+      ]
+    ],
+    "handler": "V-CLIMB-UP",
+    "pre_handler": null
+  },
+  {
+    "verb": "CLIMB",
+    "pattern": [
+      "TO",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-CLIMB-UP",
+    "pre_handler": null
+  },
+  {
+    "verb": "CLIMB",
+    "pattern": [
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-THROUGH",
+    "pre_handler": null
+  },
+  {
+    "verb": "CLIMB",
+    "pattern": [
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "CLIMBBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-CLIMB-DOWN",
+    "pre_handler": null
+  },
+  {
+    "verb": "CLIMB",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "CLIMBBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-CLIMB-FOO",
+    "pre_handler": null
+  },
+  {
+    "verb": "CLIMB",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "CLIMBBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-BOARD",
+    "pre_handler": "PRE-BOARD"
+  },
+  {
+    "verb": "SIT",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-SIT",
+    "pre_handler": null
+  },
+  {
+    "verb": "SIT",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "VEHBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-CLIMB-ON",
+    "pre_handler": null
+  },
+  {
+    "verb": "SIT",
+    "pattern": [
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "RMUNGBIT"
+      ]
+    ],
+    "handler": "V-SIT-DOWN",
+    "pre_handler": null
+  },
+  {
+    "verb": "SIT",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "VEHBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-BOARD",
+    "pre_handler": "PRE-BOARD"
+  },
+  {
+    "verb": "SIT",
+    "pattern": [
+      "OBJECT",
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE",
+        "TAKE"
+      ]
+    ],
+    "handler": "V-PUT",
+    "pre_handler": "PRE-PUT"
+  },
+  {
+    "verb": "SIT",
+    "pattern": [
+      "OBJECT",
+      "UNDER",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE",
+        "TAKE"
+      ]
+    ],
+    "handler": "V-PUT-UNDER",
+    "pre_handler": "PRE-PUT-UNDER"
+  },
+  {
+    "verb": "SIT",
+    "pattern": [
+      "OBJECT",
+      "OVER",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "SIT",
+    "pattern": [
+      "OBJECT",
+      "NEAR",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "SIT",
+    "pattern": [
+      "OBJECT",
+      "ACROSS",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SPAN",
+    "pre_handler": null
+  },
+  {
+    "verb": "STAND",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-STAND",
+    "pre_handler": null
+  },
+  {
+    "verb": "STAND",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "RMUNGBIT"
+      ]
+    ],
+    "handler": "V-STAND",
+    "pre_handler": null
+  },
+  {
+    "verb": "STAND",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-STAND-ON",
+    "pre_handler": null
+  },
+  {
+    "verb": "CLOSE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-CLOSE",
+    "pre_handler": null
+  },
+  {
+    "verb": "CURSE",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-CURSE",
+    "pre_handler": null
+  },
+  {
+    "verb": "DISEMBARK",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "RMUNGBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-DISEMBARK",
+    "pre_handler": null
+  },
+  {
+    "verb": "DROP",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-DROP",
+    "pre_handler": null
+  },
+  {
+    "verb": "DROP",
+    "pattern": [
+      "OBJECT",
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-PUT",
+    "pre_handler": "PRE-PUT"
+  },
+  {
+    "verb": "DROP",
+    "pattern": [
+      "OBJECT",
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-PUT",
+    "pre_handler": "PRE-PUT"
+  },
+  {
+    "verb": "DROP",
+    "pattern": [
+      "OBJECT",
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-PUT-ON",
+    "pre_handler": "PRE-PUT"
+  },
+  {
+    "verb": "EAT",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "FOODBIT"
+      ],
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-EAT",
+    "pre_handler": null
+  },
+  {
+    "verb": "EAT",
+    "pattern": [
+      "FROM",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-EAT-FROM",
+    "pre_handler": null
+  },
+  {
+    "verb": "ENTER",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-ENTER",
+    "pre_handler": null
+  },
+  {
+    "verb": "ENTER",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-THROUGH",
+    "pre_handler": null
+  },
+  {
+    "verb": "EXIT",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-EXIT",
+    "pre_handler": null
+  },
+  {
+    "verb": "EXIT",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-EXIT",
+    "pre_handler": null
+  },
+  {
+    "verb": "EXAMINE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "MANY"
+      ]
+    ],
+    "handler": "V-EXAMINE",
+    "pre_handler": "PRE-EXAMINE"
+  },
+  {
+    "verb": "EXAMINE",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "IN-ROOM",
+        "ON-GROUND",
+        "MANY"
+      ]
+    ],
+    "handler": "V-LOOK-INSIDE",
+    "pre_handler": null
+  },
+  {
+    "verb": "EXAMINE",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "IN-ROOM",
+        "ON-GROUND",
+        "MANY"
+      ]
+    ],
+    "handler": "V-LOOK-INSIDE",
+    "pre_handler": null
+  },
+  {
+    "verb": "FIND",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-FIND",
+    "pre_handler": null
+  },
+  {
+    "verb": "FIRE",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD"
+      ]
+    ],
+    "handler": "V-SZAP",
+    "pre_handler": "PRE-SZAP"
+  },
+  {
+    "verb": "FIRE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-ZAP",
+    "pre_handler": "PRE-ZAP"
+  },
+  {
+    "verb": "FIRE",
+    "pattern": [
+      "AT",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-ZAP",
+    "pre_handler": "PRE-ZAP"
+  },
+  {
+    "verb": "FIRE",
+    "pattern": [
+      "OBJECT",
+      "AT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD"
+      ]
+    ],
+    "handler": "V-ZAP",
+    "pre_handler": "PRE-ZAP"
+  },
+  {
+    "verb": "FOLLOW",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ]
+    ],
+    "handler": "V-FOLLOW",
+    "pre_handler": null
+  },
+  {
+    "verb": "FLUSH",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-FLUSH",
+    "pre_handler": null
+  },
+  {
+    "verb": "FLY",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-FLY",
+    "pre_handler": null
+  },
+  {
+    "verb": "FLY",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-FLY",
+    "pre_handler": null
+  },
+  {
+    "verb": "GIVE",
+    "pattern": [
+      "OBJECT",
+      "TO",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "MANY",
+        "HELD",
+        "HAVE"
+      ],
+      [
+        "FIND",
+        "ACTORBIT"
+      ]
+    ],
+    "handler": "V-GIVE",
+    "pre_handler": "PRE-GIVE"
+  },
+  {
+    "verb": "GIVE",
+    "pattern": [
+      "OBJECT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ],
+      [
+        "ON-GROUND"
+      ],
+      [
+        "MANY",
+        "HELD",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-SGIVE",
+    "pre_handler": "PRE-SGIVE"
+  },
+  {
+    "verb": "HELLO",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-HELLO",
+    "pre_handler": null
+  },
+  {
+    "verb": "HELLO",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-HELLO",
+    "pre_handler": null
+  },
+  {
+    "verb": "HELP",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-HELP",
+    "pre_handler": null
+  },
+  {
+    "verb": "JUMP",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-LEAP",
+    "pre_handler": null
+  },
+  {
+    "verb": "JUMP",
+    "pattern": [
+      "OVER",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-LEAP",
+    "pre_handler": null
+  },
+  {
+    "verb": "JUMP",
+    "pattern": [
+      "ACROSS",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-LEAP",
+    "pre_handler": null
+  },
+  {
+    "verb": "JUMP",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-LEAP",
+    "pre_handler": null
+  },
+  {
+    "verb": "JUMP",
+    "pattern": [
+      "FROM",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-LEAP",
+    "pre_handler": null
+  },
+  {
+    "verb": "JUMP",
+    "pattern": [
+      "OFF",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-LEAP",
+    "pre_handler": null
+  },
+  {
+    "verb": "KICK",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-KICK",
+    "pre_handler": null
+  },
+  {
+    "verb": "KISS",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-KISS",
+    "pre_handler": null
+  },
+  {
+    "verb": "KNOCK",
+    "pattern": [
+      "AT",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-KNOCK",
+    "pre_handler": null
+  },
+  {
+    "verb": "KNOCK",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-KNOCK",
+    "pre_handler": null
+  },
+  {
+    "verb": "KNOCK",
+    "pattern": [
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-ATTACK",
+    "pre_handler": null
+  },
+  {
+    "verb": "LEAVE",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-LEAVE",
+    "pre_handler": null
+  },
+  {
+    "verb": "LEAVE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-DROP",
+    "pre_handler": null
+  },
+  {
+    "verb": "LISTEN",
+    "pattern": [
+      "TO",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-LISTEN",
+    "pre_handler": null
+  },
+  {
+    "verb": "LOCK",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ],
+      [
+        "HELD"
+      ]
+    ],
+    "handler": "V-LOCK",
+    "pre_handler": null
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-LOOK",
+    "pre_handler": null
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-LOOK-CRETIN",
+    "pre_handler": null
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [
+      "AROUND",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "RMUNGBIT"
+      ]
+    ],
+    "handler": "V-LOOK",
+    "pre_handler": null
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [
+      "AT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "MANY"
+      ]
+    ],
+    "handler": "V-EXAMINE",
+    "pre_handler": "PRE-EXAMINE"
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "MANY"
+      ]
+    ],
+    "handler": "V-EXAMINE",
+    "pre_handler": "PRE-EXAMINE"
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-LOOK-INSIDE",
+    "pre_handler": null
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [
+      "UNDER",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-LOOK-UNDER",
+    "pre_handler": null
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [
+      "BEHIND",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-LOOK-BEHIND",
+    "pre_handler": null
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "MANY"
+      ]
+    ],
+    "handler": "V-LOOK-INSIDE",
+    "pre_handler": null
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [
+      "OUT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "MANY"
+      ]
+    ],
+    "handler": "V-LOOK-INSIDE",
+    "pre_handler": null
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [
+      "FOR",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-FIND",
+    "pre_handler": null
+  },
+  {
+    "verb": "LOOK",
+    "pattern": [
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "RMUNGBIT"
+      ]
+    ],
+    "handler": "V-LOOK-DOWN",
+    "pre_handler": null
+  },
+  {
+    "verb": "SEARCH",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SEARCH",
+    "pre_handler": null
+  },
+  {
+    "verb": "SEARCH",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SEARCH",
+    "pre_handler": null
+  },
+  {
+    "verb": "SEARCH",
+    "pattern": [
+      "FOR",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-FIND",
+    "pre_handler": null
+  },
+  {
+    "verb": "SEARCH",
+    "pattern": [
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SEARCH",
+    "pre_handler": null
+  },
+  {
+    "verb": "MOVE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-MOVE",
+    "pre_handler": "PRE-MOVE"
+  },
+  {
+    "verb": "MOVE",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUSH-UP",
+    "pre_handler": null
+  },
+  {
+    "verb": "MOVE",
+    "pattern": [
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUSH-DOWN",
+    "pre_handler": null
+  },
+  {
+    "verb": "POINT",
+    "pattern": [
+      "AT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-POINT",
+    "pre_handler": null
+  },
+  {
+    "verb": "POINT",
+    "pattern": [
+      "TO",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-POINT",
+    "pre_handler": null
+  },
+  {
+    "verb": "POINT",
+    "pattern": [
+      "OBJECT",
+      "AT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-POINT",
+    "pre_handler": null
+  },
+  {
+    "verb": "PULL",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PULL",
+    "pre_handler": null
+  },
+  {
+    "verb": "PULL",
+    "pattern": [
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUSH-DOWN",
+    "pre_handler": null
+  },
+  {
+    "verb": "PULL",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUSH-UP",
+    "pre_handler": null
+  },
+  {
+    "verb": "PULL",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PULL",
+    "pre_handler": null
+  },
+  {
+    "verb": "PULL",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ZATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "DESTROY",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM",
+        "HELD",
+        "CARRIED"
+      ]
+    ],
+    "handler": "V-MUNG",
+    "pre_handler": null
+  },
+  {
+    "verb": "DESTROY",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM",
+        "HELD",
+        "CARRIED"
+      ],
+      [
+        "HAVE"
+      ]
+    ],
+    "handler": "V-MUNG",
+    "pre_handler": null
+  },
+  {
+    "verb": "DESTROY",
+    "pattern": [
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM",
+        "HELD",
+        "CARRIED"
+      ]
+    ],
+    "handler": "V-MUNG",
+    "pre_handler": null
+  },
+  {
+    "verb": "OPEN",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-OPEN",
+    "pre_handler": null
+  },
+  {
+    "verb": "OPEN",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "DOORBIT"
+      ],
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-OPEN",
+    "pre_handler": null
+  },
+  {
+    "verb": "OPEN",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HAVE"
+      ]
+    ],
+    "handler": "V-OPEN-WITH",
+    "pre_handler": null
+  },
+  {
+    "verb": "PICK",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "TAKEBIT"
+      ],
+      [
+        "ON-GROUND",
+        "MANY"
+      ]
+    ],
+    "handler": "V-TAKE",
+    "pre_handler": "PRE-TAKE"
+  },
+  {
+    "verb": "PICK",
+    "pattern": [
+      "UP",
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ZATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "PLAY",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PLAY",
+    "pre_handler": null
+  },
+  {
+    "verb": "PLAY",
+    "pattern": [
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ]
+    ],
+    "handler": "V-PLAY-WITH",
+    "pre_handler": null
+  },
+  {
+    "verb": "PLAY",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ]
+    ],
+    "handler": "V-PLAY",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUSH",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUSH",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUSH",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUSH",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUSH",
+    "pattern": [
+      "OFF",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUSH",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUSH",
+    "pattern": [
+      "AGAINST",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUSH",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUSH",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUSH-UP",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUSH",
+    "pattern": [
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUSH-DOWN",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUSH",
+    "pattern": [
+      "OBJECT",
+      "UNDER",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUT-UNDER",
+    "pre_handler": "PRE-PUT-UNDER"
+  },
+  {
+    "verb": "PUT",
+    "pattern": [
+      "OBJECT",
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE",
+        "TAKE"
+      ]
+    ],
+    "handler": "V-PUT",
+    "pre_handler": "PRE-PUT"
+  },
+  {
+    "verb": "PUT",
+    "pattern": [
+      "OBJECT",
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "MANY"
+      ]
+    ],
+    "handler": "V-PUT-ON",
+    "pre_handler": "PRE-PUT"
+  },
+  {
+    "verb": "PUT",
+    "pattern": [
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-DROP",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUT",
+    "pattern": [
+      "OBJECT",
+      "UNDER",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE",
+        "TAKE"
+      ]
+    ],
+    "handler": "V-PUT-UNDER",
+    "pre_handler": "PRE-PUT-UNDER"
+  },
+  {
+    "verb": "PUT",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HAVE",
+        "TAKE"
+      ]
+    ],
+    "handler": "V-WEAR",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUT",
+    "pattern": [
+      "OBJECT",
+      "OVER",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUT",
+    "pattern": [
+      "OBJECT",
+      "NEAR",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUT",
+    "pattern": [
+      "OBJECT",
+      "ACROSS",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SPAN",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUT",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-SLIDE",
+    "pre_handler": null
+  },
+  {
+    "verb": "PUT",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-INSERT",
+    "pre_handler": null
+  },
+  {
+    "verb": "RAPE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ]
+    ],
+    "handler": "V-RAPE",
+    "pre_handler": null
+  },
+  {
+    "verb": "REACH",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "CONTBIT"
+      ]
+    ],
+    "handler": "V-REACH",
+    "pre_handler": null
+  },
+  {
+    "verb": "REACH",
+    "pattern": [
+      "FOR",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-REACH-FOR",
+    "pre_handler": null
+  },
+  {
+    "verb": "READ",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "READBIT"
+      ],
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-READ",
+    "pre_handler": "PRE-READ"
+  },
+  {
+    "verb": "RUB",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-RUB",
+    "pre_handler": null
+  },
+  {
+    "verb": "RUB",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ZATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "RUB",
+    "pattern": [
+      "OBJECT",
+      "TO",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "SCRUB",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SCRUB",
+    "pre_handler": null
+  },
+  {
+    "verb": "SCRUB",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SCRUB",
+    "pre_handler": null
+  },
+  {
+    "verb": "SCRUB",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HAVE"
+      ]
+    ],
+    "handler": "V-SCRUB",
+    "pre_handler": null
+  },
+  {
+    "verb": "SLEEP",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-SLEEP",
+    "pre_handler": null
+  },
+  {
+    "verb": "SHAKE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SHAKE",
+    "pre_handler": null
+  },
+  {
+    "verb": "SHAKE",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ]
+    ],
+    "handler": "V-SHAKE-WITH",
+    "pre_handler": null
+  },
+  {
+    "verb": "SLIDE",
+    "pattern": [
+      "OBJECT",
+      "UNDER",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-PUT-UNDER",
+    "pre_handler": "PRE-PUT-UNDER"
+  },
+  {
+    "verb": "SLIDE",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-SLIDE",
+    "pre_handler": null
+  },
+  {
+    "verb": "SLIDE",
+    "pattern": [
+      "OBJECT",
+      "ACROSS",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SPAN",
+    "pre_handler": null
+  },
+  {
+    "verb": "SKIP",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-SKIP",
+    "pre_handler": null
+  },
+  {
+    "verb": "SMELL",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SMELL",
+    "pre_handler": null
+  },
+  {
+    "verb": "STEP",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-STEP-ON",
+    "pre_handler": null
+  },
+  {
+    "verb": "STEP",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-STEP-ON",
+    "pre_handler": null
+  },
+  {
+    "verb": "STRIKE",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ],
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-ATTACK",
+    "pre_handler": null
+  },
+  {
+    "verb": "STRIKE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-ATTACK",
+    "pre_handler": null
+  },
+  {
+    "verb": "SWIM",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-SWIM",
+    "pre_handler": null
+  },
+  {
+    "verb": "SWIM",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SWIM-DIR",
+    "pre_handler": null
+  },
+  {
+    "verb": "SWIM",
+    "pattern": [
+      "TO",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SWIM-DIR",
+    "pre_handler": null
+  },
+  {
+    "verb": "SWIM",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SWIM",
+    "pre_handler": null
+  },
+  {
+    "verb": "SWIM",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "RMUNGBIT"
+      ]
+    ],
+    "handler": "V-SWIM-UP",
+    "pre_handler": null
+  },
+  {
+    "verb": "SWIM",
+    "pattern": [
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "RMUNGBIT"
+      ]
+    ],
+    "handler": "V-SWIM-DIR",
+    "pre_handler": null
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "TAKEBIT"
+      ],
+      [
+        "ON-GROUND",
+        "MANY"
+      ]
+    ],
+    "handler": "V-TAKE",
+    "pre_handler": "PRE-TAKE"
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "VEHBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-BOARD",
+    "pre_handler": "PRE-BOARD"
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "OUT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "RMUNGBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-DISEMBARK",
+    "pre_handler": null
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "VEHBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-CLIMB-ON",
+    "pre_handler": null
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "OBJECT",
+      "OUT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "TAKEBIT"
+      ],
+      [
+        "CARRIED",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-TAKE",
+    "pre_handler": "PRE-TAKE"
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "OBJECT",
+      "OFF",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "TAKEBIT"
+      ],
+      [
+        "CARRIED",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-TAKE",
+    "pre_handler": "PRE-TAKE"
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "OBJECT",
+      "FROM",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "TAKEBIT"
+      ],
+      [
+        "MANY"
+      ],
+      [
+        "IN-ROOM",
+        "CARRIED"
+      ],
+      [
+        "ON-GROUND",
+        "HELD"
+      ]
+    ],
+    "handler": "V-TAKE",
+    "pre_handler": "PRE-TAKE"
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "OFF",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "WEARBIT"
+      ],
+      [
+        "HELD",
+        "CARRIED",
+        "MANY"
+      ]
+    ],
+    "handler": "V-TAKE-OFF",
+    "pre_handler": null
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "RMUNGBIT"
+      ]
+    ],
+    "handler": "V-STAND",
+    "pre_handler": null
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "OBJECT",
+      "OVER",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "OBJECT",
+      "NEAR",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "TAKE",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ZATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "REMOVE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-REMOVE",
+    "pre_handler": null
+  },
+  {
+    "verb": "REMOVE",
+    "pattern": [
+      "OBJECT",
+      "FROM",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-TAKE",
+    "pre_handler": "PRE-TAKE"
+  },
+  {
+    "verb": "REMOVE",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ZATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "TELL",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ],
+      [
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-TELL",
+    "pre_handler": null
+  },
+  {
+    "verb": "TELL",
+    "pattern": [
+      "OBJECT",
+      "FOR",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ],
+      [
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-ASK-FOR",
+    "pre_handler": null
+  },
+  {
+    "verb": "SMILE",
+    "pattern": [
+      "AT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ]
+    ],
+    "handler": "V-SMILE",
+    "pre_handler": null
+  },
+  {
+    "verb": "SMILE",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-SMILE",
+    "pre_handler": null
+  },
+  {
+    "verb": "SALUTE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-SALUTE",
+    "pre_handler": null
+  },
+  {
+    "verb": "SAY",
+    "pattern": [
+      "TO",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ],
+      [
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-TALK",
+    "pre_handler": null
+  },
+  {
+    "verb": "SAY",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-SAY",
+    "pre_handler": null
+  },
+  {
+    "verb": "THROW",
+    "pattern": [
+      "OBJECT",
+      "AT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-THROW",
+    "pre_handler": null
+  },
+  {
+    "verb": "THROW",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-THROW",
+    "pre_handler": null
+  },
+  {
+    "verb": "THROW",
+    "pattern": [
+      "OBJECT",
+      "OFF",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-THROW-OFF",
+    "pre_handler": null
+  },
+  {
+    "verb": "THROW",
+    "pattern": [
+      "OBJECT",
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-PUT",
+    "pre_handler": "PRE-PUT"
+  },
+  {
+    "verb": "THROW",
+    "pattern": [
+      "OBJECT",
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-PUT",
+    "pre_handler": "PRE-PUT"
+  },
+  {
+    "verb": "THROW",
+    "pattern": [
+      "OBJECT",
+      "OVER",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-THROW-OFF",
+    "pre_handler": null
+  },
+  {
+    "verb": "THROW",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-THROW",
+    "pre_handler": null
+  },
+  {
+    "verb": "TURN",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM",
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-TURN",
+    "pre_handler": null
+  },
+  {
+    "verb": "TURN",
+    "pattern": [
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "LIGHTBIT"
+      ],
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-LAMP-ON",
+    "pre_handler": null
+  },
+  {
+    "verb": "TURN",
+    "pattern": [
+      "OFF",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "LIGHTBIT"
+      ],
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-LAMP-OFF",
+    "pre_handler": null
+  },
+  {
+    "verb": "TURN",
+    "pattern": [
+      "OBJECT",
+      "TO",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-SET",
+    "pre_handler": null
+  },
+  {
+    "verb": "TURN",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-SET",
+    "pre_handler": null
+  },
+  {
+    "verb": "ACTIVATE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "LIGHTBIT"
+      ]
+    ],
+    "handler": "V-LAMP-ON",
+    "pre_handler": null
+  },
+  {
+    "verb": "TYPE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-TYPE",
+    "pre_handler": null
+  },
+  {
+    "verb": "TYPE",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-TYPE",
+    "pre_handler": null
+  },
+  {
+    "verb": "UNLOCK",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ],
+      [
+        "FIND",
+        "TOOLBIT"
+      ],
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "TAKE"
+      ]
+    ],
+    "handler": "V-UNLOCK",
+    "pre_handler": null
+  },
+  {
+    "verb": "WAIT",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-WAIT",
+    "pre_handler": null
+  },
+  {
+    "verb": "WAKE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-ALARM",
+    "pre_handler": null
+  },
+  {
+    "verb": "WAKE",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-ALARM",
+    "pre_handler": null
+  },
+  {
+    "verb": "WALK",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-WALK",
+    "pre_handler": null
+  },
+  {
+    "verb": "WALK",
+    "pattern": [
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-THROUGH",
+    "pre_handler": null
+  },
+  {
+    "verb": "WALK",
+    "pattern": [
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-THROUGH",
+    "pre_handler": null
+  },
+  {
+    "verb": "WALK",
+    "pattern": [
+      "AROUND",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-WALK-AROUND",
+    "pre_handler": null
+  },
+  {
+    "verb": "WALK",
+    "pattern": [
+      "UP",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "CLIMBBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-CLIMB-UP",
+    "pre_handler": null
+  },
+  {
+    "verb": "WALK",
+    "pattern": [
+      "DOWN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "CLIMBBIT"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ],
+    "handler": "V-CLIMB-DOWN",
+    "pre_handler": null
+  },
+  {
+    "verb": "WALK",
+    "pattern": [
+      "TO",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-WALK-TO",
+    "pre_handler": null
+  },
+  {
+    "verb": "WALK",
+    "pattern": [
+      "OUT",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-EXIT",
+    "pre_handler": null
+  },
+  {
+    "verb": "WALK",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ]
+    ],
+    "handler": "V-SLIDE",
+    "pre_handler": null
+  },
+  {
+    "verb": "WAVE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED"
+      ]
+    ],
+    "handler": "V-WAVE",
+    "pre_handler": null
+  },
+  {
+    "verb": "WAVE",
+    "pattern": [
+      "OBJECT",
+      "AT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HELD",
+        "CARRIED"
+      ]
+    ],
+    "handler": "V-WAVE",
+    "pre_handler": null
+  },
+  {
+    "verb": "WAVE",
+    "pattern": [
+      "OBJECT",
+      "OVER",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "WAVE",
+    "pattern": [
+      "OBJECT",
+      "NEAR",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "WEAR",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HAVE",
+        "TAKE"
+      ]
+    ],
+    "handler": "V-WEAR",
+    "pre_handler": null
+  },
+  {
+    "verb": "YELL",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-YELL",
+    "pre_handler": null
+  },
+  {
+    "verb": "YELL",
+    "pattern": [
+      "AT",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ]
+    ],
+    "handler": "V-SCOLD",
+    "pre_handler": null
+  },
+  {
+    "verb": "ZORK",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-ZORK",
+    "pre_handler": null
+  },
+  {
+    "verb": "YES",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-YES",
+    "pre_handler": null
+  },
+  {
+    "verb": "YES",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-YES",
+    "pre_handler": null
+  },
+  {
+    "verb": "NO",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-NO",
+    "pre_handler": null
+  },
+  {
+    "verb": "MAYBE",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-MAYBE",
+    "pre_handler": null
+  },
+  {
+    "verb": "POUR",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-POUR",
+    "pre_handler": null
+  },
+  {
+    "verb": "POUR",
+    "pattern": [
+      "OBJECT",
+      "OVER",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-POUR",
+    "pre_handler": null
+  },
+  {
+    "verb": "POUR",
+    "pattern": [
+      "OBJECT",
+      "ON",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-POUR",
+    "pre_handler": null
+  },
+  {
+    "verb": "POUR",
+    "pattern": [
+      "OBJECT",
+      "OUT",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-POUR",
+    "pre_handler": null
+  },
+  {
+    "verb": "POUR",
+    "pattern": [
+      "OBJECT",
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-POUR",
+    "pre_handler": null
+  },
+  {
+    "verb": "EMPTY",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HAVE"
+      ]
+    ],
+    "handler": "V-EMPTY",
+    "pre_handler": null
+  },
+  {
+    "verb": "EMPTY",
+    "pattern": [
+      "OBJECT",
+      "IN",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HAVE"
+      ]
+    ],
+    "handler": "V-EMPTY",
+    "pre_handler": null
+  },
+  {
+    "verb": "ATTRACT",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "TAKE"
+      ]
+    ],
+    "handler": "V-ZATTRACT",
+    "pre_handler": null
+  },
+  {
+    "verb": "FIX",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-FIX-IT",
+    "pre_handler": null
+  },
+  {
+    "verb": "OIL",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-OIL",
+    "pre_handler": null
+  },
+  {
+    "verb": "OIL",
+    "pattern": [
+      "OBJECT",
+      "WITH",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HAVE"
+      ]
+    ],
+    "handler": "V-OIL",
+    "pre_handler": null
+  },
+  {
+    "verb": "SHOW",
+    "pattern": [
+      "OBJECT",
+      "TO",
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "HAVE"
+      ],
+      [
+        "FIND",
+        "ACTORBIT"
+      ]
+    ],
+    "handler": "V-SHOW",
+    "pre_handler": null
+  },
+  {
+    "verb": "TASTE",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [],
+    "handler": "V-TASTE",
+    "pre_handler": null
+  },
+  {
+    "verb": "ESCAPE",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-ZESCAPE",
+    "pre_handler": null
+  },
+  {
+    "verb": "TIME",
+    "pattern": [],
+    "object_filters": [],
+    "handler": "V-TIME",
+    "pre_handler": null
+  },
+  {
+    "verb": "SCOLD",
+    "pattern": [
+      "OBJECT"
+    ],
+    "object_filters": [
+      [
+        "FIND",
+        "ACTORBIT"
+      ]
+    ],
+    "handler": "V-SCOLD",
+    "pre_handler": null
+  }
+]

@@ -1,0 +1,206 @@
+[
+  {
+    "id": "ME",
+    "desc": "you",
+    "fdesc": null,
+    "ldesc": null,
+    "location": "GLOBAL-OBJECTS",
+    "synonyms": [
+      "ME",
+      "MYSELF",
+      "SELF",
+      "WE"
+    ],
+    "adjectives": [],
+    "flags": [
+      "ACTORBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "CRETIN-F"
+  },
+  {
+    "id": "BLATHER",
+    "desc": "Ensign First Class",
+    "fdesc": null,
+    "ldesc": "Ensign First Class Blather is standing before you, furiously scribbling\ndemerits onto an oversized clipboard.",
+    "location": null,
+    "synonyms": [
+      "ENSIGN",
+      "BLATHER"
+    ],
+    "adjectives": [
+      "ENSIGN",
+      "FIRST",
+      "CLASS"
+    ],
+    "flags": [
+      "VOWELBIT",
+      "ACTORBIT"
+    ],
+    "size": 150,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "BLATHER-F"
+  },
+  {
+    "id": "AMBASSADOR",
+    "desc": "alien ambassador",
+    "fdesc": null,
+    "ldesc": "A high-ranking ambassador from a newly-contacted alien race is standing\nhere on three of his legs, and watching you with seven of his eyes.",
+    "location": null,
+    "synonyms": [
+      "AMBASSADOR"
+    ],
+    "adjectives": [
+      "VERY",
+      "IMPORTANT",
+      "ALIEN",
+      "HIGH-RANKING",
+      "HIGH",
+      "RANKING"
+    ],
+    "flags": [
+      "VOWELBIT",
+      "ACTORBIT"
+    ],
+    "size": 150,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "AMBASSADOR-F"
+  },
+  {
+    "id": "MICROBE",
+    "desc": "microbe",
+    "fdesc": null,
+    "ldesc": "A hungry microbe blocks your way, its cilia waving and its pseudopods\ntowering over you.",
+    "location": null,
+    "synonyms": [
+      "MICROBE",
+      "BUG",
+      "MONSTER"
+    ],
+    "adjectives": [
+      "HUNGRY"
+    ],
+    "flags": [
+      "ACTORBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "MICROBE-F"
+  },
+  {
+    "id": "RAT-ANT",
+    "desc": "rat-like, ant-like man-sized monster",
+    "fdesc": null,
+    "ldesc": "A ferocious feral creature, with a hairy shelled body and\na whip-like tail snaps its enormous mandibles at you.",
+    "location": "BIO-LAB",
+    "synonyms": [
+      "MONSTER",
+      "MUTANT",
+      "RAT-ANT"
+    ],
+    "adjectives": [
+      "RAT-LIKE",
+      "ANT-LIKE",
+      "MAN-SIZED"
+    ],
+    "flags": [
+      "ACTORBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "TROLL",
+    "desc": "hairy growling biped",
+    "fdesc": null,
+    "ldesc": "Rushing toward you is an ugly, deformed humanoid, bellowing\nin a guttural tongue. It brandishes a piece of lab equipment shaped\nsomewhat like a battle axe.",
+    "location": "BIO-LAB",
+    "synonyms": [
+      "TROLL",
+      "BIPED",
+      "MUTANT",
+      "MONSTER"
+    ],
+    "adjectives": [
+      "HAIRY",
+      "GROWLING",
+      "UGLY",
+      "DEFORMED"
+    ],
+    "flags": [
+      "ACTORBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  },
+  {
+    "id": "GRUE",
+    "desc": "lurking fanged creature",
+    "fdesc": null,
+    "ldesc": "Lurking nearby is a vicious-looking creature with slavering\nfangs. Squinting in the light, it eyes you hungrily.",
+    "location": "BIO-LAB",
+    "synonyms": [
+      "GRUE",
+      "CREATURE",
+      "MUTANT",
+      "MONSTER"
+    ],
+    "adjectives": [
+      "LURKING",
+      "SINISTER",
+      "FANGED",
+      "VICIOUS",
+      "HUNGRY",
+      "SILENT"
+    ],
+    "flags": [
+      "ACTORBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": "GRUE-F"
+  },
+  {
+    "id": "TRIFFID",
+    "desc": "mobile man-eating plant",
+    "fdesc": null,
+    "ldesc": "A giant plant, teeming with poisonous tentacles, is shuffling\ntoward you on three leg-like stalks.",
+    "location": "BIO-LAB",
+    "synonyms": [
+      "TRIFFID",
+      "PLANT",
+      "MUTANT",
+      "MONSTER"
+    ],
+    "adjectives": [
+      "MOBILE",
+      "MAN-EATING",
+      "GIANT"
+    ],
+    "flags": [
+      "ACTORBIT"
+    ],
+    "size": null,
+    "capacity": null,
+    "value": null,
+    "text": null,
+    "action": null
+  }
+]
