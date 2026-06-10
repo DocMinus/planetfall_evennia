@@ -10,6 +10,8 @@ or interactively:
 import json
 from pathlib import Path
 
+from django.db import transaction
+
 from evennia import create_object, search_object
 from evennia.utils import logger
 
@@ -35,62 +37,48 @@ def load_world(data_dir=DATA_DIR):
     if _is_loaded():
         print("World already loaded. To reload, delete existing objects first.")
         return
-    _check_bootstrap()
 
     data_dir = Path(data_dir)
     rooms   = _json(data_dir / "rooms.json")
     objects = _json(data_dir / "objects.json")
     npcs    = _json(data_dir / "npcs.json")
 
-    print(f"  Creating {len(rooms)} rooms...")
-    room_reg = _create_rooms(rooms)
+    # All-or-nothing: a failure partway through must not leave a half-built
+    # world behind, since _is_loaded() would then skip all future loads.
+    with transaction.atomic():
+        print(f"  Creating {len(rooms)} rooms...")
+        room_reg = _create_rooms(rooms)
 
-    print(f"  Creating {len(objects)} objects...")
-    obj_reg = _create_objects(objects)
+        print(f"  Creating {len(objects)} objects...")
+        obj_reg = _create_objects(objects)
 
-    print(f"  Creating {len(npcs)} NPCs...")
-    npc_reg = _create_npcs(npcs)
+        print(f"  Creating {len(npcs)} NPCs...")
+        npc_reg = _create_npcs(npcs)
 
-    all_reg = {**room_reg, **obj_reg, **npc_reg}
+        all_reg = {**room_reg, **obj_reg, **npc_reg}
 
-    print("  Placing objects and NPCs...")
-    _place_items(objects, all_reg)
-    _place_items(npcs, all_reg)
+        print("  Placing objects and NPCs...")
+        _place_items(objects, all_reg)
+        _place_items(npcs, all_reg)
 
-    print("  Wiring exits...")
-    _wire_exits(rooms, room_reg)
+        print("  Wiring exits...")
+        _wire_exits(rooms, room_reg)
 
-    print(f"Done: {len(room_reg)} rooms, {len(obj_reg)} objects, {len(npc_reg)} NPCs loaded.")
+        print(f"Done: {len(room_reg)} rooms, {len(obj_reg)} objects, {len(npc_reg)} NPCs loaded.")
 
-    from world.scheduler_script import get_or_create_game_state_script
-    get_or_create_game_state_script()
-    print("  Scheduler initialised.")
+        from world.scheduler_script import get_or_create_game_state_script
+        get_or_create_game_state_script()
+        print("  Scheduler initialised.")
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _check_bootstrap():
-    """Raise early with a helpful message if Evennia's initial objects don't exist yet."""
-    from evennia.objects.models import ObjectDB
-    from django.conf import settings as django_settings
-    home_ref = getattr(django_settings, "DEFAULT_HOME", "#2")
-    dbid = int(home_ref.lstrip("#")) if isinstance(home_ref, str) else home_ref
-    if not ObjectDB.objects.filter(id=dbid).exists():
-        raise RuntimeError(
-            f"Evennia's default home object ({home_ref}) does not exist. "
-            "Run 'make start' at least once before 'make load' so Evennia can "
-            "create its initial objects (Limbo, system account, etc.)."
-        )
-
-
 def _is_loaded():
     """Guard against running load_world twice."""
     from evennia.objects.models import ObjectDB
-    return ObjectDB.objects.filter(
-        db_typeclass_path__contains="PlanetfallRoom"
-    ).count() > 0
+    return ObjectDB.objects.filter(db_typeclass_path=PlanetfallRoom.path).exists()
 
 
 def _json(path):

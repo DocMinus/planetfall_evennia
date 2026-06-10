@@ -85,10 +85,10 @@ Synonyms from the original game are wired in — `get` works for `take`,
 ```bash
 make start      # Start the Evennia server
 make stop       # Stop the server
-make restart    # Restart (picks up code changes)
+make restart    # Restart (currently unreliable — prefer stop + start)
 make shell      # Drop into an interactive Django shell
 make migrate    # Apply database migrations
-make load       # Load world data manually (auto-runs on first cold start)
+make load       # Load world data manually (auto-runs on first server start)
 make superuser  # Create an additional admin account
 ```
 

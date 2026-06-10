@@ -60,8 +60,7 @@ def at_server_cold_start():
     This is called only when the server starts "cold", i.e. after a
     shutdown or a reset.
     """
-    from world.loader import load_world
-    load_world()
+    pass
 
 
 def at_server_cold_stop():
