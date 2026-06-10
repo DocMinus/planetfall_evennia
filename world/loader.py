@@ -35,6 +35,7 @@ def load_world(data_dir=DATA_DIR):
     if _is_loaded():
         print("World already loaded. To reload, delete existing objects first.")
         return
+    _check_bootstrap()
 
     data_dir = Path(data_dir)
     rooms   = _json(data_dir / "rooms.json")
@@ -70,10 +71,26 @@ def load_world(data_dir=DATA_DIR):
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _check_bootstrap():
+    """Raise early with a helpful message if Evennia's initial objects don't exist yet."""
+    from evennia.objects.models import ObjectDB
+    from django.conf import settings as django_settings
+    home_ref = getattr(django_settings, "DEFAULT_HOME", "#2")
+    dbid = int(home_ref.lstrip("#")) if isinstance(home_ref, str) else home_ref
+    if not ObjectDB.objects.filter(id=dbid).exists():
+        raise RuntimeError(
+            f"Evennia's default home object ({home_ref}) does not exist. "
+            "Run 'make start' at least once before 'make load' so Evennia can "
+            "create its initial objects (Limbo, system account, etc.)."
+        )
+
+
 def _is_loaded():
     """Guard against running load_world twice."""
     from evennia.objects.models import ObjectDB
-    return ObjectDB.objects.filter(db_attributes__db_key="zil_id").exists()
+    return ObjectDB.objects.filter(
+        db_typeclass_path__contains="PlanetfallRoom"
+    ).count() > 0
 
 
 def _json(path):
@@ -84,8 +101,9 @@ def _json(path):
 def _create_rooms(rooms):
     reg = {}
     for r in rooms:
-        room = create_object(PlanetfallRoom, key=r["desc"] or r["id"])
-        room.db.zil_id      = r["id"]
+        zil_id = r["id"]
+        room = create_object(PlanetfallRoom, key=r["desc"] or zil_id, aliases=[zil_id])
+        room.db.zil_id      = zil_id
         room.db.room_flags  = r.get("flags", [])
         room.db.globals     = r.get("globals", [])
         room.db.pseudo      = {p["word"]: p["object"] for p in r.get("pseudo", [])}

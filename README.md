@@ -24,18 +24,16 @@ derived from the original ZIL source code via a custom extraction pipeline.
 # 1. Create the virtual environment and install dependencies
 uv sync
 
-# 2. Apply database migrations (creates the SQLite DB)
+# 2. Apply database migrations (creates the SQLite DB and schema)
 make migrate
 
-# 3. Create a superuser account (you'll use this to log in)
-make superuser
-
-# 4. Load the game world into the database (run once)
-make load
-
-# 5. Start the server
+# 3. Start the server.
+#    On first run: prompts to create an admin account, then loads the game world.
 make start
 ```
+
+To stop the server: `make stop`. To resume later: `make start` again.
+Note: `make restart` is currently unreliable — use `make stop` then `make start`.
 
 The server starts two listeners:
 - **MUD client** — `localhost:4000` (telnet / any MUD client)
@@ -90,8 +88,8 @@ make stop       # Stop the server
 make restart    # Restart (picks up code changes)
 make shell      # Drop into an interactive Django shell
 make migrate    # Apply database migrations
-make load       # Load world data from JSON into the DB (run once)
-make superuser  # Create an admin account
+make load       # Load world data manually (auto-runs on first cold start)
+make superuser  # Create an additional admin account
 ```
 
 ---
