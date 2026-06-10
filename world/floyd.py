@@ -8,6 +8,9 @@ Floyd has two interrupt routines registered in the Scheduler:
   i_floyd_foray — fires every turn during Bio Lab crisis (comptwo.zil:1949)
 
 State flags mirror ZIL globals defined in compone.zil:2124-2132.
+
+Floyd's Evennia object (PlanetfallObject with db.zil_id="FLOYD") is created by
+the world loader.  FloydNPC wraps it and drives its movement.
 """
 from __future__ import annotations
 
@@ -41,17 +44,27 @@ FLOYDISMS = [
     "watches you with his large, friendly eyes.",
 ]
 
+# The ZIL id of the eastern Bio Lab door — gate for Floyd's foray resolution.
+_BIO_DOOR_ZIL_ID = "BIO-DOOR-EAST"
+
+
+def _by_zil_id(zil_id: str):
+    """Return the first Evennia object whose db.zil_id matches, or None."""
+    from evennia.utils.search import search_object_attribute
+    results = search_object_attribute(key="zil_id", strvalue=zil_id)
+    return results[0] if results else None
+
 
 class FloydNPC:
     """
     Floyd's state and autonomous behavior.
 
-    Call `activate()` when the player first turns Floyd on; this registers
-    i_floyd into the scheduler. Call `begin_foray()` when Floyd enters the
-    Bio Lab to register i_floyd_foray.
+    Call `activate()` when the player first turns Floyd on; this syncs his
+    starting room and registers i_floyd into the scheduler.
+    Call `begin_foray()` when Floyd enters the Bio Lab.
     """
 
-    def __init__(self, game_state: GameState) -> None:
+    def __init__(self, game_state: "GameState") -> None:
         self.gs = game_state
 
         # compone.zil:2124-2132
@@ -70,7 +83,7 @@ class FloydNPC:
         # globals.zil:1438
         self.card_revealed: bool = False
 
-        # current room Floyd occupies (None = not in any room)
+        # current room Floyd occupies (ZIL id string; None = not in any room)
         self.current_room: str | None = None
 
         self._foray_intr = None
@@ -80,9 +93,10 @@ class FloydNPC:
     # ------------------------------------------------------------------
 
     def activate(self) -> None:
-        """Turn Floyd on; register his every-turn interrupt."""
+        """Turn Floyd on; sync his position and register his every-turn interrupt."""
         if not self.reactivated:
             self.reactivated = True
+        self._sync_current_room()
         intr = self.gs.scheduler.queue(self.i_floyd, -1)
         self.gs.scheduler.enable(intr)
 
@@ -91,6 +105,7 @@ class FloydNPC:
         self.forayed = True
         self.foray_counter = 0
         self.current_room = bio_lab_room
+        self._move_floyd_obj(bio_lab_room)
         self._foray_intr = self.gs.scheduler.queue(self.i_floyd_foray, -1)
         self.gs.scheduler.enable(self._foray_intr)
 
@@ -103,9 +118,13 @@ class FloydNPC:
         Every-turn behavior. Mirrors I-FLOYD (compone.zil:2158-2249).
         Returns False always (never fatal).
         """
-        self.spoke = False
+        if self.gs.player is None:
+            return False
 
+        self.spoke = False
         player_room = self._player_room()
+        if not player_room:
+            return False
 
         if self.current_room == player_room:
             self._floyd_present(player_room)
@@ -129,7 +148,6 @@ class FloydNPC:
         elif self.foray_counter == 4:
             self._resolve_foray()
         elif self.foray_counter == 5:
-            # Dead Floyd appears if door was opened during foray
             self._print("Floyd lies motionless in the corridor, clutching the mini-booth card.")
             if self._foray_intr:
                 self.gs.scheduler.disable(self._foray_intr)
@@ -183,7 +201,9 @@ class FloydNPC:
         # 6% chance Floyd wanders off to explore
         if self.follow and self._room_is_floydbit(room) and random.random() < 0.06:
             self._print("Floyd wanders off to explore on his own.")
-            self.current_room = self._pick_adjacent_room(room)
+            new_room = self._pick_adjacent_room(room)
+            self.current_room = new_room
+            self._move_floyd_obj(new_room)
             return
 
         # 40% chance of idle comment
@@ -206,8 +226,8 @@ class FloydNPC:
             "BOOTH-1": "Floyd scampers in after you.",
             "BOOTH-2": "Floyd scampers in after you.",
             "BOOTH-3": "Floyd scampers in after you.",
-            "BIO-LOCK": 'Floyd glides in. "Squash court?"',
-            "RAD-LOCK": 'Floyd glides in. "Squash court?"',
+            "BIO-LOCK-WEST": 'Floyd glides in. "Squash court?"',
+            "BIO-LOCK-EAST": 'Floyd glides in. "Squash court?"',
             "MESS-HALL": '"Hey, wait for Floyd!" Floyd bounces in.',
             "ELEVATOR":  '"Hey, wait for Floyd!" Floyd bounces in.',
             "MINI-BOOTH": "Floyd squeezes in with a metallic groan.",
@@ -215,6 +235,7 @@ class FloydNPC:
         msg = special_messages.get(player_room, "Floyd follows you.")
         self._print(msg)
         self.current_room = player_room
+        self._move_floyd_obj(player_room)
 
     def _resolve_foray(self) -> None:
         """End of foray — Floyd exits Bio Lab (comptwo.zil:2010-2030)."""
@@ -227,20 +248,64 @@ class FloydNPC:
             self.gave_up = True
 
     # ------------------------------------------------------------------
-    # Stubs — wire these up once Room/World models exist
+    # Evennia I/O — wired to world model
     # ------------------------------------------------------------------
 
     def _player_room(self) -> str:
-        raise NotImplementedError("wire up to world model")
+        """Return the ZIL id of the room the player is currently in."""
+        player = self.gs.player
+        if player is None or player.location is None:
+            return ""
+        return player.location.db.zil_id or ""
 
-    def _room_is_floydbit(self, room: str) -> bool:
-        raise NotImplementedError("wire up to room flags")
+    def _room_is_floydbit(self, room_id: str) -> bool:
+        """Return True if the room has the FLOYDBIT flag (Floyd can wander there)."""
+        room = _by_zil_id(room_id)
+        if room is None:
+            return False
+        return "FLOYDBIT" in (room.db.room_flags or [])
 
-    def _pick_adjacent_room(self, room: str) -> str:
-        raise NotImplementedError("wire up to room exits")
+    def _pick_adjacent_room(self, room_id: str) -> str:
+        """Return a random adjacent room's ZIL id (stay put if no exits)."""
+        room = _by_zil_id(room_id)
+        if room is None:
+            return room_id
+        destinations = [
+            e.destination.db.zil_id
+            for e in room.exits
+            if e.destination and e.destination.db.zil_id
+        ]
+        return random.choice(destinations) if destinations else room_id
 
     def _bio_lab_door_open(self) -> bool:
-        raise NotImplementedError("wire up to door state")
+        """Return True if the eastern Bio Lab door is open."""
+        door = _by_zil_id(_BIO_DOOR_ZIL_ID)
+        return bool(door and door.db.is_open)
 
     def _print(self, msg: str) -> None:
-        raise NotImplementedError("wire up to output system")
+        """Send a message to the player."""
+        if self.gs.player:
+            self.gs.player.msg(msg)
+
+    # ------------------------------------------------------------------
+    # Floyd Evennia object helpers
+    # ------------------------------------------------------------------
+
+    def _get_floyd_obj(self):
+        """Return Floyd's Evennia object, or None if not yet in the DB."""
+        return _by_zil_id("FLOYD")
+
+    def _sync_current_room(self) -> None:
+        """Initialise current_room from Floyd's actual Evennia object location."""
+        obj = self._get_floyd_obj()
+        if obj and obj.location:
+            self.current_room = obj.location.db.zil_id or None
+
+    def _move_floyd_obj(self, room_zil_id: str) -> None:
+        """Physically move Floyd's Evennia object to the named room."""
+        obj = self._get_floyd_obj()
+        if obj is None:
+            return
+        room = _by_zil_id(room_zil_id)
+        if room is not None:
+            obj.location = room

@@ -3,7 +3,8 @@ Evennia Script that owns the Planetfall GameState singleton.
 
 One script (key='game_state') exists per running game.  Numeric state is
 written to db after every advance() call so it survives server reloads.
-The Scheduler's closures are transient (ndb) and rebuilt from db at_start().
+The Scheduler's closures and FloydNPC instance are transient (ndb) and
+rebuilt from db at_start().
 """
 from __future__ import annotations
 
@@ -67,10 +68,13 @@ class GameStateScript(DefaultScript):
 
     db attributes (survive reload):
         internal_moves, day, chronometer_present, chronometer_munged,
-        interrupt_states (dict: name -> {ticks_remaining, enabled, is_demon, state})
+        interrupt_states (dict: name -> {ticks_remaining, enabled, is_demon, state}),
+        floyd_state (dict: Floyd's boolean flags + current_room + foray_counter +
+                    i_floyd_active + i_floyd_foray_active)
 
-    ndb.game_state (in-process only):
-        The live GameState object; rebuilt at_start() from db.
+    ndb attributes (in-process only, rebuilt at_start):
+        ndb.game_state  — live GameState object
+        ndb.floyd       — live FloydNPC instance
     """
 
     def at_script_creation(self) -> None:
@@ -82,6 +86,7 @@ class GameStateScript(DefaultScript):
         self.db.chronometer_present = False
         self.db.chronometer_munged = False
         self.db.interrupt_states = {}
+        self.db.floyd_state = {}
 
     def at_start(self) -> None:
         """Called on every server start/reload.  Rebuild transient state from db."""
@@ -109,6 +114,12 @@ class GameStateScript(DefaultScript):
                 "\n*** Your adventure ends here.  Type 'quit' or disconnect. ***"
             )
 
+    def get_floyd(self) -> "FloydNPC":
+        """Return the live FloydNPC, rebuilding from db if needed."""
+        if not self.ndb.floyd:
+            self._rebuild_floyd(self.get_gs())
+        return self.ndb.floyd
+
     def set_timeless(self) -> None:
         """Mark the current action as consuming no game time (c_elapsed = 0)."""
         self.get_gs().set_timeless()
@@ -121,8 +132,11 @@ class GameStateScript(DefaultScript):
     # Internal helpers
     # ------------------------------------------------------------------
 
+    # Names handled by _persist_floyd / _rebuild_floyd; excluded from generic loop.
+    _FLOYD_INTERRUPT_NAMES = frozenset({"i_floyd", "i_floyd_foray"})
+
     def _rebuild(self) -> None:
-        """Reconstruct GameState from db; re-register all known interrupts."""
+        """Reconstruct GameState and Floyd from db; re-register all interrupts."""
         gs = GameState()
         gs.internal_moves = self.db.internal_moves or 0
         gs.day = self.db.day or 1
@@ -153,6 +167,37 @@ class GameStateScript(DefaultScript):
             register_all(gs)
             self._persist(gs)
 
+        self._rebuild_floyd(gs)
+
+    def _rebuild_floyd(self, gs: GameState) -> None:
+        """Restore FloydNPC state from db.floyd_state and re-register his interrupts."""
+        from world.floyd import FloydNPC
+        saved: dict = self.db.floyd_state or {}
+
+        floyd = FloydNPC(gs)
+        floyd.score_flag    = saved.get("score_flag", False)
+        floyd.spoke         = saved.get("spoke", False)
+        floyd.follow        = saved.get("follow", False)
+        floyd.reactivated   = saved.get("reactivated", False)
+        floyd.introduced    = saved.get("introduced", False)
+        floyd.waiting       = saved.get("waiting", False)
+        floyd.gave_up       = saved.get("gave_up", False)
+        floyd.forayed       = saved.get("forayed", False)
+        floyd.foray_counter = saved.get("foray_counter", 0)
+        floyd.card_revealed = saved.get("card_revealed", False)
+        floyd.current_room  = saved.get("current_room", None)
+
+        if saved.get("i_floyd_active", False):
+            intr = gs.scheduler.queue(floyd.i_floyd, -1)
+            gs.scheduler.enable(intr)
+
+        if saved.get("i_floyd_foray_active", False):
+            intr = gs.scheduler.queue(floyd.i_floyd_foray, -1)
+            gs.scheduler.enable(intr)
+            floyd._foray_intr = intr
+
+        self.ndb.floyd = floyd
+
     def _persist(self, gs: GameState) -> None:
         """Write serializable GameState fields back to db."""
         self.db.internal_moves = gs.internal_moves
@@ -163,7 +208,7 @@ class GameStateScript(DefaultScript):
         states: dict = {}
         for intr in gs.scheduler._interrupts:
             name = getattr(intr.routine, "__name__", None)
-            if name is None:
+            if name is None or name in self._FLOYD_INTERRUPT_NAMES:
                 continue
             state_dict = dict(getattr(intr.routine, "_state", {}))
             states[name] = {
@@ -173,3 +218,30 @@ class GameStateScript(DefaultScript):
                 "state": state_dict,
             }
         self.db.interrupt_states = states
+        self._persist_floyd(gs)
+
+    def _persist_floyd(self, gs: GameState) -> None:
+        """Write Floyd's state back to db.floyd_state."""
+        floyd = self.ndb.floyd
+        if floyd is None:
+            return
+        active_names = {
+            getattr(i.routine, "__name__", None)
+            for i in gs.scheduler._interrupts
+            if i.enabled
+        }
+        self.db.floyd_state = {
+            "score_flag":          floyd.score_flag,
+            "spoke":               floyd.spoke,
+            "follow":              floyd.follow,
+            "reactivated":         floyd.reactivated,
+            "introduced":          floyd.introduced,
+            "waiting":             floyd.waiting,
+            "gave_up":             floyd.gave_up,
+            "forayed":             floyd.forayed,
+            "foray_counter":       floyd.foray_counter,
+            "card_revealed":       floyd.card_revealed,
+            "current_room":        floyd.current_room,
+            "i_floyd_active":      "i_floyd" in active_names,
+            "i_floyd_foray_active": "i_floyd_foray" in active_names,
+        }
