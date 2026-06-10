@@ -15,6 +15,7 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 """
 
 from evennia import default_cmds
+from world.verb_commands import ALL_COMMANDS
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -27,13 +28,9 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
     key = "DefaultCharacter"
 
     def at_cmdset_creation(self):
-        """
-        Populates the cmdset
-        """
         super().at_cmdset_creation()
-        #
-        # any commands you add below will overload the default ones.
-        #
+        for cmd_cls in ALL_COMMANDS:
+            self.add(cmd_cls())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):

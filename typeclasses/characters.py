@@ -31,14 +31,22 @@ class Character(PlanetfallNPC):
     """Player character. Inherits NPC schema; puppeted by an Account."""
 
     def at_post_puppet(self, **kwargs) -> None:
-        """Wire this character into the GameState so interrupts can send messages."""
         from world.scheduler_script import get_or_create_game_state_script
         script = get_or_create_game_state_script()
         script.get_gs().player = self
+        if not self.db.starter_items_given:
+            self._give_starter_items()
+            self.db.starter_items_given = True
 
     def at_post_unpuppet(self, account, session=None, **kwargs) -> None:
-        """Clear the player reference when the account disconnects."""
         from world.scheduler_script import get_game_state_script
         script = get_game_state_script()
         if script and script.ndb.game_state:
             script.ndb.game_state.player = None
+
+    def _give_starter_items(self) -> None:
+        """Move all starter-inventory objects (db.starter_item=True) to self."""
+        from evennia.utils.search import search_object_attribute
+        for obj in search_object_attribute(key="starter_item", strvalue="True"):
+            if obj.location is None:
+                obj.move_to(self, quiet=True)
