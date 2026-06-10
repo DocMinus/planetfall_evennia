@@ -86,6 +86,7 @@ class GameState:
         self.chronometer_present: bool = False
         self.chronometer_munged: bool = False
         self.scheduler: Scheduler = Scheduler()
+        self.player = None             # set to Character on login; used by interrupts for output
 
     def advance_clock(self) -> bool:
         """

@@ -9,20 +9,27 @@ ZIL source reference (misc.zil:76-81 — initial QUEUE calls):
   ENABLE <QUEUE I-HUNGER-WARNINGS 2000>
   ENABLE <QUEUE I-SICKNESS-WARNINGS 1000>
 
-Routines with more than a couple of state variables should become their own
-class (like FloydNPC). The ones here are thin enough to stay as functions
-that close over GameState.
+Each maker function accepts an optional `state` dict so the GameStateScript
+can restore interrupt-local state after a server reload.  The returned
+closure carries a `_state` attribute pointing at that dict so the script
+can serialise it back to db.
 """
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.state import GameState
+    from world.state import GameState
 
 
-def register_all(gs: GameState) -> None:
-    """Register the initial interrupt set. Call once at game start."""
+def _send(gs, msg: str) -> None:
+    """Send a message to the player if one is connected."""
+    if gs.player:
+        gs.player.msg(msg)
+
+
+def register_all(gs: "GameState") -> None:
+    """Register the initial interrupt set. Call once on a fresh game."""
     s = gs.scheduler
     s.enable(s.queue(make_i_blather(gs),              -1))
     s.enable(s.queue(make_i_ambassador(gs),            -1))
@@ -34,14 +41,18 @@ def register_all(gs: GameState) -> None:
 
 # ---------------------------------------------------------------------------
 # I-BLATHER  (globals.zil:680)
-# Every-turn ensign harassment / brig drag. Stub until room/actor model exists.
+# Every-turn ensign harassment / brig drag.
 # ---------------------------------------------------------------------------
 
-def make_i_blather(gs: GameState):
+def make_i_blather(gs: "GameState", state: dict | None = None):
+    state = state if state is not None else {}
+
     def i_blather() -> bool:
         # TODO: implement ensign harassment logic
         return False
+
     i_blather.__name__ = "i_blather"
+    i_blather._state = state
     return i_blather
 
 
@@ -50,11 +61,15 @@ def make_i_blather(gs: GameState):
 # Every-turn alien NPC interactions.
 # ---------------------------------------------------------------------------
 
-def make_i_ambassador(gs: GameState):
+def make_i_ambassador(gs: "GameState", state: dict | None = None):
+    state = state if state is not None else {}
+
     def i_ambassador() -> bool:
         # TODO: implement ambassador interaction logic
         return False
+
     i_ambassador.__name__ = "i_ambassador"
+    i_ambassador._state = state
     return i_ambassador
 
 
@@ -63,13 +78,16 @@ def make_i_ambassador(gs: GameState):
 # One-shot: queues ship explosion and comm puzzle after 1 tick.
 # ---------------------------------------------------------------------------
 
-def make_i_random_interrupts(gs: GameState):
+def make_i_random_interrupts(gs: "GameState", state: dict | None = None):
+    state = state if state is not None else {}
+
     def i_random_interrupts() -> bool:
-        # Queue the ship explosion countdown (5 stages, globals.zil:1162)
         gs.scheduler.enable(gs.scheduler.queue(make_i_blowup_feinstein(gs), 100))
         # TODO: queue comm puzzle interrupt
         return False
+
     i_random_interrupts.__name__ = "i_random_interrupts"
+    i_random_interrupts._state = state
     return i_random_interrupts
 
 
@@ -78,65 +96,68 @@ def make_i_random_interrupts(gs: GameState):
 # 5-stage ship destruction countdown. Carries its own stage counter.
 # ---------------------------------------------------------------------------
 
-def make_i_blowup_feinstein(gs: GameState):
-    state = {"stage": 0}
+_BLOWUP_MESSAGES = [
+    "A distant rumble shakes the ship.",
+    "The lights flicker. Something structural is giving way.",
+    "Fire and smoke pour from a nearby corridor.",
+    "The hull groans as explosive decompression begins.",
+    None,  # stage 4: game over
+]
 
-    MESSAGES = [
-        "A distant rumble shakes the ship.",
-        "The lights flicker. Something structural is giving way.",
-        "Fire and smoke pour from a nearby corridor.",
-        "The hull groans as explosive decompression begins.",
-        None,  # stage 5: game over
-    ]
+
+def make_i_blowup_feinstein(gs: "GameState", state: dict | None = None):
+    state = state if state is not None else {"stage": 0}
 
     def i_blowup_feinstein() -> bool:
         stage = state["stage"]
-        if stage < 4:
-            msg = MESSAGES[stage]
+        if stage < len(_BLOWUP_MESSAGES) - 1:
+            msg = _BLOWUP_MESSAGES[stage]
             if msg:
-                # TODO: wire up to output system
-                pass
+                _send(gs, msg)
             state["stage"] += 1
             gs.scheduler.enable(gs.scheduler.queue(i_blowup_feinstein, 150))
         else:
-            # TODO: trigger game-over / fatal condition
+            _send(gs, "The Feinstein tears apart around you.  Everything goes dark.")
             return True
         return False
 
     i_blowup_feinstein.__name__ = "i_blowup_feinstein"
+    i_blowup_feinstein._state = state
     return i_blowup_feinstein
 
 
 # ---------------------------------------------------------------------------
 # I-SLEEP-WARNINGS  (globals.zil:2026)
-# 5-level fatigue escalation. Fires at 3600 ticks, re-queues each stage.
+# 5-level fatigue escalation.
 # ---------------------------------------------------------------------------
 
-def make_i_sleep_warnings(gs: GameState):
-    state = {"level": 0}
+_SLEEP_MESSAGES = [
+    "You feel a little drowsy.",
+    "You are quite tired.",
+    "You can barely keep your eyes open.",
+    "You collapse from exhaustion.",
+    None,  # fatal
+]
 
-    MESSAGES = [
-        "You feel a little drowsy.",
-        "You are quite tired.",
-        "You can barely keep your eyes open.",
-        "You collapse from exhaustion.",
-        None,  # fatal
-    ]
+
+def make_i_sleep_warnings(gs: "GameState", state: dict | None = None):
+    state = state if state is not None else {"level": 0}
 
     def i_sleep_warnings() -> bool:
         level = state["level"]
-        if level < len(MESSAGES):
-            msg = MESSAGES[level]
+        if level < len(_SLEEP_MESSAGES):
+            msg = _SLEEP_MESSAGES[level]
             if msg:
-                pass  # TODO: wire up to output system
+                _send(gs, msg)
             state["level"] += 1
-            if level < len(MESSAGES) - 1:
+            if level < len(_SLEEP_MESSAGES) - 1:
                 gs.scheduler.enable(gs.scheduler.queue(i_sleep_warnings, 600))
             else:
-                return True  # fatal
+                return True
         return False
 
     i_sleep_warnings.__name__ = "i_sleep_warnings"
+    i_sleep_warnings._state = state
     return i_sleep_warnings
 
 
@@ -144,31 +165,33 @@ def make_i_sleep_warnings(gs: GameState):
 # I-HUNGER-WARNINGS  (globals.zil:2295)
 # ---------------------------------------------------------------------------
 
-def make_i_hunger_warnings(gs: GameState):
-    state = {"level": 0}
+_HUNGER_MESSAGES = [
+    "Your stomach growls.",
+    "You are getting quite hungry.",
+    "You are ravenously hungry.",
+    "You faint from hunger.",
+    None,
+]
 
-    MESSAGES = [
-        "Your stomach growls.",
-        "You are getting quite hungry.",
-        "You are ravenously hungry.",
-        "You faint from hunger.",
-        None,
-    ]
+
+def make_i_hunger_warnings(gs: "GameState", state: dict | None = None):
+    state = state if state is not None else {"level": 0}
 
     def i_hunger_warnings() -> bool:
         level = state["level"]
-        if level < len(MESSAGES):
-            msg = MESSAGES[level]
+        if level < len(_HUNGER_MESSAGES):
+            msg = _HUNGER_MESSAGES[level]
             if msg:
-                pass  # TODO: wire up to output system
+                _send(gs, msg)
             state["level"] += 1
-            if level < len(MESSAGES) - 1:
+            if level < len(_HUNGER_MESSAGES) - 1:
                 gs.scheduler.enable(gs.scheduler.queue(i_hunger_warnings, 500))
             else:
                 return True
         return False
 
     i_hunger_warnings.__name__ = "i_hunger_warnings"
+    i_hunger_warnings._state = state
     return i_hunger_warnings
 
 
@@ -176,29 +199,31 @@ def make_i_hunger_warnings(gs: GameState):
 # I-SICKNESS-WARNINGS  (globals.zil:2330)
 # ---------------------------------------------------------------------------
 
-def make_i_sickness_warnings(gs: GameState):
-    state = {"level": 0}
+_SICKNESS_MESSAGES = [
+    "You feel slightly nauseous.",
+    "The radiation sickness is getting worse.",
+    "You are very ill.",
+    "You die from radiation poisoning.",
+    None,
+]
 
-    MESSAGES = [
-        "You feel slightly nauseous.",
-        "The radiation sickness is getting worse.",
-        "You are very ill.",
-        "You die from radiation poisoning.",
-        None,
-    ]
+
+def make_i_sickness_warnings(gs: "GameState", state: dict | None = None):
+    state = state if state is not None else {"level": 0}
 
     def i_sickness_warnings() -> bool:
         level = state["level"]
-        if level < len(MESSAGES):
-            msg = MESSAGES[level]
+        if level < len(_SICKNESS_MESSAGES):
+            msg = _SICKNESS_MESSAGES[level]
             if msg:
-                pass  # TODO: wire up to output system
+                _send(gs, msg)
             state["level"] += 1
-            if level < len(MESSAGES) - 1:
+            if level < len(_SICKNESS_MESSAGES) - 1:
                 gs.scheduler.enable(gs.scheduler.queue(i_sickness_warnings, 400))
             else:
                 return True
         return False
 
     i_sickness_warnings.__name__ = "i_sickness_warnings"
+    i_sickness_warnings._state = state
     return i_sickness_warnings

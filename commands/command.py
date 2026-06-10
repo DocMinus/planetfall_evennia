@@ -33,6 +33,30 @@ class Command(BaseCommand):
     pass
 
 
+class PlanetfallCommand(Command):
+    """
+    Base for all timed Planetfall game commands.
+
+    Subclasses set `timeless = True` for verbs that consume no in-game time
+    (SCORE, SAVE, RESTORE, VERSION, TELL, etc.).  All others cost 7 ticks by
+    default (GameState.c_elapsed default).
+
+    The clock is advanced in at_post_cmd() so func() can still call
+    gs.set_timeless() or override c_elapsed before the scheduler fires.
+    """
+
+    timeless: bool = False
+
+    def at_post_cmd(self) -> None:
+        from world.scheduler_script import get_or_create_game_state_script
+        script = get_or_create_game_state_script()
+        if self.timeless:
+            script.set_timeless()
+        else:
+            script.reset_elapsed()
+        script.advance(self.caller)
+
+
 # -------------------------------------------------------------
 #
 # The default commands inherit from

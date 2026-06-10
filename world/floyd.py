@@ -15,7 +15,7 @@ import random
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.state import GameState
+    from world.state import GameState
 
 # compone.zil:2316-2338 — 20 random utterances Floyd makes when idle in room
 FLOYDISMS = [

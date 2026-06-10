@@ -61,6 +61,10 @@ def load_world(data_dir=DATA_DIR):
 
     print(f"Done: {len(room_reg)} rooms, {len(obj_reg)} objects, {len(npc_reg)} NPCs loaded.")
 
+    from world.scheduler_script import get_or_create_game_state_script
+    get_or_create_game_state_script()
+    print("  Scheduler initialised.")
+
 
 # ---------------------------------------------------------------------------
 # Helpers

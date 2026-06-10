@@ -29,4 +29,16 @@ class PlanetfallNPC(ObjectParent, DefaultCharacter):
 
 class Character(PlanetfallNPC):
     """Player character. Inherits NPC schema; puppeted by an Account."""
-    pass
+
+    def at_post_puppet(self, **kwargs) -> None:
+        """Wire this character into the GameState so interrupts can send messages."""
+        from world.scheduler_script import get_or_create_game_state_script
+        script = get_or_create_game_state_script()
+        script.get_gs().player = self
+
+    def at_post_unpuppet(self, account, session=None, **kwargs) -> None:
+        """Clear the player reference when the account disconnects."""
+        from world.scheduler_script import get_game_state_script
+        script = get_game_state_script()
+        if script and script.ndb.game_state:
+            script.ndb.game_state.player = None
