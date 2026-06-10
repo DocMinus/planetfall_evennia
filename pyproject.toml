@@ -1,0 +1,10 @@
+[project]
+name = "planetfall-evennia"
+version = "0.1.0"
+requires-python = "==3.12.7"
+dependencies = [
+    "evennia==6.0.0",
+]
+
+[dependency-groups]
+dev = []

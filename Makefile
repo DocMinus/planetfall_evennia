@@ -1,6 +1,6 @@
-EVENNIA := PATH="/Users/a/.local/share/uv/tools/evennia/bin:$$PATH" evennia
+EVENNIA := .venv/bin/evennia
 
-.PHONY: start stop restart shell migrate load
+.PHONY: start stop restart shell migrate load superuser
 
 start:
 	$(EVENNIA) start
@@ -19,3 +19,6 @@ migrate:
 
 load:
 	$(EVENNIA) shell -c "from world.loader import load_world; load_world()"
+
+superuser:
+	$(EVENNIA) createsuperuser
