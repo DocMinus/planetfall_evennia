@@ -1,6 +1,6 @@
 EVENNIA := PATH="/Users/a/.local/share/uv/tools/evennia/bin:$$PATH" evennia
 
-.PHONY: start stop restart shell migrate
+.PHONY: start stop restart shell migrate load
 
 start:
 	$(EVENNIA) start
@@ -16,3 +16,6 @@ shell:
 
 migrate:
 	$(EVENNIA) migrate
+
+load:
+	$(EVENNIA) shell -c "from world.loader import load_world; load_world()"
