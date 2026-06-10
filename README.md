@@ -1,40 +1,187 @@
-# Welcome to Evennia!
+# Planetfall — Evennia Port
 
-This is your game directory, set up to let you start with
-your new game right away. An overview of this directory is found here:
-https://github.com/evennia/evennia/wiki/Directory-Overview#the-game-directory
+An unofficial fan port of **Planetfall** (1983, Infocom) to
+[Evennia](https://www.evennia.com) 6.0, a Python/Django MUD framework.
+The game world (105 rooms, 137 objects, 8 NPCs, 200+ verb patterns) is
+derived from the original ZIL source code via a custom extraction pipeline.
 
-You can delete this readme file when you've read it and you can
-re-arrange things in this game-directory to suit your own sense of
-organisation (the only exception is the directory structure of the
-`server/` directory, which Evennia expects). If you change the structure
-you must however also edit/add to your settings file to tell Evennia
-where to look for things.
+> **Status:** Phases 0–5 complete — world loads, clock ticks, Floyd follows
+> you, all verb commands are wired. Puzzle handlers and conditional exits are
+> in progress (see `EVENNIA_PLAN_2.md`).
 
-Your game's main configuration file is found in
-`server/conf/settings.py` (but you don't need to change it to get
-started). If you just created this directory (which means you'll already
-have a `virtualenv` running if you followed the default instructions),
-`cd` to this directory then initialize a new database using
+---
 
-    evennia migrate
+## Prerequisites
 
-To start the server, stand in this directory and run
+- Python 3.12
+- [uv](https://github.com/astral-sh/uv) (used for the virtual environment)
 
-    evennia start
+---
 
-This will start the server, logging output to the console. Make
-sure to create a superuser when asked. By default you can now connect
-to your new game using a MUD client on `localhost`, port `4000`.  You can
-also log into the web client by pointing a browser to
-`http://localhost:4001`.
+## Setup
 
-# Getting started
+```bash
+# 1. Create the virtual environment and install dependencies
+uv sync
 
-From here on you might want to look at one of the beginner tutorials:
-http://github.com/evennia/evennia/wiki/Tutorials.
+# 2. Apply database migrations (creates the SQLite DB)
+make migrate
 
-Evennia's documentation is here:
-https://github.com/evennia/evennia/wiki.
+# 3. Create a superuser account (you'll use this to log in)
+make superuser
 
-Enjoy!
+# 4. Load the game world into the database (run once)
+make load
+
+# 5. Start the server
+make start
+```
+
+The server starts two listeners:
+- **MUD client** — `localhost:4000` (telnet / any MUD client)
+- **Web client** — `http://localhost:4001` (browser, no client needed)
+
+---
+
+## Starting a Game
+
+1. Connect to `localhost:4001` in your browser (or a MUD client at port 4000).
+2. Log in with the superuser account you created.
+3. Teleport to the starting room:
+   ```
+   @tel/quiet BRIG
+   ```
+4. Type `look` to see where you are.
+
+---
+
+## Basic Commands
+
+| Command | Effect |
+|---------|--------|
+| `look` / `l` | Describe the current room |
+| `examine <thing>` | Examine an object or NPC |
+| `inventory` / `i` | List what you're carrying |
+| `take <thing>` | Pick up an object |
+| `drop <thing>` | Drop from inventory |
+| `open <thing>` | Open a door or container |
+| `close <thing>` | Close it |
+| `put <thing> in <container>` | Put an object inside another |
+| `read <thing>` | Read an object's text |
+| `wear <thing>` | Wear clothing |
+| `look in <container>` | Look inside a container |
+| `wait` / `z` | Pass a turn |
+| `score` | Show your current score |
+| `diagnose` | Show your health status |
+| `north` / `n`, `south` / `s` … | Move in a direction |
+| `again` / `g` | Repeat the last command |
+| `quit` / `q` | Disconnect |
+
+Synonyms from the original game are wired in — `get` works for `take`,
+`kill` for `attack`, `i` for `inventory`, etc.
+
+---
+
+## Makefile Targets
+
+```bash
+make start      # Start the Evennia server
+make stop       # Stop the server
+make restart    # Restart (picks up code changes)
+make shell      # Drop into an interactive Django shell
+make migrate    # Apply database migrations
+make load       # Load world data from JSON into the DB (run once)
+make superuser  # Create an admin account
+```
+
+---
+
+## Project Structure
+
+```
+planetfall_evennia/
+  commands/
+    command.py            # PlanetfallCommand base class; clock advance hook
+    default_cmdsets.py    # CharacterCmdSet; registers all 99 verb commands
+  typeclasses/
+    rooms.py              # PlanetfallRoom — ZIL room fields (flags, pseudo, action)
+    objects.py            # PlanetfallObject — ZIL object fields (TAKEBIT, CONTBIT, …)
+    characters.py         # PlanetfallNPC + Character; starter item handout
+    exits.py              # PlanetfallExit — blocked/conditional/per exit types
+  world/
+    data/                 # JSON world data (rooms, objects, npcs, syntax, synonyms)
+    loader.py             # One-time DB loader: JSON → Evennia objects
+    state.py              # GameState + Scheduler (pure Python clock engine)
+    interrupts.py         # Interrupt closures: sleep/hunger warnings, blather, etc.
+    floyd.py              # FloydNPC — autonomous robot companion logic
+    scheduler_script.py   # Evennia Script wrapping GameState; survives server reloads
+    verb_commands.py      # 99 Command classes generated from syntax.json; 16 handlers
+  server/conf/
+    settings.py           # Evennia settings
+```
+
+---
+
+## How the Clock Works
+
+Every command that is not marked `timeless` advances the game clock by 7
+ticks (Planetfall's default action cost). The `GameStateScript` Evennia
+`Script` owns a `GameState` + `Scheduler` instance. After each command the
+scheduler fires any queued interrupt routines whose countdown has reached
+zero — sleep warnings, hunger messages, Floyd's idle chatter, etc.
+
+State (clock, interrupt queue, Floyd's position) is persisted to the Evennia
+database after every advance and rebuilt on server restart.
+
+---
+
+## Reloading / Development
+
+```bash
+make restart          # Hot-reload; picks up Python changes without resetting the DB
+make shell            # Interactive shell with full Django ORM access
+
+# Inspect the game state from the shell:
+from world.scheduler_script import get_game_state_script
+gs = get_game_state_script().get_gs()
+print(gs.day, gs.internal_moves)
+
+# Re-run the world loader after wiping the DB:
+from world.loader import load_world
+load_world()
+```
+
+---
+
+## Credits and Licences
+
+### Planetfall (original game)
+
+**Planetfall** was written by **Steve Meretzky** and published by **Infocom** in 1983.
+The intellectual property is currently held by **Activision Blizzard**.
+
+The ZIL (Zork Implementation Language) source code used as reference for this port
+was made publicly available as part of the
+[Infocom Cabinet](https://github.com/historicalsource) archive hosted by
+Jason Scott and the Internet Archive (2019). The copyright to Planetfall and
+its source code remains with Activision Blizzard. This project is an
+**unofficial, non-commercial fan port** created for educational and preservation
+purposes. It makes no claim to the original intellectual property.
+
+If you own the rights and have concerns, please open an issue.
+
+### Evennia
+
+This project is built on [Evennia](https://www.evennia.com) 6.0.0, a Python/Django
+framework for online text games.
+
+Evennia is copyright © the Evennia contributors and is released under the
+**BSD 3-Clause Licence**.
+Source: https://github.com/evennia/evennia
+
+### This Port
+
+The Python code in this repository (loader, scheduler, Floyd logic, command
+system) was written for this project. It is released under the **MIT Licence**
+— see `LICENSE` if present, otherwise treat it as freely usable for
+non-commercial purposes with attribution.
