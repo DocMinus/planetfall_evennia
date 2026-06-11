@@ -249,10 +249,79 @@ def handle_red_elevator_button(ctx: ObjAction) -> bool:
     return True
 
 
+def handle_blather(ctx: ObjAction) -> bool:
+    """BLATHER-F (globals.zil:739) — Ensign Blather's verb responses."""
+    v = ctx.verb
+    msg = ctx.caller.msg
+    if v in ("V-TALK", "V-HELLO", "V-TELL"):
+        msg("Blather shouts \"Speak when you're spoken to, Ensign Seventh "
+            "Class!\" He breaks three pencil points in a frenzied rush to give "
+            "you more demerits.")
+        return True
+    if v in ("V-ATTACK", "V-KICK"):
+        msg("Blather removes several of your appendages and internal organs.")
+        return True
+    if v == "V-SALUTE":
+        msg("Blather's sneer softens a bit. \"First right thing you've done "
+            "today. Only five demerits.\"")
+        return True
+    if v == "V-THROW":
+        item = ctx.nouns[0] if ctx.nouns else "object"
+        if ctx.obj.location:
+            for held in list(ctx.caller.contents):
+                held.move_to(ctx.obj.location, quiet=True, move_type="drop")
+                break
+        msg(f"The {item} bounces off Blather's bulbous nose. He becomes livid, "
+            "orders you to do five hundred push-ups, gives you ten thousand "
+            "demerits, and assigns you five years of extra galley duty.")
+        return True
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        msg("Ensign Blather is a tall, beefy officer with a tremendous, "
+            "misshapen nose. His uniform is perfect in every respect, and the "
+            "crease in his trousers could probably slice diamonds in half.")
+        return True
+    if v == "V-TAKE":
+        msg("Blather brushes you away, muttering about suspended shore leave.")
+        return True
+    return False
+
+
+def handle_ambassador(ctx: ObjAction) -> bool:
+    """AMBASSADOR-F (globals.zil:870) — the alien ambassador's verb responses."""
+    v = ctx.verb
+    msg = ctx.caller.msg
+    if v in ("V-TALK", "V-HELLO", "V-TELL"):
+        msg("The ambassador taps his translator, and then touches his center "
+            "knee to his left ear (the Blow'k-bibben-Gordoan equivalent of "
+            "shrugging).")
+        return True
+    if v == "V-ASK-FOR" and any("celery" in n.lower() for n in ctx.nouns):
+        msg("The ambassador seems willing to let you eat some of it, but I "
+            "doubt he wants to part with the entire stalk.")
+        return True
+    if v in ("V-ATTACK", "V-KICK"):
+        msg("The ambassador is startled, and emits an amazing quantity of "
+            "slime which spreads across the section of the deck you just "
+            "polished.")
+        return True
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        msg("The ambassador has around twenty eyes, seven of which are "
+            "currently open. Half of his six legs are retracted. Green slime "
+            "oozes from multiple orifices in his scaly skin. He speaks through "
+            "a mechanical translator slung around his neck.")
+        return True
+    if v == "V-LISTEN":
+        msg("The alien makes a wheezing noise as he breathes.")
+        return True
+    return False
+
+
 OBJ_HANDLERS: dict = {
     "FLOYD-F": handle_floyd,
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,
     "RED-ELEVATOR-BUTTON-F": handle_red_elevator_button,
+    "BLATHER-F": handle_blather,
+    "AMBASSADOR-F": handle_ambassador,
 }
 
 
