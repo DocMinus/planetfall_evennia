@@ -206,8 +206,13 @@ def make_i_random_interrupts(gs: "GameState", state: dict | None = None):
     state = state if state is not None else {}
 
     def i_random_interrupts() -> bool:
-        gs.scheduler.enable(gs.scheduler.queue(make_i_blowup_feinstein(gs), 100))
-        # TODO: queue comm puzzle interrupt
+        # ZIL: <ENABLE <QUEUE I-BLOWUP-FEINSTEIN <+ <RANDOM 90> 240>>> — the
+        # Feinstein is doomed 240–329 ticks in; I-BLOWUP-FEINSTEIN converts
+        # itself to an every-turn demon on its first fire.
+        import random
+        gs.scheduler.enable(
+            gs.scheduler.queue(make_i_blowup_feinstein(gs), random.randint(0, 89) + 240)
+        )
         return False
 
     i_random_interrupts.__name__ = "i_random_interrupts"
@@ -217,39 +222,238 @@ def make_i_random_interrupts(gs: "GameState", state: dict | None = None):
 
 # ---------------------------------------------------------------------------
 # I-BLOWUP-FEINSTEIN  (globals.zil:1162)
-# 5-stage ship destruction countdown. Carries its own stage counter.
+# The opening: the Feinstein is destroyed over five turns (BLOWUP-COUNTER 1→5).
+# The player must reach the ESCAPE-POD and get in the SAFETY-WEB before then.
+# Door state, NPC panic, and whether you die or eject all key off where HERE is.
 # ---------------------------------------------------------------------------
 
-_BLOWUP_MESSAGES = [
-    "A distant rumble shakes the ship.",
-    "The lights flicker. Something structural is giving way.",
-    "Fire and smoke pour from a nearby corridor.",
-    "The hull groans as explosive decompression begins.",
-    None,  # stage 4: game over
-]
+def _set_door(zil_id: str, *, is_open=None, visible=None) -> None:
+    """Mutate a door object's OPENBIT / INVISIBLE, by zil_id."""
+    door = _by_zil_id(zil_id)
+    if door is None:
+        return
+    if is_open is not None:
+        door.db.is_open = is_open
+    if visible is not None:
+        flags = [f for f in (door.db.obj_flags or []) if f != "INVISIBLE"]
+        if not visible:
+            flags.append("INVISIBLE")
+        door.db.obj_flags = flags
 
 
 def make_i_blowup_feinstein(gs: "GameState", state: dict | None = None):
-    state = state if state is not None else {"stage": 0}
+    """I-BLOWUP-FEINSTEIN (globals.zil:1162) — the five-turn ship destruction."""
+    state = state if state is not None else {}
 
     def i_blowup_feinstein() -> bool:
-        stage = state["stage"]
-        if stage < len(_BLOWUP_MESSAGES) - 1:
-            msg = _BLOWUP_MESSAGES[stage]
-            if msg:
-                _send(gs, msg)
-            state["stage"] += 1
-            gs.scheduler.enable(gs.scheduler.queue(i_blowup_feinstein, 150))
-        else:
-            return gs.die(
-                "An enormous explosion tears the walls of the ship apart. If "
-                "only you had made it to an escape pod..."
-            )
+        gs.flags["BLOWUP-COUNTER"] = gs.flags.get("BLOWUP-COUNTER", 0) + 1
+        n = gs.flags["BLOWUP-COUNTER"]
+        here = _here_id(gs)
+
+        if n == 1:
+            gs.flags["BRIGS-UP"] = 0
+            _set_door("POD-DOOR", is_open=True)
+            msg = ("\nA massive explosion rocks the ship. Echoes from the "
+                   "explosion resound deafeningly down the halls. ")
+            if here == "DECK-NINE":
+                msg += "The door to port slides open. "
+                if _in_room("AMBASSADOR", here):
+                    _move_npc("AMBASSADOR", None)
+                    _move_npc("CELERY", None)
+                    msg += ("\nThe ambassador squawks frantically, evacuates a "
+                            "massive load of gooey slime, and rushes away.")
+                elif _in_room("BLATHER", here):
+                    _move_npc("BLATHER", None)
+                    msg += ("\nBlather, confused by this non-routine occurrence, "
+                            "orders you to continue scrubbing the floor, and "
+                            "then dashes off.")
+            elif here not in ("ESCAPE-POD", "GANGWAY", "BRIG"):
+                msg += ("\nBlather, looking slightly disoriented, barks at you "
+                        "to resume your assigned duties.")
+            _send(gs, msg)
+            # The opening QUEUE fired this once after a delay; convert it to an
+            # every-turn demon (ZIL `<ENABLE <QUEUE I-BLOWUP-FEINSTEIN -1>>`).
+            # Only here at n==1 — the -1 demon persists, so re-queuing each turn
+            # would stack duplicates.
+            gs.scheduler.enable(gs.scheduler.queue(i_blowup_feinstein, -1))
+
+        elif n == 2:
+            _set_door("CORRIDOR-DOOR", is_open=False, visible=True)
+            _set_door("GANGWAY-DOOR", is_open=False, visible=True)
+            if here == "DECK-NINE":
+                _send(gs, "\nMore distant explosions! A narrow emergency "
+                      "bulkhead at the base of the gangway and a wider one "
+                      "along the corridor to starboard both crash shut!")
+            elif here in ("ESCAPE-POD", "BRIG"):
+                _send(gs, "\nThe ship shakes again. You hear, from close by, "
+                      "the sounds of emergency bulkheads closing.")
+            elif here == "GANGWAY":
+                _send(gs, "\nAnother explosion. A narrow bulkhead at the base "
+                      "of the gangway slams shut!")
+            else:
+                _send(gs, "\nYou are deafened by more explosions and by the "
+                      "sound of emergency bulkheads slamming closed.")
+
+        elif n == 3:
+            _set_door("POD-DOOR", is_open=False)
+            if here == "DECK-NINE":
+                _send(gs, "\nMore powerful explosions buffet the ship. The "
+                      "lights flicker madly, and the escape-pod bulkhead "
+                      "clangs shut.")
+            elif here == "ESCAPE-POD":
+                _send(gs, "\nThe pod door clangs shut as heavy explosions "
+                      "continue to buffet the Feinstein.")
+            else:
+                return gs.die(
+                    "The ship rocks from the force of multiple explosions. The "
+                    "lights go out, and you feel a sudden drop in pressure "
+                    "accompanied by a loud hissing. Too bad you weren't in the "
+                    "escape pod...")
+
+        elif n == 4:
+            _disable_self(gs, "i_blather")
+            _disable_self(gs, "i_ambassador")
+            if here == "DECK-NINE":
+                _send(gs, "\nExplosions continue to rock the ship.")
+            else:
+                _send(gs, "\nYou feel the pod begin to slide down its ejection "
+                      "tube as explosions shake the mother ship.")
+
+        else:  # n == 5
+            if here == "DECK-NINE":
+                return gs.die(
+                    "An enormous explosion tears the walls of the ship apart. "
+                    "If only you had made it to an escape pod...")
+            _send(gs, "\nThrough the viewport of the pod you see the Feinstein "
+                  "dwindle as you head away. Bursts of light dot its hull. "
+                  "Suddenly, a huge explosion blows the Feinstein into tiny "
+                  "pieces, sending the escape pod tumbling away!")
+            gs.scheduler.enable(gs.scheduler.queue(make_i_pod_trip(gs), -1))
+            _disable_self(gs, "i_blowup_feinstein")
+            if not gs.flags.get("IN-WEB"):
+                if _prob(20):
+                    return gs.die(
+                        "You are thrown against the bulkhead, head first. It "
+                        "seems that getting in the safety webbing would have "
+                        "been a good idea.")
+                _send(gs, "\nYou are thrown against the bulkhead, bruising a "
+                      "few limbs. The safety webbing might have offered a bit "
+                      "more protection.")
         return False
 
     i_blowup_feinstein.__name__ = "i_blowup_feinstein"
     i_blowup_feinstein._state = state
     return i_blowup_feinstein
+
+
+# ---------------------------------------------------------------------------
+# I-POD-TRIP  (globals.zil:1272)
+# The escape pod's descent to Resida (TRIP-COUNTER 1→11). Lands safely only if
+# you rode it in the SAFETY-WEB.
+# ---------------------------------------------------------------------------
+
+_POD_TRIP_MESSAGES = {
+    1: ("\nAs the escape pod tumbles away from the former location of the "
+        "Feinstein, its gyroscopes whine. The pod slowly stops tumbling. "
+        "Lights on the control panel blink furiously as the autopilot "
+        "searches for a reasonable destination."),
+    2: ("\nThe auxiliary rockets fire briefly, and a nearby planet swings into "
+        "view through the port. It appears to be almost entirely ocean, with "
+        "just a few visible islands and an unusually small polar ice cap. A "
+        "moment later, the system's sun swings into view, and the viewport "
+        "polarizes into a featureless black rectangle."),
+    3: ("\nThe main thrusters fire a long, gentle burst. A monotonic voice "
+        "issues from the control panel. \"Approaching planet...human-"
+        "habitable.\""),
+    7: "\nThe pod is buffeted as it enters the planet's atmosphere.",
+    8: ("\nYou feel the temperature begin to rise, and the pod's climate "
+        "control system roars as it labors to compensate."),
+    9: ("\nThe viewport suddenly becomes transparent again, giving you a view "
+        "of endless ocean below. The lights on the control panel flash madly "
+        "as the pod's computer searches for a suitable landing site. The "
+        "thrusters fire long and hard, slowing the pod's descent."),
+    10: ("\nThe pod is now approaching the closer of a pair of islands. It "
+         "appears to be surrounded by sheer cliffs rising from the water, and "
+         "is topped by a wide plateau. The plateau seems to be covered by a "
+         "sprawling complex of buildings."),
+}
+
+
+def make_i_pod_trip(gs: "GameState", state: dict | None = None):
+    """I-POD-TRIP (globals.zil:1272) — the pod's descent to the planet."""
+    state = state if state is not None else {}
+
+    def i_pod_trip() -> bool:
+        gs.flags["TRIP-COUNTER"] = gs.flags.get("TRIP-COUNTER", 0) + 1
+        n = gs.flags["TRIP-COUNTER"]
+        if n in _POD_TRIP_MESSAGES:
+            _send(gs, _POD_TRIP_MESSAGES[n])
+        elif n == 11:
+            if gs.flags.get("IN-WEB"):
+                here = _by_zil_id("ESCAPE-POD")
+                for zid in ("FOOD-KIT", "TOWEL"):
+                    obj = _by_zil_id(zid)
+                    if obj and here:
+                        obj.move_to(here, quiet=True, move_type="move")
+                _send(gs, "\nThe pod lands with a thud. Through the viewport "
+                      "you can see a rocky cleft and some water below. The pod "
+                      "rocks gently back and forth as if it was precariously "
+                      "balanced. A previously unseen panel slides open, "
+                      "revealing some emergency provisions, including a "
+                      "survival kit and a towel.")
+                gs.flags["TRIP-COUNTER"] = 15
+                _disable_self(gs, "i_pod_trip")
+            else:
+                return gs.die(
+                    "The pod, whose automated controls were unfortunately "
+                    "designed by computer scientists, lands with a good deal of "
+                    "force. Your body sails across the pod until it is stopped "
+                    "by one of the sharper corners of the control panel.")
+        return False
+
+    i_pod_trip.__name__ = "i_pod_trip"
+    i_pod_trip._state = state
+    return i_pod_trip
+
+
+# ---------------------------------------------------------------------------
+# I-SINK-POD  (globals.zil:1325)
+# Once the pod has landed and you stand out of the web, it sinks. You must
+# open the pod door and swim out before SINK-COUNTER 5.
+# ---------------------------------------------------------------------------
+
+def make_i_sink_pod(gs: "GameState", state: dict | None = None):
+    """I-SINK-POD (globals.zil:1325) — the landed pod fills with water and sinks."""
+    state = state if state is not None else {}
+
+    def i_sink_pod() -> bool:
+        gs.flags["SINK-COUNTER"] = gs.flags.get("SINK-COUNTER", 0) + 1
+        n = gs.flags["SINK-COUNTER"]
+        in_pod = _here_id(gs) == "ESCAPE-POD"
+        pod_open = _door_is_open("POD-DOOR")
+        if n == 3 and in_pod:
+            _send(gs, "\nThe pod is now completely submerged, and you feel it "
+                  "smash against underwater rocks. Bubbles streaming upward "
+                  "past the window indicate that the pod is continuing to sink.")
+        elif n == 4 and in_pod and not pod_open:
+            _send(gs, "\nThe pod creaks ominously from the increasing pressure.")
+        elif n == 5 and in_pod:
+            if pod_open:
+                return gs.die(
+                    "Between the swirling waters and the increasing pressure, "
+                    "it's curtains for you. Perhaps you should have left the "
+                    "pod a bit sooner.")
+            return gs.die("The pod splits open, and water pours in.")
+        return False
+
+    i_sink_pod.__name__ = "i_sink_pod"
+    i_sink_pod._state = state
+    return i_sink_pod
+
+
+def _door_is_open(zil_id: str) -> bool:
+    door = _by_zil_id(zil_id)
+    return bool(door and door.db.is_open)
 
 
 # ---------------------------------------------------------------------------

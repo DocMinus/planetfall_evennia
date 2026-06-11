@@ -641,6 +641,11 @@ def _h_walk(caller, nouns):
     PlanetfallCommand.at_post_cmd not to tick a second time for that move.
     """
     from evennia.objects.objects import DefaultExit
+    # ZIL SAFETY-WEB-F / BED M-BEG: you must leave the vehicle before walking.
+    gs = _gs()
+    if gs and gs.flags.get("IN-WEB"):
+        caller.msg("You'll have to stand up, first.")
+        return
     word = _strip_articles(nouns[0]).strip().lower() if nouns else ""
     direction = _DIR_CANON.get(word)
     loc = caller.location
@@ -1076,7 +1081,12 @@ def _h_exit(caller, nouns):
     _do_walk(caller, "out")
 
 def _h_leave(caller, nouns):
-    _do_walk(caller, "out")
+    # ZIL V-LEAVE: disembark a vehicle if in one, else walk out.
+    gs = _gs()
+    if gs and (gs.flags.get("IN-WEB") or gs.flags.get("IN-BED")):
+        _h_disembark(caller, nouns)
+    else:
+        _do_walk(caller, "out")
 
 def _h_climb_up(caller, nouns):
     _do_walk(caller, "up")
@@ -1087,6 +1097,98 @@ def _h_climb_down(caller, nouns):
 def _h_walk_dir(caller, nouns):
     """V-WALK-AROUND / V-WALK-TO — ZIL USE-DIRECTIONS prompt."""
     caller.msg("You should specify a direction to walk.")
+
+
+# --- vehicle boarding: SAFETY-WEB (pod) and BED (survival) ------------------
+# ZIL models these as VEHBIT objects you move ADVENTURER into, while HERE stays
+# the room. We track occupancy as GameState flags (IN-WEB / IN-BED) so HERE,
+# look, and the interrupts keep working.
+
+def _here_zil(caller) -> str | None:
+    return caller.location.db.zil_id if caller.location else None
+
+
+def _stand_from_web(caller) -> None:
+    """ZIL SAFETY-WEB-F EXIT/STAND branch (globals.zil:986)."""
+    gs = _gs()
+    if not gs:
+        return
+    gs.flags["IN-WEB"] = False
+    # After the pod has landed (TRIP-COUNTER>14), standing up starts it sinking.
+    if gs.flags.get("TRIP-COUNTER", 0) > 14 and not _sink_running(gs):
+        from world.interrupts import make_i_sink_pod
+        gs.scheduler.enable(gs.scheduler.queue(make_i_sink_pod(gs), -1))
+        caller.msg("As you stand, the pod shifts slightly and you feel it "
+                   "falling. A moment later, the fall stops with a shock, and "
+                   "you see water rising past the viewport.")
+    else:
+        caller.msg("You are standing again.")
+
+
+def _sink_running(gs) -> bool:
+    return any(getattr(i.routine, "__name__", None) == "i_sink_pod" and i.enabled
+               for i in gs.scheduler._interrupts)
+
+
+def _h_board(caller, nouns):
+    """V-BOARD (verbs.zil:860) — board a vehicle (SAFETY-WEB / BED)."""
+    obj = _prso(caller, nouns)
+    if not obj:
+        return
+    gs = _gs()
+    zid = obj.db.zil_id
+    if zid == "SAFETY-WEB":
+        if gs:
+            gs.flags["IN-WEB"] = True
+        caller.msg("You are now in the safety webbing.")
+    elif zid == "BED":
+        if gs:
+            gs.flags["IN-BED"] = True
+        caller.msg("You are now on the bed.")
+    elif "VEHBIT" in (obj.db.obj_flags or []):
+        caller.msg(f"You are now in the {obj.key}.")
+    else:
+        caller.msg(f"I suppose you have a theory on boarding {_article(obj)} "
+                   f"{obj.key}.")
+
+
+def _h_sit(caller, nouns):
+    """V-SIT (verbs.zil:1262) — sit; in the pod or a dorm this boards a vehicle."""
+    here = _here_zil(caller)
+    if here == "ESCAPE-POD":
+        caller.msg("(in the web)")
+        _h_board(caller, ["safety webbing"])
+    elif here in ("DORM-A", "DORM-B", "DORM-C", "DORM-D", "INFIRMARY"):
+        caller.msg("(on the bed)")
+        _h_board(caller, ["bed"])
+    else:
+        _set_elapsed(caller, 31)
+        caller.msg("You recline on the floor for a bit, and then stand up "
+                   "again.")
+
+
+def _h_stand(caller, nouns):
+    """V-STAND (verbs.zil:892) — stand up / out of a vehicle."""
+    gs = _gs()
+    if gs and gs.flags.get("IN-WEB"):
+        _stand_from_web(caller)
+    elif gs and gs.flags.get("IN-BED"):
+        gs.flags["IN-BED"] = False
+        caller.msg("You are on your own feet again.")
+    else:
+        caller.msg("You are already standing, I think.")
+
+
+def _h_disembark(caller, nouns):
+    """V-DISEMBARK / EXIT from a vehicle (verbs.zil:866)."""
+    gs = _gs()
+    if gs and gs.flags.get("IN-WEB"):
+        _stand_from_web(caller)
+    elif gs and gs.flags.get("IN-BED"):
+        gs.flags["IN-BED"] = False
+        caller.msg("You are on your own feet again.")
+    else:
+        _do_walk(caller, "out")
 
 
 def _h_stub(caller, nouns):
@@ -1192,6 +1294,13 @@ HANDLERS: dict = {
     "V-CLIMB-DOWN":  _h_climb_down,
     "V-WALK-AROUND": _h_walk_dir,
     "V-WALK-TO":     _h_walk_dir,
+    # Vehicle boarding (pod safety-web / beds) — engine #4 + survival.
+    "V-BOARD":       _h_board,
+    "V-CLIMB-ON":    _h_board,
+    "V-SIT":         _h_sit,
+    "V-SIT-DOWN":    _h_sit,
+    "V-STAND":       _h_stand,
+    "V-DISEMBARK":   _h_disembark,
 }
 
 

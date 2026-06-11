@@ -21,6 +21,8 @@ from world.interrupts import (
     make_i_hunger_warnings,
     make_i_sickness_warnings,
     make_i_blowup_feinstein,
+    make_i_pod_trip,
+    make_i_sink_pod,
     make_i_upper_elevator_arrive,
     make_i_lower_elevator_arrive,
 )
@@ -35,6 +37,9 @@ _MAKER_BY_NAME = {
     "i_hunger_warnings": make_i_hunger_warnings,
     "i_sickness_warnings": make_i_sickness_warnings,
     "i_blowup_feinstein": make_i_blowup_feinstein,
+    # Pod escape sequence (queued mid-blowup / on standing out of the web).
+    "i_pod_trip": make_i_pod_trip,
+    "i_sink_pod": make_i_sink_pod,
     # On-demand one-shots (queued by the elevator call-buttons); listed here so
     # a press that hasn't yet "arrived" survives a reload.
     "i_upper_elevator_arrive": make_i_upper_elevator_arrive,
@@ -48,7 +53,9 @@ _DEFAULT_TICKS = {
     "i_sleep_warnings": 3600,
     "i_hunger_warnings": 2000,
     "i_sickness_warnings": 1000,
-    "i_blowup_feinstein": 100,
+    "i_blowup_feinstein": -1,
+    "i_pod_trip": -1,
+    "i_sink_pod": -1,
     "i_upper_elevator_arrive": 50,
     "i_lower_elevator_arrive": 100,
 }
