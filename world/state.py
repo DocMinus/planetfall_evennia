@@ -105,6 +105,13 @@ class GameState:
             "LOWER-ELEVATOR-UP": False,     # compone.zil:2597  <GLOBAL ... <>>
             "ALFIE-AT-KALAMONTEE": True,    # globals.zil       <GLOBAL ... T>
             "BETTY-AT-KALAMONTEE": False,   # globals.zil       <GLOBAL ... <>>
+            # Shuttle driving sim (globals.zil) — Subsystem 4.
+            "SHUTTLE-MOVING": False,
+            "SHUTTLE-VELOCITY": 0,
+            "SHUTTLE-COUNTER": 0,
+            "LEVER-SETTING": 0,             # 0 centre, 1 up (+), -1 down (-)
+            "ALFIE-BROKEN": False,
+            "BETTY-BROKEN": False,
             "BLOWUP-COUNTER": 0,            # globals.zil:1160
             "TRIP-COUNTER": 0,              # globals.zil:1270 — pod descent stage
             "SINK-COUNTER": 0,              # globals.zil — pod sinking stage
@@ -140,6 +147,12 @@ class GameState:
         MAIN-LOOP (misc.zil:248-261).
         Returns True if a fatal interrupt fired.
         """
+        # While the shuttle is rolling, a turn costs 600/velocity ticks
+        # (misc.zil:240) — faster car, less game time per move.
+        vel = self.flags.get("SHUTTLE-VELOCITY", 0)
+        if vel > 0:
+            self.c_elapsed = 600 // vel
+
         if self.c_elapsed == 0:
             return False
 

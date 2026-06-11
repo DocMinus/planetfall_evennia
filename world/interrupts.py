@@ -840,6 +840,131 @@ def make_i_kitchen_door_closes(gs: "GameState", state: dict | None = None):
     return i_kitchen_door_closes
 
 
+# ---------------------------------------------------------------------------
+# I-SHUTTLE  (globals.zil:1880) — the maglev driving simulation.
+# Each turn the car's velocity changes by the lever setting (+5 up / -5 down);
+# the trip counter advances; at counter 24 the car arrives (velocity 0 = clean,
+# <20 = crash + car broken, else fatal) at the opposite station.
+# ---------------------------------------------------------------------------
+
+_SHUTTLE_SIGNS = {
+    2: "\nYou pass a sign which says \"Limit 45.\"",
+    12: "\nThe tunnel levels out and begins to slope upward. A sign flashes by "
+        "which reads \"Hafwaa Mark -- Beegin Deeseluraashun.\"",
+    20: "\nYou pass a sign, surrounded by blinking red lights, which says "
+        "\"15.\"",
+    21: "\nYou pass a sign, surrounded by blinking red lights, which says "
+        "\"10.\"",
+    22: "\nYou pass a sign, surrounded by blinking red lights, which says "
+        "\"5.\"",
+    23: "\nThe shuttle car is approaching a brightly-lit area. As you near it, "
+        "you make out the concrete platforms of a shuttle station.",
+}
+
+
+def _shuttle_here_is_alfie(gs) -> bool:
+    return _here_id(gs) in ("ALFIE-CONTROL-EAST", "ALFIE-CONTROL-WEST")
+
+
+def make_i_shuttle(gs: "GameState", state: dict | None = None):
+    """I-SHUTTLE (globals.zil:1880)."""
+    state = state if state is not None else {}
+
+    def i_shuttle() -> bool:
+        f = gs.flags
+        if not f.get("SHUTTLE-MOVING"):
+            f["SHUTTLE-MOVING"] = True
+            _set_door("SHUTTLE-DOOR", is_open=False, visible=True)
+            if f.get("LEVER-SETTING") == 1:
+                f["SHUTTLE-VELOCITY"] = f.get("SHUTTLE-VELOCITY", 0) + 5
+                # Convert the lever's delay-1 kick into an every-turn demon
+                # (once) — the -1 demon persists and drives the rest of the trip.
+                gs.scheduler.enable(gs.scheduler.queue(i_shuttle, -1))
+                _send(gs, "\nThe control cabin door slides shut and the shuttle "
+                      "car begins to move forward! The display changes to 5.")
+            else:
+                _send(gs, "\nThe control cabin door slides shut and the shuttle "
+                      "car begins to move backward. You hear a loud crunch as "
+                      "the shuttle car runs into the rear wall of the station.")
+                _shuttle_stop(gs)
+            return False
+
+        # Already moving.
+        if f.get("SHUTTLE-VELOCITY", 0) > 0:
+            f["SHUTTLE-COUNTER"] = f.get("SHUTTLE-COUNTER", 0) + 1
+        lever = f.get("LEVER-SETTING", 0)
+        if lever == 1:
+            f["SHUTTLE-VELOCITY"] = f.get("SHUTTLE-VELOCITY", 0) + 5
+        elif lever == -1:
+            if f.get("SHUTTLE-VELOCITY", 0) > 0:
+                f["SHUTTLE-VELOCITY"] -= 5
+            else:
+                f["LEVER-SETTING"] = 0
+                _send(gs, "\nThe shuttle car comes to a stop and the lever pops "
+                      "back to the central position.")
+
+        if f.get("SHUTTLE-COUNTER") == 24:
+            _shuttle_arrive(gs)
+        elif f.get("SHUTTLE-VELOCITY", 0) > 0:
+            _shuttle_describe_trip(gs)
+        return False
+
+    i_shuttle.__name__ = "i_shuttle"
+    i_shuttle._state = state
+    return i_shuttle
+
+
+def _shuttle_describe_trip(gs) -> None:
+    f = gs.flags
+    lead = ("still reads" if f.get("LEVER-SETTING") == 0 else "blinks, and now reads")
+    _send(gs, f"\nThe shuttle car continues to move. The display {lead} "
+          f"{f.get('SHUTTLE-VELOCITY', 0)}.")
+    sign = _SHUTTLE_SIGNS.get(f.get("SHUTTLE-COUNTER"))
+    if sign:
+        _send(gs, sign)
+
+
+def _shuttle_stop(gs) -> None:
+    f = gs.flags
+    f["SHUTTLE-ON"] = False
+    f["SHUTTLE-MOVING"] = False
+    f["LEVER-SETTING"] = 0
+    f["SHUTTLE-VELOCITY"] = 0
+    _set_door("SHUTTLE-DOOR", is_open=True, visible=False)
+    _disable_self(gs, "i_shuttle")
+
+
+def _shuttle_arrive(gs) -> bool:
+    f = gs.flags
+    vel = f.get("SHUTTLE-VELOCITY", 0)
+    alfie = _shuttle_here_is_alfie(gs)
+    if vel == 0:
+        _send(gs, "\nThe shuttle car glides into the station and comes to rest "
+              "at the concrete platform. You hear the cabin doors slide open.")
+    elif vel < 20:
+        f["ALFIE-BROKEN" if alfie else "BETTY-BROKEN"] = True
+        _send(gs, "\nThe shuttle car rumbles through the station and smashes "
+              "into the wall at the far end. You are thrown forward into the "
+              "control panel. Both you and the shuttle car produce unhealthy "
+              "crunching sounds as the cabin doors creak slowly open.")
+    else:
+        _shuttle_stop(gs)
+        return gs.die("The shuttle car hurtles past the platforms and rams "
+                      "into the wall at the far end of the station. The shuttle "
+                      "car is destroyed, but you're in no condition to care.")
+    f["SHUTTLE-VELOCITY"] = 0
+    f["SHUTTLE-MOVING"] = False
+    f["SHUTTLE-COUNTER"] = 0
+    f["LEVER-SETTING"] = 0
+    f["SHUTTLE-ON"] = False
+    _set_door("SHUTTLE-DOOR", is_open=True, visible=False)
+    _disable_self(gs, "i_shuttle")
+    # The car is now parked at the opposite station.
+    key = "ALFIE-AT-KALAMONTEE" if alfie else "BETTY-AT-KALAMONTEE"
+    f[key] = not f.get(key)
+    return False
+
+
 def make_i_upper_elevator_arrive(gs: "GameState", state: dict | None = None):
     state = state if state is not None else {}
 

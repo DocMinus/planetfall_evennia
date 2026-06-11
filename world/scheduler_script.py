@@ -32,6 +32,7 @@ from world.interrupts import (
     make_i_turnoff_mini,
     make_i_turnoff_shuttle,
     make_i_kitchen_door_closes,
+    make_i_shuttle,
 )
 
 # Maps routine name -> maker function so we can restore closures after reload.
@@ -59,6 +60,7 @@ _MAKER_BY_NAME = {
     "i_turnoff_mini": make_i_turnoff_mini,
     "i_turnoff_shuttle": make_i_turnoff_shuttle,
     "i_kitchen_door_closes": make_i_kitchen_door_closes,
+    "i_shuttle": make_i_shuttle,
 }
 
 _DEFAULT_TICKS = {
@@ -80,6 +82,7 @@ _DEFAULT_TICKS = {
     "i_turnoff_mini": 30,
     "i_turnoff_shuttle": 100,
     "i_kitchen_door_closes": 50,
+    "i_shuttle": -1,
 }
 
 

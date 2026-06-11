@@ -772,16 +772,135 @@ def _floyd_reveal_card(gs) -> None:
                    "his head and looks confused.")
 
 
+_SHUTTLE_REC_1 = "A recorded voice says \"Shuttle controls are already activated.\""
+_SHUTTLE_REC_2 = ("A recorded voice says \"Use other control cabin. Control "
+                  "activation overridden.\"")
+_SHUTTLE_REC_3 = ("A recording of a deep male voice says \"Shuttle controls "
+                  "activated.\"")
+_SHUTTLE_REC_4 = "A recorded voice says \"Shuttle controls are not currently activated.\""
+
+
 def _shuttle_activate(gs, caller) -> None:
-    """SHUTTLE-ACTIVATE (globals.zil) — power the shuttle (Subsystem 4 drives it)."""
+    """SHUTTLE-ACTIVATE (globals.zil:1790) — power up a control cabin."""
     here = _here_zil(caller)
-    if here in ("ALFIE-CONTROL-EAST", "ALFIE-CONTROL-WEST",
-                "BETTY-CONTROL-EAST", "BETTY-CONTROL-WEST"):
-        gs.flags["SHUTTLE-ON"] = True
-        _queue(gs, "make_i_turnoff_shuttle", 100)
-        caller.msg("A recorded voice says \"Shuttle controls enabled.\"")
-    else:
+    is_alfie = here in ("ALFIE-CONTROL-EAST", "ALFIE-CONTROL-WEST")
+    is_betty = here in ("BETTY-CONTROL-EAST", "BETTY-CONTROL-WEST")
+    if not (is_alfie or is_betty):
         caller.msg(_WRONG_CARD)
+        return
+    if (is_alfie and gs.flags.get("ALFIE-BROKEN")) or \
+       (is_betty and gs.flags.get("BETTY-BROKEN")):
+        caller.msg("A garbled recording mentions that the shuttle car has "
+                   "undergone some damage and that the repair robot has been "
+                   "summoned.")
+        return
+    if gs.internal_moves > 6000:
+        caller.msg("A recorded voice explains that using the shuttle car during "
+                   "the evening hours requires special authorization.")
+        return
+    if gs.flags.get("SHUTTLE-ON"):
+        caller.msg(_SHUTTLE_REC_1)
+        return
+    # The cabin only activates from the side away from the car's parked station.
+    at_kala = gs.flags.get("ALFIE-AT-KALAMONTEE" if is_alfie else "BETTY-AT-KALAMONTEE")
+    east = here.endswith("EAST")
+    wrong_side = (east and not at_kala) or (not east and at_kala)
+    if wrong_side:
+        caller.msg(_SHUTTLE_REC_2)
+        return
+    gs.flags["SHUTTLE-ON"] = True
+    _queue(gs, "make_i_turnoff_shuttle", 80)
+    caller.msg(_SHUTTLE_REC_3)
+
+
+def handle_lever(ctx: ObjAction) -> bool:
+    """LEVER-F (globals.zil:1863) — drive the shuttle by setting acceleration."""
+    caller, v = ctx.caller, ctx.verb
+    gs = _gs()
+    if not gs:
+        return False
+    setting = gs.flags.get("LEVER-SETTING", 0)
+    if v in ("V-PUSH", "V-PUSH-UP"):
+        if not gs.flags.get("SHUTTLE-ON"):
+            caller.msg(_SHUTTLE_REC_4)
+        elif setting == 1:
+            caller.msg("The lever is already in the upper position.")
+        elif setting == 0:
+            gs.flags["LEVER-SETTING"] = 1
+            _queue(gs, "make_i_shuttle", 1)
+            caller.msg("The lever is now in the upper position.")
+        else:
+            gs.flags["LEVER-SETTING"] = 0
+            caller.msg("The lever is now in the central position.")
+        return True
+    if v in ("V-PULL", "V-PUSH-DOWN"):
+        if not gs.flags.get("SHUTTLE-ON"):
+            caller.msg(_SHUTTLE_REC_4)
+        elif setting == 1:
+            gs.flags["LEVER-SETTING"] = 0
+            caller.msg("The lever is now in the central position.")
+        elif setting == 0:
+            if gs.flags.get("SHUTTLE-VELOCITY", 0) == 0:
+                caller.msg("The lever immediately pops back to the central "
+                           "position.")
+            else:
+                gs.flags["LEVER-SETTING"] = -1
+                _queue(gs, "make_i_shuttle", 1)
+                caller.msg("The lever is now in the lower position.")
+        else:
+            caller.msg("The lever is already in the lower position.")
+        return True
+    return False
+
+
+def handle_shuttle_door(ctx: ObjAction) -> bool:
+    """SHUTTLE-DOOR-F (globals.zil:1719)."""
+    if ctx.verb == "V-OPEN":
+        gs = _gs()
+        if gs and gs.flags.get("SHUTTLE-MOVING"):
+            ctx.caller.msg("A recorded voice says \"Operator should remain in "
+                           "control cabin while shuttle car is between "
+                           "stations.\"")
+        else:
+            ctx.caller.msg("Are you sure it isn't?")
+        return True
+    return False
+
+
+def handle_control_cabin(room, character, rarg):
+    """CONTROL-CABIN-F (globals.zil:1681) — the M-LOOK driving display."""
+    if rarg != M_LOOK:
+        return False
+    gs = _gs()
+    setting = _flag(gs, "LEVER-SETTING", 0)
+    pos = "center" if setting == 0 else "upper" if setting == 1 else "lower"
+    vel = _flag(gs, "SHUTTLE-VELOCITY", 0)
+    here = character.location.db.zil_id if character.location else None
+    # The window view: a wall when parked at this cabin's home station, else rails.
+    alfie_home = {"ALFIE-CONTROL-WEST": "ALFIE-AT-KALAMONTEE",
+                  "ALFIE-CONTROL-EAST": None}
+    at_wall = False
+    if here == "ALFIE-CONTROL-WEST":
+        at_wall = _flag(gs, "ALFIE-AT-KALAMONTEE")
+    elif here == "BETTY-CONTROL-WEST":
+        at_wall = _flag(gs, "BETTY-AT-KALAMONTEE")
+    elif here == "ALFIE-CONTROL-EAST":
+        at_wall = not _flag(gs, "ALFIE-AT-KALAMONTEE")
+    elif here == "BETTY-CONTROL-EAST":
+        at_wall = not _flag(gs, "BETTY-AT-KALAMONTEE")
+    if at_wall:
+        view = "a featureless concrete wall."
+    elif _flag(gs, "SHUTTLE-MOVING") and _flag(gs, "SHUTTLE-COUNTER", 0) == 23:
+        view = "parallel rails ending at a brightly-lit station ahead."
+    else:
+        view = ("parallel rails running along the floor of a long tunnel, "
+                "vanishing in the distance.")
+    return ("This is a small control cabin. A control panel contains a slot, a "
+            "lever, and a display. The lever can be set at a central position, "
+            "or it could be pushed up to a position labelled \"+\", or pulled "
+            "down to a position labelled \"-\". It is currently at the "
+            f"{pos} setting. The display, a digital readout, currently reads "
+            f"{vel}. Through the cabin window you can see {view}")
 
 
 # ---------------------------------------------------------------------------
@@ -916,11 +1035,18 @@ OBJ_HANDLERS: dict = {
     "GOO-F": handle_goo,
     "HIGH-PROTEIN-F": handle_high_protein,
     "MEDICINE-F": handle_medicine,
+    "LEVER-F": handle_lever,
+    "SHUTTLE-DOOR-F": handle_shuttle_door,
+}
+ROOM_HANDLERS.update({
+    "CONTROL-CABIN-F": handle_control_cabin,
+})
+OBJ_HANDLERS.update({
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,
     "RED-ELEVATOR-BUTTON-F": handle_red_elevator_button,
     "BLATHER-F": handle_blather,
     "AMBASSADOR-F": handle_ambassador,
-}
+})
 
 
 # ---------------------------------------------------------------------------
