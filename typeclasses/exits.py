@@ -23,38 +23,42 @@ class PlanetfallExit(ObjectParent, DefaultExit):
         self.db.routine = None          # str|None: handler routine name (per)
 
     def at_traverse(self, traversing_object, target_location, **kwargs):
+        # ZIL: every GO attempt — success OR failure — costs a turn and ticks
+        # the clock/interrupts. The main loop seeds C-ELAPSED with the default
+        # (7) each turn and only overrides it on a *successful* move; the failed
+        # branches of V-WALK return via RFATAL without zeroing it, and
+        # INTERNAL-MOVES += C-ELAPSED / CLOCKER still run (misc.zil MAIN-LOOP).
+        # So we advance the clock on refusal as well as on a completed move.
         exit_type = self.db.exit_type or "to"
+        from world.scheduler_script import get_or_create_game_state_script
+        script = get_or_create_game_state_script()
 
         if exit_type == "blocked":
-            msg = self.db.block_message or "You can't go that way."
-            traversing_object.msg(msg)
+            traversing_object.msg(self.db.block_message or "You can't go that way.")
+            script.reset_elapsed()
+            script.advance(traversing_object)
             return False
 
         if exit_type == "per":
             # A "per" routine computes the real destination (the static one is a
-            # placeholder). It may set gs.c_elapsed for timed transit; the move
-            # then advances the clock by that amount, mirroring ZIL.
+            # placeholder) and may set gs.c_elapsed for timed transit. Resetting
+            # first means a refusal still ticks the default turn cost.
             from world.exit_handlers import dispatch_per
-            from world.scheduler_script import get_or_create_game_state_script
-            script = get_or_create_game_state_script()
             script.reset_elapsed()
             dest = dispatch_per(traversing_object, self)
-            if dest is None:
-                return False
-            traversing_object.move_to(dest, move_type="traverse")
+            if dest is not None:
+                traversing_object.move_to(dest, move_type="traverse")
             script.advance(traversing_object)
             return False
 
         if exit_type == "conditional":
             if not self._conditional_open(traversing_object):
+                script.reset_elapsed()
+                script.advance(traversing_object)
                 return False
 
         moved = super().at_traverse(traversing_object, target_location, **kwargs)
-        # ZIL: every successful GO consumes a turn (default C-ELAPSED), so the
-        # clock and its interrupts advance as the player walks the ship.
         if moved is not False and traversing_object.location is target_location:
-            from world.scheduler_script import get_or_create_game_state_script
-            script = get_or_create_game_state_script()
             script.reset_elapsed()
             script.advance(traversing_object)
         return moved

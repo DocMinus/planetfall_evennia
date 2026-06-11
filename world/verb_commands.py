@@ -622,11 +622,13 @@ def _h_walk(caller, nouns):
             continue
         names = {ex.key.lower()} | {a.lower() for a in ex.aliases.all()}
         if direction in names:
-            before = caller.location
+            # at_traverse advances the clock for any exit attempt (success or
+            # refusal), so flag it to stop at_post_cmd ticking the move twice.
             ex.at_traverse(caller, ex.destination)
-            if caller.location is not before:
-                caller.ndb.pf_clock_handled = True
+            caller.ndb.pf_clock_handled = True
             return
+    # No exit at all in that direction: at_traverse never ran, so let the
+    # command's own at_post_cmd tick the failed move (one default turn).
     caller.msg("You can't go that way.")
 
 
