@@ -457,70 +457,185 @@ def _door_is_open(zil_id: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# I-SLEEP-WARNINGS  (globals.zil:2026)
-# 5-level fatigue escalation.
+# I-SLEEP-WARNINGS  (globals.zil:2026) + the fall-asleep / dream / wake cycle.
+# SLEEPY-LEVEL escalates; getting into a bed converts it to a restful sleep
+# that advances the day, otherwise level 5 forces a (sometimes fatal) collapse.
 # ---------------------------------------------------------------------------
 
-_SLEEP_MESSAGES = [
-    "You feel a little drowsy.",
-    "You are quite tired.",
-    "You can barely keep your eyes open.",
-    "You collapse from exhaustion.",
-    None,  # fatal
-]
+_SLEEP_MESSAGES = {
+    1: ("\nYou begin to feel weary. It might be time to think about finding "
+        "a nice safe place to sleep.", 400),
+    2: ("\nYou're really tired now. You'd better find a place to sleep real "
+        "soon.", 135),
+    3: ("\nIf you don't get some sleep soon you'll probably drop.", 60),
+    4: ("\nYou can barely keep your eyes open.", 50),
+}
 
 
 def make_i_sleep_warnings(gs: "GameState", state: dict | None = None):
-    state = state if state is not None else {"level": 0}
+    """I-SLEEP-WARNINGS (globals.zil:2026)."""
+    state = state if state is not None else {}
 
     def i_sleep_warnings() -> bool:
-        level = state["level"]
-        if level < len(_SLEEP_MESSAGES):
-            msg = _SLEEP_MESSAGES[level]
-            if msg:
-                _send(gs, msg)
-            state["level"] += 1
-            if level < len(_SLEEP_MESSAGES) - 1:
-                gs.scheduler.enable(gs.scheduler.queue(i_sleep_warnings, 600))
-            else:
-                return gs.die(
-                    "Unfortunately, you don't seem to have survived the night."
-                )
-        return False
+        gs.flags["SLEEPY-LEVEL"] = gs.flags.get("SLEEPY-LEVEL", 0) + 1
+        lvl = gs.flags["SLEEPY-LEVEL"]
+        if gs.flags.get("IN-BED"):
+            _send(gs, "\nYou suddenly realize how tired you were and how "
+                  "comfortable the bed is. You should be asleep in no time.")
+            _disable_self(gs, "i_sleep_warnings")
+            gs.scheduler.enable(gs.scheduler.queue(make_i_fall_asleep(gs), 16))
+            return False
+        if lvl in _SLEEP_MESSAGES:
+            msg, delay = _SLEEP_MESSAGES[lvl]
+            _send(gs, msg)
+            gs.scheduler.enable(gs.scheduler.queue(i_sleep_warnings, delay))
+            return False
+        # Level 5: you can't stay awake any longer.
+        return _sleep_collapse(gs)
 
     i_sleep_warnings.__name__ = "i_sleep_warnings"
     i_sleep_warnings._state = state
     return i_sleep_warnings
 
 
+def _sleep_collapse(gs) -> bool:
+    here = _here_id(gs)
+    if here in ("DORM-A", "DORM-B", "DORM-C", "DORM-D"):
+        _send(gs, "\nYou climb into one of the bunk beds and immediately fall "
+              "asleep.")
+        gs.flags["IN-BED"] = True
+        return _dream_and_wake(gs)
+    _send(gs, "\nYou can't stay awake a moment longer. You drop to the ground "
+          "and fall into a deep but fitful sleep.")
+    day = gs.day
+    # The castle floods as the days pass; sleeping in the wrong spot drowns you.
+    drown = ((day == 1 and here == "CRAG") or
+             (day == 3 and here == "BALCONY") or
+             (day == 5 and here == "WINDING-STAIR"))
+    if drown:
+        return gs.die(
+            "\n\n\nSuddenly, in the middle of the night, a wave of water washes "
+            "over you. Before you can quite get your bearings, you drown.")
+    if _prob(30):
+        return gs.die(
+            "\n\n\nSuddenly, in the middle of the night, you awake as several "
+            "ferocious beasts (could they be grues?) surround and attack you. "
+            "Perhaps you should have found a slightly safer place to sleep.")
+    return _dream_and_wake(gs)
+
+
+def make_i_fall_asleep(gs: "GameState", state: dict | None = None):
+    """I-FALL-ASLEEP (globals.zil:2140) — the moment you actually drop off."""
+    state = state if state is not None else {}
+
+    def i_fall_asleep() -> bool:
+        _send(gs, "\nYou slowly sink into a deep and restful sleep.")
+        _disable_self(gs, "i_fall_asleep")
+        return _dream_and_wake(gs)
+
+    i_fall_asleep.__name__ = "i_fall_asleep"
+    i_fall_asleep._state = state
+    return i_fall_asleep
+
+
+_DREAMS = (
+    "\n...You find yourself on the bridge of the Feinstein. Ensign Blather is "
+    "here, as well as Admiral Smithers. You are diligently scrubbing the "
+    "control panel. Blather keeps yelling at you to scrub harder. Suddenly you "
+    "hit the ship's self-destruct switch! Smithers and Blather howl at you as "
+    "the ship begins exploding! You try to run, but your feet seem to be fused "
+    "to the deck...",
+    "\n...You gulp down the last of your Ramosian Fire Nectar and ask the "
+    "andro-waiter for another pitcher...",
+)
+
+
+def _dream_and_wake(gs) -> bool:
+    """DREAMING + WAKING-UP (globals.zil:2145, 2197)."""
+    import random
+    if _prob(60):
+        _send(gs, random.choice(_DREAMS))
+    return _waking_up(gs)
+
+
+def _waking_up(gs) -> bool:
+    """WAKING-UP (globals.zil:2197) — a new day dawns; reset fatigue, drop kit."""
+    gs.day += 1
+    gs.flags["SICKNESS-WARNING-FLAG"] = True
+    gs.flags["SLEEPY-LEVEL"] = 0
+    in_bed = gs.flags.get("IN-BED")
+
+    # Day 9 with no end in sight: you don't survive the night (RESET-TIME).
+    if gs.day >= 9:
+        return gs.die("Unfortunately, you don't seem to have survived the "
+                      "night.")
+
+    # Non-worn inventory ends up on the floor (ZIL drops it to HERE).
+    player = gs.player
+    if player and player.location:
+        for item in list(player.contents):
+            if "WORNBIT" not in (item.db.obj_flags or []):
+                item.move_to(player.location, quiet=True, move_type="drop")
+
+    banner = f"\n***** SEPTEM {gs.day + 4}, 11344 *****\n"
+    sick = gs.flags.get("SICKNESS-LEVEL", 0)
+    if not in_bed:
+        banner += ("You wake and slowly stand up, feeling stiff from your "
+                   "night on the floor.")
+    elif sick < 3:
+        banner += ("You wake up feeling refreshed and ready to face the "
+                   "challenges of this mysterious world.")
+    elif sick < 6:
+        banner += ("You wake after sleeping restlessly. You feel weak and "
+                   "listless.")
+    else:
+        banner += ("You wake feeling weak and worn-out. It will be an effort "
+                   "just to stand up.")
+    gs.flags["IN-BED"] = False
+
+    if gs.flags.get("HUNGER-LEVEL", 0) > 0:
+        gs.flags["HUNGER-LEVEL"] = 4
+        gs.scheduler.enable(gs.scheduler.queue(make_i_hunger_warnings(gs), 100))
+        banner += " You are also incredibly famished. Better get some breakfast!"
+    else:
+        gs.scheduler.enable(gs.scheduler.queue(make_i_hunger_warnings(gs), 400))
+
+    _send(gs, banner)
+    # Re-arm the next night's sleep clock (RESET-TIME, simplified).
+    _SLEEP_RESET_DELAYS = {2: 5800, 3: 5550, 4: 5200, 5: 4800,
+                           6: 4300, 7: 3700, 8: 3000}
+    delay = _SLEEP_RESET_DELAYS.get(gs.day, 3000)
+    gs.scheduler.enable(gs.scheduler.queue(make_i_sleep_warnings(gs), delay))
+    return False
+
+
 # ---------------------------------------------------------------------------
 # I-HUNGER-WARNINGS  (globals.zil:2295)
 # ---------------------------------------------------------------------------
 
-_HUNGER_MESSAGES = [
-    "Your stomach growls.",
-    "You are getting quite hungry.",
-    "You are ravenously hungry.",
-    "You faint from hunger.",
-    None,
-]
+_HUNGER_MESSAGES = {
+    1: ("\nA growl from your stomach warns that you're getting pretty hungry "
+        "and thirsty.", 450),
+    2: ("\nYou're now really ravenous and your lips are quite parched.", 150),
+    3: ("\nYou're starting to feel faint from lack of food and liquid.", 100),
+    4: ("\nIf you don't eat or drink something in a few millichrons, you'll "
+        "probably pass out.", 50),
+}
 
 
 def make_i_hunger_warnings(gs: "GameState", state: dict | None = None):
-    state = state if state is not None else {"level": 0}
+    """I-HUNGER-WARNINGS (globals.zil:2295)."""
+    state = state if state is not None else {}
 
     def i_hunger_warnings() -> bool:
-        level = state["level"]
-        if level < len(_HUNGER_MESSAGES):
-            msg = _HUNGER_MESSAGES[level]
-            if msg:
-                _send(gs, msg)
-            state["level"] += 1
-            if level < len(_HUNGER_MESSAGES) - 1:
-                gs.scheduler.enable(gs.scheduler.queue(i_hunger_warnings, 500))
-            else:
-                return gs.die("You collapse from extreme thirst and hunger.")
-        return False
+        gs.flags["HUNGER-LEVEL"] = gs.flags.get("HUNGER-LEVEL", 0) + 1
+        lvl = gs.flags["HUNGER-LEVEL"]
+        if lvl in _HUNGER_MESSAGES:
+            msg, delay = _HUNGER_MESSAGES[lvl]
+            _send(gs, msg)
+            gs.scheduler.enable(gs.scheduler.queue(i_hunger_warnings, delay))
+            return False
+        return gs.die("\nYou collapse from extreme thirst and hunger.")
 
     i_hunger_warnings.__name__ = "i_hunger_warnings"
     i_hunger_warnings._state = state
@@ -531,32 +646,46 @@ def make_i_hunger_warnings(gs: "GameState", state: dict | None = None):
 # I-SICKNESS-WARNINGS  (globals.zil:2330)
 # ---------------------------------------------------------------------------
 
-_SICKNESS_MESSAGES = [
-    "You feel slightly nauseous.",
-    "The radiation sickness is getting worse.",
-    "You are very ill.",
-    "You die from radiation poisoning.",
-    None,
-]
+_SICKNESS_MESSAGES = {
+    1: "\nYou notice that you feel a bit weak and slightly flushed, but you're "
+       "not sure why.",
+    2: "\nYou notice that you feel unusually weak, and you suspect that you "
+       "have a fever.",
+    3: "\nYou are now feeling quite under the weather, not unlike a bad flu.",
+    4: "\nYour fever seems to have gotten worse, and you're developing a bad "
+       "headache.",
+    5: "\nYour health has deteriorated further. You feel hot and weak, and "
+       "your head is throbbing.",
+    6: "\nYou feel very, very sick, and have almost no strength left.",
+    7: "\nYou feel like you're on fire, burning up from the fever. You're "
+       "almost too weak to move, and your brain is reeling from the pounding "
+       "headache.",
+    8: "\nYou're no longer sure of where you are and what you're doing. You "
+       "stumble about, your pain subsiding into a dull numbness.",
+}
 
 
 def make_i_sickness_warnings(gs: "GameState", state: dict | None = None):
-    state = state if state is not None else {"level": 0}
+    """I-SICKNESS-WARNINGS (globals.zil:2330) — only progresses on sick days.
+
+    SICKNESS-WARNING-FLAG is set each night (WAKING-UP); the disease only
+    advances while it is set, so a healthy player's sickness clock idles.
+    """
+    state = state if state is not None else {}
 
     def i_sickness_warnings() -> bool:
-        level = state["level"]
-        if level < len(_SICKNESS_MESSAGES):
-            msg = _SICKNESS_MESSAGES[level]
-            if msg:
-                _send(gs, msg)
-            state["level"] += 1
-            if level < len(_SICKNESS_MESSAGES) - 1:
-                gs.scheduler.enable(gs.scheduler.queue(i_sickness_warnings, 400))
-            else:
-                return gs.die(
-                    "You finally succumb to the ravages of your illness and "
-                    "collapse."
-                )
+        gs.scheduler.enable(gs.scheduler.queue(i_sickness_warnings, 700))
+        if not gs.flags.get("SICKNESS-WARNING-FLAG"):
+            return False
+        gs.flags["SICKNESS-WARNING-FLAG"] = False
+        gs.flags["SICKNESS-LEVEL"] = gs.flags.get("SICKNESS-LEVEL", 0) + 1
+        lvl = gs.flags["SICKNESS-LEVEL"]
+        if lvl in _SICKNESS_MESSAGES:
+            _send(gs, _SICKNESS_MESSAGES[lvl])
+            return False
+        if lvl >= 9:
+            return gs.die("\nYou finally succumb to the ravages of your illness "
+                          "and collapse.")
         return False
 
     i_sickness_warnings.__name__ = "i_sickness_warnings"

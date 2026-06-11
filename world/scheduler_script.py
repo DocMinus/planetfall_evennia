@@ -23,6 +23,7 @@ from world.interrupts import (
     make_i_blowup_feinstein,
     make_i_pod_trip,
     make_i_sink_pod,
+    make_i_fall_asleep,
     make_i_upper_elevator_arrive,
     make_i_lower_elevator_arrive,
     make_i_turnoff_upper_elevator,
@@ -46,6 +47,7 @@ _MAKER_BY_NAME = {
     # Pod escape sequence (queued mid-blowup / on standing out of the web).
     "i_pod_trip": make_i_pod_trip,
     "i_sink_pod": make_i_sink_pod,
+    "i_fall_asleep": make_i_fall_asleep,
     # On-demand one-shots (queued by the elevator call-buttons); listed here so
     # a press that hasn't yet "arrived" survives a reload.
     "i_upper_elevator_arrive": make_i_upper_elevator_arrive,
@@ -69,6 +71,7 @@ _DEFAULT_TICKS = {
     "i_blowup_feinstein": -1,
     "i_pod_trip": -1,
     "i_sink_pod": -1,
+    "i_fall_asleep": 16,
     "i_upper_elevator_arrive": 50,
     "i_lower_elevator_arrive": 100,
     "i_turnoff_upper_elevator": 180,

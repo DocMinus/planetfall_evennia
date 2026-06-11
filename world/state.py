@@ -124,6 +124,13 @@ class GameState:
             "CARD-REVEALED": False,          # Floyd has shown his card
             "CARD-STOLEN": False,            # his card has been taken
             "ELEVATOR-IN-TRANSIT": False,    # an elevator car is moving
+            # Survival levels (globals.zil) — shared by the warning interrupts,
+            # the cures (eat/sleep/medicine), and V-DIAGNOSE.
+            "SLEEPY-LEVEL": 0,
+            "HUNGER-LEVEL": 0,
+            "SICKNESS-LEVEL": 0,
+            "SICKNESS-WARNING-FLAG": False,
+            "FLOYD-INTRODUCED": False,
             "CRYO-SCORE-FLAG": False,       # comptwo.zil
         }
 

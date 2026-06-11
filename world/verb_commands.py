@@ -1161,9 +1161,27 @@ def _h_board(caller, nouns):
             gs.flags["IN-WEB"] = True
         caller.msg("You are now in the safety webbing.")
     elif zid == "BED":
+        here = _here_zil(caller)
+        if here == "INFIRMARY" and gs:
+            # The infirmary's diagnostic robot is a death trap (BED-F).
+            gs.die("You climb into the bed. It is soft and comfortable. After "
+                   "a few moments, a previously unseen panel opens, and a "
+                   "diagnostic robot comes wheeling out. As the robot straps "
+                   "you to the bed, it injects you with all 347 serums and "
+                   "medicines it carries. The last thing you notice before you "
+                   "pass out is the robot preparing to saw your legs off.")
+            return
         if gs:
             gs.flags["IN-BED"] = True
-        caller.msg("You are now on the bed.")
+            if gs.flags.get("SLEEPY-LEVEL", 0) > 0:
+                from world.interrupts import make_i_fall_asleep, _disable_self
+                _disable_self(gs, "i_sleep_warnings")
+                gs.scheduler.enable(
+                    gs.scheduler.queue(make_i_fall_asleep(gs), 16))
+                caller.msg("Ahhh...the bed is soft and comfortable. You should "
+                           "be asleep in short order.")
+                return
+        caller.msg("You are now in bed.")
     elif "VEHBIT" in (obj.db.obj_flags or []):
         caller.msg(f"You are now in the {obj.key}.")
     else:
@@ -1208,6 +1226,23 @@ def _h_disembark(caller, nouns):
         caller.msg("You are on your own feet again.")
     else:
         _do_walk(caller, "out")
+
+
+def _h_sleep(caller, nouns):
+    """V-SLEEP (verbs.zil:1726)."""
+    gs = _gs()
+    sleepy = gs.flags.get("SLEEPY-LEVEL", 0) if gs else 0
+    if sleepy == 0:
+        caller.msg("You're not tired!")
+        return
+    falling = gs and any(
+        getattr(i.routine, "__name__", None) == "i_fall_asleep" and i.enabled
+        for i in gs.scheduler._interrupts
+    )
+    if falling:
+        caller.msg("You'll probably be asleep before you know it.")
+    else:
+        caller.msg("Civilized members of society usually sleep in beds.")
 
 
 def _h_stub(caller, nouns):
@@ -1320,6 +1355,7 @@ HANDLERS: dict = {
     "V-SIT-DOWN":    _h_sit,
     "V-STAND":       _h_stand,
     "V-DISEMBARK":   _h_disembark,
+    "V-SLEEP":       _h_sleep,
 }
 
 

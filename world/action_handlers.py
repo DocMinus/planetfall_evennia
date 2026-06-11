@@ -784,6 +784,95 @@ def _shuttle_activate(gs, caller) -> None:
         caller.msg(_WRONG_CARD)
 
 
+# ---------------------------------------------------------------------------
+# Subsystem 2 — Survival cures (food / medicine; sleep is in _h_board + interrupts)
+# ---------------------------------------------------------------------------
+
+def _carrying(caller, zil_id: str) -> bool:
+    return any(o.db.zil_id == zil_id for o in caller.contents)
+
+
+def _eat_resets_hunger(gs, caller, obj, requeue_ticks: int, flavor: str) -> None:
+    """Shared EAT cure: clear hunger, re-arm the hunger clock, eat the food."""
+    obj.location = None
+    caller.ndb.pf_elapsed = 15
+    gs.flags["HUNGER-LEVEL"] = 0
+    import world.interrupts as I
+    gs.scheduler.enable(gs.scheduler.queue(I.make_i_hunger_warnings(gs), requeue_ticks))
+    caller.msg(flavor)
+
+
+_GOO_FLAVOR = {
+    "RED-GOO": "scrumptious cherry pie",
+    "BROWN-GOO": "delicious Nebulan fungus pudding",
+    "GREEN-GOO": "yummy lima beans",
+}
+
+
+def handle_goo(ctx: ObjAction) -> bool:
+    """GOO-F (globals.zil:1063) — the survival-kit food blobs."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if v == "V-EAT":
+        if gs and gs.flags.get("HUNGER-LEVEL", 0) == 0:
+            caller.msg("Thanks, but you're not hungry.")
+        elif not _carrying(caller, "FOOD-KIT"):
+            caller.msg("You're not holding the survival kit.")
+        else:
+            flavor = _GOO_FLAVOR.get(obj.db.zil_id, "food")
+            _eat_resets_hunger(gs, caller, obj, 1450,
+                               f"Mmmm...that tasted just like {flavor}.")
+        return True
+    if v in ("V-TAKE", "V-DROP"):
+        lead = ("It would ooze through your fingers" if v == "V-TAKE"
+                else "The goo, being gooey, sticks where it is")
+        caller.msg(lead + ". You'll have to eat it right from the survival kit.")
+        return True
+    return False
+
+
+def handle_high_protein(ctx: ObjAction) -> bool:
+    """HIGH-PROTEIN-F (compone.zil:844) — the canteen's protein drink."""
+    caller, v = ctx.caller, ctx.verb
+    gs = _gs()
+    if v == "V-EAT":
+        if not _carrying(caller, "CANTEEN"):
+            caller.msg("You're not holding the canteen.")
+        elif gs and gs.flags.get("HUNGER-LEVEL", 0) == 0:
+            caller.msg("Thanks, but you're not hungry.")
+        else:
+            _eat_resets_hunger(gs, caller, ctx.obj, 3600,
+                               "Mmmm....that was good. It certainly quenched "
+                               "your thirst and satisfied your hunger.")
+        return True
+    return False
+
+
+def handle_medicine(ctx: ObjAction) -> bool:
+    """MEDICINE-F (comptwo.zil:169) — bitter medicine slows the sickness."""
+    caller, v = ctx.caller, ctx.verb
+    gs = _gs()
+    bottle_held = _carrying(caller, "MEDICINE-BOTTLE")
+    bottle = _by_zil_id("MEDICINE-BOTTLE")
+    if v in ("V-TASTE", "V-EAT", "V-POUR") and not bottle_held:
+        caller.msg("You're not holding the medicine bottle.")
+        return True
+    if v in ("V-TASTE", "V-EAT", "V-POUR") and bottle and not bottle.db.is_open:
+        caller.msg("The bottle is closed.")
+        return True
+    if v == "V-TASTE":
+        caller.msg("It tastes fairly bitter.")
+        return True
+    if v == "V-EAT":
+        ctx.obj.location = None
+        caller.ndb.pf_elapsed = 15
+        if gs:
+            gs.flags["SICKNESS-LEVEL"] = max(0, gs.flags.get("SICKNESS-LEVEL", 0) - 2)
+        caller.msg("The medicine tasted extremely bitter.")
+        return True
+    return False
+
+
 def handle_kitchen_door(ctx: ObjAction) -> bool:
     """KITCHEN-DOOR-F (compone.zil:772) — opens only via the card slot."""
     if ctx.verb == "V-OPEN":
@@ -824,6 +913,9 @@ OBJ_HANDLERS: dict = {
     "SLOT-F": handle_slot,
     "KITCHEN-DOOR-F": handle_kitchen_door,
     "CONFERENCE-DOOR-F": handle_conference_door,
+    "GOO-F": handle_goo,
+    "HIGH-PROTEIN-F": handle_high_protein,
+    "MEDICINE-F": handle_medicine,
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,
     "RED-ELEVATOR-BUTTON-F": handle_red_elevator_button,
     "BLATHER-F": handle_blather,
