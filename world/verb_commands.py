@@ -19,9 +19,11 @@ _ARTICLES = frozenset({"the", "a", "an", "some", "my", "your"})
 _SKIP_TOKENS = frozenset({"RANDOM", "COMMAND", "RECORD", "UNRECORD"})
 
 # Verbs that consume no game time — PlanetfallCommand.timeless = True
+# AGAIN is timeless because it replays the previous command, whose own
+# at_post_cmd advances the clock — counting AGAIN too would double-tick.
 _TIMELESS_VERBS = frozenset({
     "INVENTORY", "SCORE", "SAVE", "RESTOR", "VERSION", "DIAGNOSE",
-    "VERBOSE", "BRIEF", "SUPER",
+    "VERBOSE", "BRIEF", "SUPER", "AGAIN",
 })
 
 # ZIL truncations → full English words for the Evennia key
@@ -428,6 +430,20 @@ def _h_lamp_off(caller, nouns):
     caller.msg(f"The {obj.key} is now off.")
 
 
+def _h_again(caller, nouns):
+    """V-AGAIN (verbs.zil:1) — replay the most recent non-AGAIN command.
+
+    `last_command` is recorded in the command factory's func() below; the
+    AGAIN command itself is never recorded, so this replays the real verb
+    that preceded it. The guard is a belt-and-braces check.
+    """
+    last = getattr(caller.ndb, "last_command", None)
+    if not last or last.strip().lower() in ("g", "again"):
+        caller.msg("You can't repeat that.")
+        return
+    caller.execute_cmd(last)
+
+
 def _h_stub(caller, nouns):
     caller.msg("That action isn't implemented yet.")
 
@@ -463,6 +479,7 @@ HANDLERS: dict = {
     "V-REMOVE":      _h_take_off,
     "V-LAMP-ON":     _h_lamp_on,
     "V-LAMP-OFF":    _h_lamp_off,
+    "V-AGAIN":       _h_again,
 }
 
 
@@ -481,6 +498,11 @@ def make_command(verb: str, entries: list, aliases: list, timeless: bool = False
         for pattern, handler_name in self._pf_entries:
             nouns = _match_pattern(args, pattern)
             if nouns is not None:
+                # Phase 9: remember the last real command so AGAIN/G can replay
+                # it. AGAIN itself is never recorded, so "g g" still repeats the
+                # original verb rather than chasing its own tail.
+                if handler_name != "V-AGAIN":
+                    self.caller.ndb.last_command = self.raw_string.strip()
                 # ZIL PRSO semantics: the object's ACTION routine gets first
                 # crack at the verb. If it consumes it, skip the default.
                 if nouns:
