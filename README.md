@@ -114,7 +114,7 @@ planetfall_evennia/
     interrupts.py         # Interrupt closures: sleep/hunger warnings, blather, etc.
     floyd.py              # FloydNPC — autonomous robot companion logic
     scheduler_script.py   # Evennia Script wrapping GameState; survives server reloads
-    verb_commands.py      # 99 Command classes generated from syntax.json; 16 handlers
+    verb_commands.py      # 99 Command classes generated from syntax.json; verb handlers
   server/conf/
     settings.py           # Evennia settings
 ```
