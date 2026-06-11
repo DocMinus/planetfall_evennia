@@ -148,9 +148,13 @@ def handle_floyd(ctx: ObjAction) -> bool:
         from world.scheduler_script import get_game_state_script
         script = get_game_state_script()
         if script:
-            script.get_floyd().activate()
+            fnpc = script.get_floyd()
+            fnpc.activate()
+            # ZIL FLOYD-SCORE-FLAG: +2 the first time Floyd is switched on.
+            if not fnpc.score_flag:
+                fnpc.score_flag = True
+                script.get_gs().add_score(2)
         floyd.db.obj_flags = list(floyd.db.obj_flags or []) + ["ACTORBIT", "RLANDBIT"]
-        # ZIL also awards +2 the first time; scoring is wired in Phase 8.
         caller.msg("Nothing happens.")
         return True
 

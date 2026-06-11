@@ -22,10 +22,17 @@ class PlanetfallRoom(ObjectParent, DefaultRoom):
         """Called when any character enters this room.
 
         Dispatches to the room's ZIL ACTION routine with the M-ENTER reason
-        argument (Phase 6). Rooms with no registered handler are a no-op.
+        argument (Phase 6) and scores the room's VALUE once (Phase 8, ZIL
+        SCORE-OBJ on room entry, verbs.zil:914). Rooms with no registered
+        handler / no value are a no-op.
         """
         from world.action_handlers import dispatch_room, M_ENTER
+        from world.scheduler_script import get_game_state_script
         dispatch_room(self, character, M_ENTER)
+        if self.db.value:
+            script = get_game_state_script()
+            if script:
+                script.get_gs().score_object(self)
 
     def at_object_receive(self, moved_obj, source_location, move_type="move", **kwargs):
         super().at_object_receive(moved_obj, source_location, move_type=move_type, **kwargs)

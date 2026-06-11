@@ -41,6 +41,13 @@ def _by_zil_id(zil_id: str):
     return results[0] if results else None
 
 
+def _gs():
+    """Return the live GameState, or None if the script doesn't exist yet."""
+    from world.scheduler_script import get_game_state_script
+    script = get_game_state_script()
+    return script.get_gs() if script else None
+
+
 def _strip_articles(noun: str) -> str:
     return " ".join(w for w in noun.lower().split() if w not in _ARTICLES)
 
@@ -206,6 +213,9 @@ def _h_take(caller, nouns):
         caller.msg("You can't pick that up.")
         return
     obj.move_to(caller, quiet=True, move_type="get")
+    gs = _gs()
+    if gs:
+        gs.score_object(obj)   # ZIL SCORE-OBJ: valuable items score on first take
     caller.msg("Taken.")
 
 
@@ -289,7 +299,30 @@ def _h_diagnose(caller, nouns):
 
 
 def _h_score(caller, nouns):
-    caller.msg("Your score is 0 points out of a possible 80, in 0 moves.")
+    """V-SCORE (verbs.zil:222) — score, day, time, and rank."""
+    gs = _gs()
+    score = gs.score if gs else 0
+    day = gs.day if gs else 1
+    line = f"Your score is {score} (out of 80 points). It is Day {day} of your adventure."
+
+    chrono = next(
+        (o for o in caller.contents if o.db.zil_id == "CHRONOMETER"), None
+    )
+    if chrono:
+        moves = gs.internal_moves if gs else 0
+        line += (
+            " Current Galactic Standard Time (adjusted to your local day-cycle) "
+            f"is {moves}."
+        )
+    else:
+        line += (
+            " Current Galactic Standard Time is impossible to determine, since "
+            "you're not wearing your chronometer."
+        )
+
+    from world.state import GameState
+    line += f"\nThis score gives you the rank of {GameState.rank_for(score)}."
+    caller.msg(line)
 
 
 def _h_put(caller, nouns):
@@ -311,6 +344,9 @@ def _h_put(caller, nouns):
         caller.msg(f"The {container.key} is closed.")
         return
     item.move_to(container, quiet=True, move_type="drop")
+    gs = _gs()
+    if gs:
+        gs.score_object(item)   # ZIL SCORE-OBJ also fires on PUT (verbs.zil:624)
     caller.msg("Done.")
 
 

@@ -81,6 +81,7 @@ class GameState:
     def __init__(self) -> None:
         self.internal_moves: int = 0
         self.day: int = 1
+        self.score: int = 0            # SCORE global (verbs.zil:212); max 80
         self.c_elapsed: int = 7        # default ticks per action
         self.moves_display: int = 0    # shown to player
         self.chronometer_present: bool = False
@@ -105,6 +106,43 @@ class GameState:
         self.internal_moves += self.c_elapsed
         self._update_display()
         return self.scheduler.tick(self.c_elapsed)
+
+    def add_score(self, points: int, reason: str | None = None) -> None:
+        """Award `points` to the running score (verbs.zil SETG SCORE)."""
+        self.score += points
+
+    def score_object(self, obj) -> int:
+        """ZIL SCORE-OBJ (verbs.zil:216): award an object's/room's VALUE once.
+
+        Adds db.value to the score, then zeroes it so re-taking or re-entering
+        does not score again. Returns the points awarded (0 if none).
+        """
+        val = obj.db.value or 0
+        if val > 0:
+            self.score += val
+            obj.db.value = 0
+        return val
+
+    MAX_SCORE = 80
+
+    @staticmethod
+    def rank_for(score: int) -> str:
+        """Map a score to its ZIL rank title (verbs.zil:242-251)."""
+        if score >= 80:
+            return "Galactic Overlord"
+        if score > 72:
+            return "Cluster Admiral"
+        if score > 64:
+            return "System Captain"
+        if score > 48:
+            return "Planetary Commodore"
+        if score > 36:
+            return "Lieutenant"
+        if score > 24:
+            return "Ensign First Class"
+        if score > 12:
+            return "Space Cadet"
+        return "Beginner"
 
     def set_timeless(self) -> None:
         """Mark current action as consuming no time (c_elapsed = 0)."""

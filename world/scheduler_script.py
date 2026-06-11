@@ -83,6 +83,7 @@ class GameStateScript(DefaultScript):
         self.interval = -1   # not time-based; driven by advance()
         self.db.internal_moves = 0
         self.db.day = 1
+        self.db.score = 0
         self.db.chronometer_present = False
         self.db.chronometer_munged = False
         self.db.flags = {}
@@ -141,6 +142,7 @@ class GameStateScript(DefaultScript):
         gs = GameState()
         gs.internal_moves = self.db.internal_moves or 0
         gs.day = self.db.day or 1
+        gs.score = self.db.score or 0
         gs.chronometer_present = bool(self.db.chronometer_present)
         gs.chronometer_munged = bool(self.db.chronometer_munged)
         # Overlay saved flags onto GameState's default seed (keeps NO-MICROBE
@@ -207,6 +209,7 @@ class GameStateScript(DefaultScript):
         """Write serializable GameState fields back to db."""
         self.db.internal_moves = gs.internal_moves
         self.db.day = gs.day
+        self.db.score = gs.score
         self.db.chronometer_present = gs.chronometer_present
         self.db.chronometer_munged = gs.chronometer_munged
         self.db.flags = dict(gs.flags)
