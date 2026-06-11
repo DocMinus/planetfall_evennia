@@ -201,8 +201,58 @@ def _deactivate_floyd(floyd, caller) -> None:
     caller.msg(msg)
 
 
+def _arrival_pending(gs, name: str) -> bool:
+    """ZIL <GET <INT routine> C-ENABLED?> — is this one-shot already queued?"""
+    return any(
+        getattr(i.routine, "__name__", None) == name and i.enabled
+        for i in gs.scheduler._interrupts
+    )
+
+
+def handle_blue_elevator_button(ctx: ObjAction) -> bool:
+    """BLUE-ELEVATOR-BUTTON-F (compone.zil:2548) — call the upper car down."""
+    if ctx.verb != "V-PUSH":
+        return False
+    from world.scheduler_script import get_or_create_game_state_script
+    from world.interrupts import make_i_upper_elevator_arrive
+    import random
+
+    gs = get_or_create_game_state_script().get_gs()
+    if not gs.flags.get("UPPER-ELEVATOR-UP"):
+        return False  # car not at top; ZIL falls through to the generic push
+    if _arrival_pending(gs, "i_upper_elevator_arrive"):
+        ctx.caller.msg("Patience, patience...")
+    else:
+        intr = gs.scheduler.queue(make_i_upper_elevator_arrive(gs), random.randint(0, 19) + 40)
+        gs.scheduler.enable(intr)
+        ctx.caller.msg("You hear a faint whirring noise from behind the blue door.")
+    return True
+
+
+def handle_red_elevator_button(ctx: ObjAction) -> bool:
+    """RED-ELEVATOR-BUTTON-F (compone.zil:2560) — call the lower car up."""
+    if ctx.verb != "V-PUSH":
+        return False
+    from world.scheduler_script import get_or_create_game_state_script
+    from world.interrupts import make_i_lower_elevator_arrive
+    import random
+
+    gs = get_or_create_game_state_script().get_gs()
+    if gs.flags.get("LOWER-ELEVATOR-UP"):
+        return False  # car not at bottom; ZIL falls through to the generic push
+    if _arrival_pending(gs, "i_lower_elevator_arrive"):
+        ctx.caller.msg("Patience, patience...")
+    else:
+        intr = gs.scheduler.queue(make_i_lower_elevator_arrive(gs), random.randint(0, 39) + 80)
+        gs.scheduler.enable(intr)
+        ctx.caller.msg("The red door begins vibrating a bit.")
+    return True
+
+
 OBJ_HANDLERS: dict = {
     "FLOYD-F": handle_floyd,
+    "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,
+    "RED-ELEVATOR-BUTTON-F": handle_red_elevator_button,
 }
 
 

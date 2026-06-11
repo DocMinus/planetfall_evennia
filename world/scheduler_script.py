@@ -21,6 +21,8 @@ from world.interrupts import (
     make_i_hunger_warnings,
     make_i_sickness_warnings,
     make_i_blowup_feinstein,
+    make_i_upper_elevator_arrive,
+    make_i_lower_elevator_arrive,
 )
 
 # Maps routine name -> maker function so we can restore closures after reload.
@@ -33,6 +35,10 @@ _MAKER_BY_NAME = {
     "i_hunger_warnings": make_i_hunger_warnings,
     "i_sickness_warnings": make_i_sickness_warnings,
     "i_blowup_feinstein": make_i_blowup_feinstein,
+    # On-demand one-shots (queued by the elevator call-buttons); listed here so
+    # a press that hasn't yet "arrived" survives a reload.
+    "i_upper_elevator_arrive": make_i_upper_elevator_arrive,
+    "i_lower_elevator_arrive": make_i_lower_elevator_arrive,
 }
 
 _DEFAULT_TICKS = {
@@ -43,6 +49,8 @@ _DEFAULT_TICKS = {
     "i_hunger_warnings": 2000,
     "i_sickness_warnings": 1000,
     "i_blowup_feinstein": 100,
+    "i_upper_elevator_arrive": 50,
+    "i_lower_elevator_arrive": 100,
 }
 
 

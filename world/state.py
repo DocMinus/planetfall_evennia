@@ -92,7 +92,21 @@ class GameState:
         # Named game flags (ZIL globals). Door-open conditional exits read the
         # door object directly; this dict holds non-object globals such as
         # NO-MICROBE (comptwo.zil:2474, starts T). See world/exit_handlers.py.
-        self.flags: dict = {"NO-MICROBE": True}
+        #
+        # Transport globals (Phase 11) seeded at their ZIL defaults — the PER
+        # exit routines read these to compute dynamic destinations. The deeper
+        # subsystems that *set* them (shuttle driving, pod-sink opening) are
+        # later work; the traversal layer is faithful given these values.
+        self.flags: dict = {
+            "NO-MICROBE": True,             # comptwo.zil:2474
+            "UPPER-ELEVATOR-UP": True,      # compone.zil:2599  <GLOBAL ... T>
+            "LOWER-ELEVATOR-UP": False,     # compone.zil:2597  <GLOBAL ... <>>
+            "ALFIE-AT-KALAMONTEE": True,    # globals.zil       <GLOBAL ... T>
+            "BETTY-AT-KALAMONTEE": False,   # globals.zil       <GLOBAL ... <>>
+            "BLOWUP-COUNTER": 0,            # globals.zil:1160
+            "LADDER-FLAG": False,           # ladder-across-rift puzzle
+            "CRYO-SCORE-FLAG": False,       # comptwo.zil
+        }
 
     def advance_clock(self) -> bool:
         """

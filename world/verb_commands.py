@@ -549,6 +549,29 @@ def _h_again(caller, nouns):
     caller.execute_cmd(last)
 
 
+# ZIL HO-HUM table (verbs.zil:1144) — random flavour for a futile push/pull.
+_HO_HUM = (
+    " isn't notably helpful.",
+    " has no effect.",
+    " is as worthwhile as cleaning a Grotch cage.",
+)
+
+
+def _h_push(caller, nouns):
+    """V-PUSH default (verbs.zil:1084, HACK-HACK branch).
+
+    Object ACTION routines (e.g. the elevator call-buttons) get first crack at
+    PUSH via dispatch_object; this is the generic fall-through for everything
+    else.
+    """
+    import random
+    name = "that"
+    if nouns:
+        obj = resolve_obj(caller, nouns[0])
+        name = obj.key if obj else _strip_articles(nouns[0])
+    caller.msg(f"Pushing the {name}{random.choice(_HO_HUM)}")
+
+
 def _h_stub(caller, nouns):
     caller.msg("That action isn't implemented yet.")
 
@@ -587,6 +610,7 @@ HANDLERS: dict = {
     "V-AGAIN":       _h_again,
     "V-SAVE":        _h_save,
     "V-RESTORE":     _h_restore,
+    "V-PUSH":        _h_push,
 }
 
 

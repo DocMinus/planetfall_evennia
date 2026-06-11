@@ -30,15 +30,34 @@ class PlanetfallExit(ObjectParent, DefaultExit):
             traversing_object.msg(msg)
             return False
 
+        if exit_type == "per":
+            # A "per" routine computes the real destination (the static one is a
+            # placeholder). It may set gs.c_elapsed for timed transit; the move
+            # then advances the clock by that amount, mirroring ZIL.
+            from world.exit_handlers import dispatch_per
+            from world.scheduler_script import get_or_create_game_state_script
+            script = get_or_create_game_state_script()
+            script.reset_elapsed()
+            dest = dispatch_per(traversing_object, self)
+            if dest is None:
+                return False
+            traversing_object.move_to(dest, move_type="traverse")
+            script.advance(traversing_object)
+            return False
+
         if exit_type == "conditional":
             if not self._conditional_open(traversing_object):
                 return False
 
-        if exit_type == "per":
-            from world.exit_handlers import dispatch_per
-            return dispatch_per(traversing_object, self)
-
-        return super().at_traverse(traversing_object, target_location, **kwargs)
+        moved = super().at_traverse(traversing_object, target_location, **kwargs)
+        # ZIL: every successful GO consumes a turn (default C-ELAPSED), so the
+        # clock and its interrupts advance as the player walks the ship.
+        if moved is not False and traversing_object.location is target_location:
+            from world.scheduler_script import get_or_create_game_state_script
+            script = get_or_create_game_state_script()
+            script.reset_elapsed()
+            script.advance(traversing_object)
+        return moved
 
     def _conditional_open(self, traversing_object) -> bool:
         """Return True if a conditional exit may be traversed; else message + False.

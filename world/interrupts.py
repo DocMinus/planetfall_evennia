@@ -227,3 +227,55 @@ def make_i_sickness_warnings(gs: "GameState", state: dict | None = None):
     i_sickness_warnings.__name__ = "i_sickness_warnings"
     i_sickness_warnings._state = state
     return i_sickness_warnings
+
+
+# ---------------------------------------------------------------------------
+# Elevator-arrival demons (compone.zil:2570 / 2580)
+# Queued on demand by the lobby call-buttons; one-shot — the scheduler drops
+# them after they fire. Each opens its shaft door and flips the car-position
+# flag the PER routines read.
+# ---------------------------------------------------------------------------
+
+def _by_zil_id(zil_id: str):
+    from evennia.utils.search import search_object_attribute
+    results = search_object_attribute(key="zil_id", strvalue=zil_id)
+    return results[0] if results else None
+
+
+def _player_in(gs, room_zil_id: str) -> bool:
+    p = gs.player
+    return bool(p and p.location and p.location.db.zil_id == room_zil_id)
+
+
+def make_i_upper_elevator_arrive(gs: "GameState", state: dict | None = None):
+    state = state if state is not None else {}
+
+    def i_upper_elevator_arrive() -> bool:
+        door = _by_zil_id("UPPER-ELEVATOR-DOOR")
+        if door:
+            door.db.is_open = True
+        gs.flags["UPPER-ELEVATOR-UP"] = False
+        if _player_in(gs, "ELEVATOR-LOBBY"):
+            _send(gs, "\nThe door at the north end of the room slides open.")
+        return False
+
+    i_upper_elevator_arrive.__name__ = "i_upper_elevator_arrive"
+    i_upper_elevator_arrive._state = state
+    return i_upper_elevator_arrive
+
+
+def make_i_lower_elevator_arrive(gs: "GameState", state: dict | None = None):
+    state = state if state is not None else {}
+
+    def i_lower_elevator_arrive() -> bool:
+        door = _by_zil_id("LOWER-ELEVATOR-DOOR")
+        if door:
+            door.db.is_open = True
+        gs.flags["LOWER-ELEVATOR-UP"] = True
+        if _player_in(gs, "ELEVATOR-LOBBY"):
+            _send(gs, "\nThe door at the south end of the room slides open.")
+        return False
+
+    i_lower_elevator_arrive.__name__ = "i_lower_elevator_arrive"
+    i_lower_elevator_arrive._state = state
+    return i_lower_elevator_arrive
