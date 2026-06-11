@@ -126,18 +126,27 @@ def _match_pattern(args: str, pattern: list) -> list | None:
 # Handlers — each receives (caller, nouns: list[str])
 # ---------------------------------------------------------------------------
 
-def _h_look(caller, nouns):
+def build_look(caller, loc) -> str:
+    """Render a room the ZIL way as a single string.
+
+    Used by the V-LOOK command, by movement, and by connect (via
+    Character.at_look), so every room view is consistent: the room name, its
+    ACTION-routine description (or static desc), visible objects (NDESCBIT
+    objects like the ADVENTURER are hidden), then the obvious exits.
+    """
     from evennia.objects.objects import DefaultExit
-    loc = caller.location
+    from world.action_handlers import dispatch_room_look
     if not loc:
-        caller.msg("You are in a void.")
-        return
-    caller.msg(f"\n{loc.key}")
-    from world.action_handlers import dispatch_room, M_LOOK
-    if not dispatch_room(loc, caller, M_LOOK):
-        if loc.db.desc:
-            caller.msg(loc.db.desc)
+        return "You are in a void."
+
+    lines = [f"\n{loc.key}"]
+    desc = dispatch_room_look(loc, caller)
+    if desc is None:
+        desc = loc.db.desc or None
+    if desc:
+        lines.append(desc)
     loc.db.first_visit = False
+
     visible = [
         obj for obj in loc.contents
         if obj is not caller
@@ -145,13 +154,19 @@ def _h_look(caller, nouns):
         and "NDESCBIT" not in (obj.db.obj_flags or [])
     ]
     if visible:
-        caller.msg("")
+        lines.append("")
         for obj in visible:
-            caller.msg(f"  There is {_article(obj)} {obj.key} here.")
+            lines.append(f"  There is {_article(obj)} {obj.key} here.")
+
     exits = [e for e in loc.contents
              if isinstance(e, DefaultExit) and e.destination]
     if exits:
-        caller.msg(f"\nObvious exits: {', '.join(sorted(e.key for e in exits))}")
+        lines.append(f"\nObvious exits: {', '.join(sorted(e.key for e in exits))}")
+    return "\n".join(lines)
+
+
+def _h_look(caller, nouns):
+    caller.msg(build_look(caller, caller.location))
 
 
 def _h_examine(caller, nouns):

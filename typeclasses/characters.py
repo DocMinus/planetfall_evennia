@@ -10,6 +10,21 @@ class PlanetfallNPC(ObjectParent, DefaultCharacter):
     (e.g. FLOYD-F, BLATHER-F) dispatched by the action field.
     """
 
+    def at_look(self, target, **kwargs):
+        """Render a room view the ZIL way.
+
+        Evennia calls at_look() for the automatic look on movement and on
+        connect. For rooms we delegate to build_look() so those views match the
+        explicit `look` command (dynamic ACTION descriptions, NDESCBIT objects
+        such as the ADVENTURER hidden, ZIL-style exit line) instead of
+        Evennia's default appearance. Non-room targets keep default behaviour.
+        """
+        from typeclasses.rooms import PlanetfallRoom
+        if isinstance(target, PlanetfallRoom):
+            from world.verb_commands import build_look
+            return build_look(self, target)
+        return super().at_look(target, **kwargs)
+
     def at_object_creation(self):
         super().at_object_creation()
         self.db.zil_id = None
@@ -37,6 +52,10 @@ class Character(PlanetfallNPC):
         if not self.db.starter_items_given:
             self._give_starter_items()
             self.db.starter_items_given = True
+        # Set gs.player and hand out starter items first, then let the default
+        # puppet flow run — it shows the on-connect room look via at_look(),
+        # which is now ZIL-rendered.
+        super().at_post_puppet(**kwargs)
 
     def at_post_unpuppet(self, account, session=None, **kwargs) -> None:
         from world.scheduler_script import get_game_state_script

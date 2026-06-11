@@ -60,8 +60,12 @@ def _flag(gs, name: str, default=False):
 # Room handlers — handler(room, character, rarg) -> bool
 # ---------------------------------------------------------------------------
 
-def handle_deck_nine(room, character, rarg) -> bool:
-    """DECK-NINE-F (globals.zil:509) — dynamic corridor description."""
+def handle_deck_nine(room, character, rarg):
+    """DECK-NINE-F (globals.zil:509) — dynamic corridor description.
+
+    For M-LOOK the handler returns the description text (consumed by
+    dispatch_room_look); for any other reason arg it is a no-op.
+    """
     if rarg != M_LOOK:
         return False
     gangway_open = _ddesc("GANGWAY-DOOR") == "open"
@@ -76,11 +80,10 @@ def handle_deck_nine(room, character, rarg) -> bool:
         " To port is the entrance to one of the ship's primary escape pods. "
         f"The pod bulkhead is {_ddesc('POD-DOOR')}."
     )
-    character.msg(text)
-    return True
+    return text
 
 
-def handle_bio_lab(room, character, rarg) -> bool:
+def handle_bio_lab(room, character, rarg):
     """BIO-LAB-F (comptwo.zil:2049) — lighting-dependent description.
 
     The M-END chase-scene branch is endgame logic deferred to Phase 11.
@@ -102,8 +105,7 @@ def handle_bio_lab(room, character, rarg) -> bool:
             "northern wall."
         )
     text += " Some of the experiments seem to be out of control..."
-    character.msg(text)
-    return True
+    return text
 
 
 ROOM_HANDLERS: dict = {
@@ -338,6 +340,19 @@ def dispatch_room(room, character, rarg) -> bool:
     if handler is None:
         return False
     return bool(handler(room, character, rarg))
+
+
+def dispatch_room_look(room, character):
+    """Return the room's ZIL M-LOOK description text, or None.
+
+    None means the room has no registered ACTION handler (or it produced no
+    text for M-LOOK), so the caller should fall back to the static db.desc.
+    """
+    handler = ROOM_HANDLERS.get(room.db.action)
+    if handler is None:
+        return None
+    result = handler(room, character, M_LOOK)
+    return result if isinstance(result, str) else None
 
 
 def dispatch_object(obj, caller, verb, nouns) -> bool:
