@@ -138,6 +138,14 @@ class GameState:
             "SICKNESS-LEVEL": 0,
             "SICKNESS-WARNING-FLAG": False,
             "FLOYD-INTRODUCED": False,
+            # Reactor repair (compone/comptwo.zil) — Subsystem 5 win flags.
+            "COMM-FIXED": False,
+            "DEFENSE-FIXED": False,
+            "COURSE-CONTROL-FIXED": False,
+            "COMPUTER-FIXED": False,
+            "ACCESS-PANEL-FULL": True,       # the bad board starts in the panel
+            "ITS-CRACKED": False,
+            "COMM-SHUTDOWN": False,
             "CRYO-SCORE-FLAG": False,       # comptwo.zil
         }
 

@@ -867,6 +867,266 @@ def handle_shuttle_door(ctx: ObjAction) -> bool:
     return False
 
 
+# ---------------------------------------------------------------------------
+# Subsystem 5 — Reactor repair (compone/comptwo.zil): Defense + Course Control
+# ---------------------------------------------------------------------------
+
+def _award(gs, points: int) -> None:
+    if gs:
+        gs.add_score(points)
+
+
+def handle_access_panel(ctx: ObjAction) -> bool:
+    """ACCESS-PANEL-F (comptwo.zil:391) — Defense: swap in the good board."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if v == "V-OPEN":
+        if obj.db.is_open:
+            caller.msg("It's already open.")
+        else:
+            obj.db.is_open = True
+            caller.msg("The panel swings open.")
+        return True
+    if v == "V-CLOSE":
+        if obj.db.is_open:
+            obj.db.is_open = False
+            caller.msg("The panel swings closed.")
+        else:
+            caller.msg("It's already closed.")
+        return True
+    if v in ("V-PUT", "V-INSERT", "V-PUT-ON"):
+        item = resolve_obj_local(caller, ctx.nouns[0]) if ctx.nouns else None
+        if not obj.db.is_open:
+            caller.msg("The panel is closed.")
+        elif gs and gs.flags.get("ACCESS-PANEL-FULL"):
+            caller.msg("There's no room.")
+        elif item and item.db.zil_id == "GOOD-BOARD":
+            item.location = None
+            second = _by_zil_id("SECOND-BOARD")
+            if second:
+                second.move_to(obj, quiet=True, move_type="move")
+            gs.flags["DEFENSE-FIXED"] = True
+            gs.flags["ACCESS-PANEL-FULL"] = True
+            _award(gs, 6)
+            caller.msg("The card clicks neatly into the socket. The warning "
+                       "lights stop flashing.")
+        elif item and item.db.zil_id in ("CRACKED-BOARD", "FRIED-BOARD"):
+            item.location = None
+            second = _by_zil_id("SECOND-BOARD")
+            if second:
+                second.move_to(obj, quiet=True, move_type="move")
+            gs.flags["ACCESS-PANEL-FULL"] = True
+            if item.db.zil_id == "CRACKED-BOARD":
+                gs.flags["ITS-CRACKED"] = True
+            caller.msg("The card clicks neatly into the socket.")
+        else:
+            name = item.key if item else "thing"
+            caller.msg(f"The {name} doesn't fit.")
+        return True
+    return False
+
+
+def handle_board(ctx: ObjAction) -> bool:
+    """BOARD-F (comptwo.zil:478) — the fromitz boards in the access panel."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if v == "V-TAKE":
+        if obj.db.zil_id == "SECOND-BOARD" and not (gs and gs.flags.get("DEFENSE-FIXED")):
+            obj.location = None
+            gs.flags["ACCESS-PANEL-FULL"] = False
+            bad_id = "CRACKED-BOARD" if gs.flags.get("ITS-CRACKED") else "FRIED-BOARD"
+            bad = _by_zil_id(bad_id)
+            if bad:
+                bad.move_to(caller, quiet=True, move_type="get")
+            caller.msg("The fromitz board slides out of the panel, producing "
+                       "an empty socket for another board.")
+        else:
+            caller.msg("You jerk your hand back as you receive a powerful "
+                       "shock from the fromitz board.")
+        return True
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        caller.msg("Like most fromitz boards, it is a twisted maze of silicon "
+                   "circuits. It is square, approximately seventeen centimeters "
+                   "on each side.")
+        return True
+    return False
+
+
+def handle_cube(ctx: ObjAction) -> bool:
+    """CUBE-F (comptwo.zil:545) — Course Control: swap in the good bedistor."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if v == "V-OPEN":
+        if obj.db.is_open:
+            caller.msg("It's already open.")
+        else:
+            obj.db.is_open = True
+            caller.msg("The lid swings open.")
+        return True
+    if v == "V-CLOSE":
+        if obj.db.is_open:
+            obj.db.is_open = False
+            caller.msg("The lid swings closed.")
+        else:
+            caller.msg("It's already closed.")
+        return True
+    if v in ("V-PUT", "V-INSERT", "V-PUT-ON"):
+        item = resolve_obj_local(caller, ctx.nouns[0]) if ctx.nouns else None
+        bad = _by_zil_id("BAD-BEDISTOR")
+        if not obj.db.is_open:
+            caller.msg("The cube is closed.")
+        elif bad and bad.location is obj:
+            caller.msg("There's a fused bedistor in the way.")
+        elif item and item.db.zil_id == "GOOD-BEDISTOR":
+            item.move_to(obj, quiet=True, move_type="move")
+            gs.flags["COURSE-CONTROL-FIXED"] = True
+            _award(gs, 6)
+            caller.msg("Done. The warning lights go out and another light goes "
+                       "on.")
+        elif item:
+            caller.msg(f"The {item.key} doesn't fit.")
+        return True
+    return False
+
+
+def handle_bad_bedistor(ctx: ObjAction) -> bool:
+    """BAD-BEDISTOR-F (comptwo.zil:595) — fused; remove only with the pliers."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    cube = _by_zil_id("CUBE")
+    if v == "V-TAKE" and cube and obj.location is cube:
+        caller.msg("It seems to be fused to its socket.")
+        return True
+    if v == "V-ZATTRACT":
+        prsi = _prsi(ctx)
+        if prsi and prsi.db.zil_id == "PLIERS":
+            obj.move_to(caller, quiet=True, move_type="get")
+            _set_bit(obj, "TRYTAKEBIT", False)
+            caller.msg("With a tug, you manage to remove the fused bedistor.")
+        else:
+            caller.msg("You can't get a grip on the bedistor with that.")
+        return True
+    return False
+
+
+def handle_good_bedistor(ctx: ObjAction) -> bool:
+    """GOOD-BEDISTOR-F (compone.zil:1424) — live once installed; touching kills."""
+    if ctx.verb == "V-TAKE":
+        gs = _gs()
+        if gs and gs.flags.get("COURSE-CONTROL-FIXED"):
+            gs.die("Kerzap!! You should know better than to touch an active "
+                   "bedistor!")
+            return True
+    return False
+
+
+def handle_spool_reader(ctx: ObjAction) -> bool:
+    """SPOOL-READER-F (comptwo.zil:1189) — read the manual spools."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    spool = next((o for o in obj.contents), None)
+    if v == "V-LAMP-ON":
+        if _bit(obj, "ONBIT"):
+            caller.msg("The spool reader is already on.")
+        else:
+            _set_bit(obj, "ONBIT", True)
+            if spool:
+                caller.msg(spool.db.obj_text or "The screen lights up.")
+            else:
+                caller.msg("The machine hums quietly, and the screen lights up "
+                           "with the phrase \"Pleez insurt spuul.\"")
+        return True
+    if v == "V-LAMP-OFF":
+        if _bit(obj, "ONBIT"):
+            _set_bit(obj, "ONBIT", False)
+            caller.msg("The spool reader is now off.")
+        else:
+            caller.msg("It's not on!")
+        return True
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN", "V-READ"):
+        if _bit(obj, "ONBIT") and spool:
+            caller.msg(spool.db.obj_text or "The screen displays information.")
+        else:
+            caller.msg("The screen is blank.")
+        return True
+    if v in ("V-PUT", "V-INSERT"):
+        item = resolve_obj_local(caller, ctx.nouns[0]) if ctx.nouns else None
+        if spool:
+            caller.msg("There's already a spool in the reader.")
+        elif item and item.db.zil_id in ("GREEN-SPOOL", "RED-SPOOL"):
+            item.move_to(obj, quiet=True, move_type="move")
+            msg = "The spool fits neatly into the opening."
+            if _bit(obj, "ONBIT"):
+                msg += " Some information appears on the screen."
+            caller.msg(msg)
+        else:
+            caller.msg("It doesn't fit in the circular opening.")
+        return True
+    return False
+
+
+def resolve_obj_local(caller, noun):
+    from world.verb_commands import resolve_obj
+    return resolve_obj(caller, noun)
+
+
+# Reactor room status displays (M-LOOK) -------------------------------------
+
+def handle_planetary_defense(room, character, rarg):
+    """PLANETARY-DEFENSE-F (comptwo.zil:370)."""
+    if rarg != M_LOOK:
+        return False
+    gs = _gs()
+    text = "This room is filled with a dazzling array of lights and controls. "
+    if not _flag(gs, "DEFENSE-FIXED"):
+        text += ("One light, blinking quickly, catches your eye. It reads "
+                 "\"Surkit Boord Faalyur. WORNEENG: xis boord kuntroolz xe "
+                 "diskriminaashun surkits.\" ")
+    text += f"There is a small access panel on one wall which is {_ddesc('ACCESS-PANEL')}."
+    return text
+
+
+def handle_course_control(room, character, rarg):
+    """PLANETARY-COURSE-CONTROL-F (comptwo.zil:522)."""
+    if rarg != M_LOOK:
+        return False
+    gs = _gs()
+    text = ("This is a long room whose walls are covered with complicated "
+            "controls and colored lights. ")
+    if _flag(gs, "COURSE-CONTROL-FIXED"):
+        text += "One blinking light says \"Kors diivurjins minimiizeeng.\""
+    else:
+        text += ("Two of these lights are blinking. The first one reads "
+                 "\"Bedistur Faalyur!\" The other light reads \"Kritikul "
+                 "diivurjins frum pland kors.\"")
+    text += f" In one corner is a large metal cube whose lid is {_ddesc('CUBE')}."
+    return text
+
+
+def handle_systems_monitors(room, character, rarg):
+    """SYSTEMS-MONITORS-F (compone.zil:1125) — the three-system status board."""
+    if rarg != M_LOOK:
+        return False
+    gs = _gs()
+    d = _flag(gs, "DEFENSE-FIXED")
+    c = _flag(gs, "COURSE-CONTROL-FIXED")
+    m = _flag(gs, "COMM-FIXED")
+    green = []
+    if d: green.append("PLANATEREE DEFENS")
+    if c: green.append("PLANATEREE KORS KUNTROOL")
+    if m: green.append("KUMUUNIKAASHUNZ")
+    green += ["LIIBREREE", "REEAKTURZ", "LIIF SUPORT"]
+    bad = []
+    if not d: bad.append("PLANATEREE DEFENS")
+    if not c: bad.append("PLANATEREE KORS KUNTROOL")
+    if not m: bad.append("KUMUUNIKAASHUNZ")
+    bad.append("PRAJEKT KUNTROOL")
+    all_fixed = d and c and m
+    return ("This is a large room filled with tables full of strange "
+            "equipment. The far wall is filled with a number of monitors. Of "
+            f"these, the ones labelled {', '.join(green)} are green, but the "
+            f"one{'' if all_fixed else 's'} labelled {', '.join(bad)} "
+            f"indicate{'s' if all_fixed else ''} a malfunctioning condition.")
+
+
 def handle_control_cabin(room, character, rarg):
     """CONTROL-CABIN-F (globals.zil:1681) — the M-LOOK driving display."""
     if rarg != M_LOOK:
@@ -1037,9 +1297,18 @@ OBJ_HANDLERS: dict = {
     "MEDICINE-F": handle_medicine,
     "LEVER-F": handle_lever,
     "SHUTTLE-DOOR-F": handle_shuttle_door,
+    "ACCESS-PANEL-F": handle_access_panel,
+    "BOARD-F": handle_board,
+    "CUBE-F": handle_cube,
+    "BAD-BEDISTOR-F": handle_bad_bedistor,
+    "GOOD-BEDISTOR-F": handle_good_bedistor,
+    "SPOOL-READER-F": handle_spool_reader,
 }
 ROOM_HANDLERS.update({
     "CONTROL-CABIN-F": handle_control_cabin,
+    "PLANETARY-DEFENSE-F": handle_planetary_defense,
+    "PLANETARY-COURSE-CONTROL-F": handle_course_control,
+    "SYSTEMS-MONITORS-F": handle_systems_monitors,
 })
 OBJ_HANDLERS.update({
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,
