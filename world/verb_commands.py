@@ -39,7 +39,7 @@ _VERB_NORMALIZATIONS = {
 
 def _by_zil_id(zil_id: str):
     from evennia.utils.search import search_object_attribute
-    results = search_object_attribute(key="zil_id", strvalue=zil_id)
+    results = search_object_attribute(key="zil_id", value=zil_id)
     return results[0] if results else None
 
 
@@ -572,6 +572,49 @@ def _h_push(caller, nouns):
     caller.msg(f"Pushing the {name}{random.choice(_HO_HUM)}")
 
 
+# Direction words (and their ZIL abbreviations) → the exit key used by the
+# loader. Lets "go west" / "walk n" resolve to the room's directional exit.
+_DIR_CANON = {
+    "north": "north", "n": "north", "south": "south", "s": "south",
+    "east": "east", "e": "east", "west": "west", "w": "west",
+    "northeast": "northeast", "ne": "northeast",
+    "northwest": "northwest", "nw": "northwest",
+    "southeast": "southeast", "se": "southeast",
+    "southwest": "southwest", "sw": "southwest",
+    "up": "up", "u": "up", "down": "down", "d": "down",
+    "out": "out", "o": "out", "in": "in",
+}
+
+
+def _h_walk(caller, nouns):
+    """V-WALK (verbs.zil:431) — "go/walk <direction>".
+
+    ZIL sets P-WALK-DIR from the parsed direction and traverses that exit. Here
+    the direction arrives as the noun; we find the matching exit and let its
+    at_traverse run the conditional/per logic (which also advances the clock on
+    a successful move). The one-shot `pf_clock_handled` flag tells
+    PlanetfallCommand.at_post_cmd not to tick a second time for that move.
+    """
+    from evennia.objects.objects import DefaultExit
+    word = _strip_articles(nouns[0]).strip().lower() if nouns else ""
+    direction = _DIR_CANON.get(word)
+    loc = caller.location
+    if not direction or not loc:
+        caller.msg("You can't go that way.")
+        return
+    for ex in loc.contents:
+        if not isinstance(ex, DefaultExit):
+            continue
+        names = {ex.key.lower()} | {a.lower() for a in ex.aliases.all()}
+        if direction in names:
+            before = caller.location
+            ex.at_traverse(caller, ex.destination)
+            if caller.location is not before:
+                caller.ndb.pf_clock_handled = True
+            return
+    caller.msg("You can't go that way.")
+
+
 def _h_stub(caller, nouns):
     caller.msg("That action isn't implemented yet.")
 
@@ -611,6 +654,7 @@ HANDLERS: dict = {
     "V-SAVE":        _h_save,
     "V-RESTORE":     _h_restore,
     "V-PUSH":        _h_push,
+    "V-WALK":        _h_walk,
 }
 
 

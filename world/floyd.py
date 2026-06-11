@@ -51,7 +51,7 @@ _BIO_DOOR_ZIL_ID = "BIO-DOOR-EAST"
 def _by_zil_id(zil_id: str):
     """Return the first Evennia object whose db.zil_id matches, or None."""
     from evennia.utils.search import search_object_attribute
-    results = search_object_attribute(key="zil_id", strvalue=zil_id)
+    results = search_object_attribute(key="zil_id", value=zil_id)
     return results[0] if results else None
 
 

@@ -47,6 +47,6 @@ class Character(PlanetfallNPC):
     def _give_starter_items(self) -> None:
         """Move all starter-inventory objects (db.starter_item=True) to self."""
         from evennia.utils.search import search_object_attribute
-        for obj in search_object_attribute(key="starter_item", strvalue="True"):
+        for obj in search_object_attribute(key="starter_item", value=True):
             if obj.location is None:
                 obj.move_to(self, quiet=True)

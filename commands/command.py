@@ -48,6 +48,12 @@ class PlanetfallCommand(Command):
     timeless: bool = False
 
     def at_post_cmd(self) -> None:
+        # A handler that already advanced the clock itself (e.g. V-WALK, which
+        # traverses an exit whose at_traverse ticks the clock) sets this
+        # one-shot flag so the move isn't counted twice.
+        if getattr(self.caller.ndb, "pf_clock_handled", False):
+            self.caller.ndb.pf_clock_handled = False
+            return
         from world.scheduler_script import get_or_create_game_state_script
         script = get_or_create_game_state_script()
         if self.timeless:

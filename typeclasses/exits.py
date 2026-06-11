@@ -90,7 +90,7 @@ class PlanetfallExit(ObjectParent, DefaultExit):
     @staticmethod
     def _by_zil_id(zil_id):
         from evennia.utils.search import search_object_attribute
-        results = search_object_attribute(key="zil_id", strvalue=zil_id)
+        results = search_object_attribute(key="zil_id", value=zil_id)
         return results[0] if results else None
 
 

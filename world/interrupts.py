@@ -362,7 +362,7 @@ def make_i_sickness_warnings(gs: "GameState", state: dict | None = None):
 
 def _by_zil_id(zil_id: str):
     from evennia.utils.search import search_object_attribute
-    results = search_object_attribute(key="zil_id", strvalue=zil_id)
+    results = search_object_attribute(key="zil_id", value=zil_id)
     return results[0] if results else None
 
 
