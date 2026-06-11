@@ -114,6 +114,16 @@ class GameState:
             "LADDER-FLAG": False,           # ladder spans the rift (compone.zil:647)
             "LADDER-EXTENDED": False,        # ladder extended to full length
             "PADLOCK-REMOVED": False,        # padlock taken off the brig door
+            # Card-access enable flags (globals.zil SLOT-F) — set by sliding the
+            # matching card, cleared by an I-TURNOFF-* interrupt after a delay.
+            "UPPER-ELEVATOR-ON": False,
+            "LOWER-ELEVATOR-ON": False,
+            "TELEPORTATION-ON": False,
+            "MINI-ACTIVATED": False,
+            "SHUTTLE-ON": False,
+            "CARD-REVEALED": False,          # Floyd has shown his card
+            "CARD-STOLEN": False,            # his card has been taken
+            "ELEVATOR-IN-TRANSIT": False,    # an elevator car is moving
             "CRYO-SCORE-FLAG": False,       # comptwo.zil
         }
 

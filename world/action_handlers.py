@@ -637,6 +637,183 @@ ROOM_HANDLERS.update({
 })
 
 
+# ---------------------------------------------------------------------------
+# Subsystem 3 — Card access (globals.zil SLOT-F + card-operated doors)
+# ---------------------------------------------------------------------------
+
+_WRONG_CARD = ("A sign flashes \"Inkorekt awtharazaashun "
+               "kard...akses deeniid.\"")
+_ELEVATOR_ENABLED = "A recorded voice chimes \"Elevator enabled.\""
+
+
+def _queue(gs, maker_name: str, ticks: int) -> None:
+    """Queue a turnoff/close interrupt by maker name (world.interrupts)."""
+    import world.interrupts as I
+    maker = getattr(I, maker_name)
+    gs.scheduler.enable(gs.scheduler.queue(maker(gs), ticks))
+
+
+def handle_slot(ctx: ObjAction) -> bool:
+    """SLOT-F (globals.zil:1370) — slide an authorization card through the slot."""
+    caller, v = ctx.caller, ctx.verb
+    if v == "V-PUT" and (_prsi(ctx) and _prsi(ctx).db.zil_id == "SLOT"):
+        caller.msg("The slot is shallow, so you can't put anything in it. It "
+                   "may be possible to slide something through the slot, "
+                   "though.")
+        return True
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        caller.msg("The slot is about ten centimeters wide, but only about two "
+                   "centimeters deep. It is surrounded on its long sides by "
+                   "parallel ridges of metal.")
+        return True
+    if v != "V-SLIDE":
+        return False
+
+    # SLIDE <card> THROUGH SLOT — SLOT-F is the slot's (PRSI) action, so the
+    # card is the direct object (nouns[0]); ctx.obj is the slot itself.
+    from world.verb_commands import resolve_obj
+    card = resolve_obj(caller, ctx.nouns[0]) if ctx.nouns else None
+    if card is None or card.db.zil_id == "SLOT":
+        caller.msg("Slide what through the slot?")
+        return True
+    gs = _gs()
+    here = _here_zil(caller)
+    card.move_to(caller, quiet=True, move_type="get")
+
+    if _bit(card, "SCRAMBLEDBIT"):
+        caller.msg("A sign flashes \"Magnetik striip randumiizd...konsult "
+                   "Prajekt Handbuk abowt propur kaar uv awtharazaashun "
+                   "kardz.\"")
+        return True
+
+    cid = card.db.zil_id
+    if cid == "KITCHEN-CARD":
+        if here == "MESS-HALL":
+            door = _by_zil_id("KITCHEN-DOOR")
+            if door and door.db.is_open:
+                caller.msg("Nothing happens.")
+            else:
+                if door:
+                    door.db.is_open = True
+                _queue(gs, "make_i_kitchen_door_closes", 50)
+                caller.msg("The kitchen door quietly slides open.")
+                _floyd_reveal_card(gs)
+        else:
+            caller.msg(_WRONG_CARD)
+    elif cid == "UPPER-ELEVATOR-CARD":
+        if here == "UPPER-ELEVATOR":
+            gs.flags["UPPER-ELEVATOR-ON"] = True
+            _queue(gs, "make_i_turnoff_upper_elevator", 180)
+            caller.msg(_ELEVATOR_ENABLED)
+            _floyd_reveal_card(gs)
+        else:
+            caller.msg(_WRONG_CARD)
+    elif cid == "LOWER-ELEVATOR-CARD":
+        if here == "LOWER-ELEVATOR":
+            gs.flags["LOWER-ELEVATOR-ON"] = True
+            _queue(gs, "make_i_turnoff_lower_elevator", 200)
+            caller.msg(_ELEVATOR_ENABLED)
+        else:
+            caller.msg(_WRONG_CARD)
+    elif cid == "TELEPORTATION-CARD":
+        if here in ("BOOTH-1", "BOOTH-2", "BOOTH-3"):
+            gs.flags["TELEPORTATION-ON"] = True
+            _queue(gs, "make_i_turnoff_teleportation", 30)
+            caller.msg("Nothing happens for a moment. Then a light flashes "
+                       "\"Redee.\"")
+        else:
+            caller.msg(_WRONG_CARD)
+    elif cid == "MINI-CARD":
+        if here == "MINI-BOOTH":
+            gs.flags["MINI-ACTIVATED"] = True
+            _queue(gs, "make_i_turnoff_mini", 30)
+            caller.msg("A melodic high-pitched voice says \"Miniaturization "
+                       "and teleportation booth activated. Please type in "
+                       "damaged sector number.\"")
+        else:
+            caller.msg(_WRONG_CARD)
+    elif cid == "SHUTTLE-CARD":
+        _shuttle_activate(gs, caller)
+    else:   # ID-CARD or anything else
+        caller.msg(_WRONG_CARD)
+    return True
+
+
+def _floyd_reveal_card(gs) -> None:
+    """FLOYD-REVEAL-CARD-F (globals.zil:1432) — Floyd shows off his own card.
+
+    The ZIL gating is an elaborate day/INTERNAL-MOVES/PROB ramp; we keep the
+    one-shot CARD-REVEALED guard and a representative probability.
+    """
+    if not gs or gs.flags.get("CARD-REVEALED"):
+        return
+    floyd_obj = _by_zil_id("FLOYD")
+    player = gs.player
+    if not (floyd_obj and player and floyd_obj.location is player.location):
+        return
+    import random
+    day = gs.day
+    chance = 5 if day == 2 else 20 if day == 3 else 100 if day > 3 else 0
+    if random.randint(1, 100) > chance:
+        return
+    gs.flags["CARD-REVEALED"] = True
+    if not gs.flags.get("CARD-STOLEN"):
+        card = _by_zil_id("LOWER-ELEVATOR-CARD")
+        if card:
+            card.move_to(floyd_obj, quiet=True, move_type="get")
+        player.msg("\nFloyd claps his hands with excitement. \"Those cards are "
+                   "really neat, huh? Floyd has one for himself--see?\" He "
+                   "reaches behind one of his panels and retrieves a "
+                   "magnetic-striped card. He waves it exuberantly in the air.")
+    else:
+        player.msg("\nFloyd bobs up and down with excitement. \"Those cards are "
+                   "really neat! Floyd has one, too.\" He begins searching "
+                   "through his compartments, but finds nothing. He scratches "
+                   "his head and looks confused.")
+
+
+def _shuttle_activate(gs, caller) -> None:
+    """SHUTTLE-ACTIVATE (globals.zil) — power the shuttle (Subsystem 4 drives it)."""
+    here = _here_zil(caller)
+    if here in ("ALFIE-CONTROL-EAST", "ALFIE-CONTROL-WEST",
+                "BETTY-CONTROL-EAST", "BETTY-CONTROL-WEST"):
+        gs.flags["SHUTTLE-ON"] = True
+        _queue(gs, "make_i_turnoff_shuttle", 100)
+        caller.msg("A recorded voice says \"Shuttle controls enabled.\"")
+    else:
+        caller.msg(_WRONG_CARD)
+
+
+def handle_kitchen_door(ctx: ObjAction) -> bool:
+    """KITCHEN-DOOR-F (compone.zil:772) — opens only via the card slot."""
+    if ctx.verb == "V-OPEN":
+        ctx.caller.msg("A light flashes \"Pleez yuuz kitcin akses kard.\"")
+        return True
+    return False
+
+
+def handle_conference_door(ctx: ObjAction) -> bool:
+    """CONFERENCE-DOOR-F (compone.zil:291) — combination-locked door."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    if v == "V-OPEN":
+        if obj.db.is_open:
+            caller.msg("It's already open.")
+        elif _here_zil(caller) == "REC-AREA":
+            caller.msg("The door is locked. You probably have to turn the dial "
+                       "to some number to open it.")
+        else:
+            caller.msg("The door seems to be locked from the other side.")
+        return True
+    if v == "V-CLOSE":
+        if obj.db.is_open:
+            obj.db.is_open = False
+            caller.msg("The door closes and you hear a click as it locks.")
+        else:
+            caller.msg("It's already closed.")
+        return True
+    return False
+
+
 OBJ_HANDLERS: dict = {
     "FLOYD-F": handle_floyd,
     "PADLOCK-F": handle_padlock,
@@ -644,6 +821,9 @@ OBJ_HANDLERS: dict = {
     "KEY-F": handle_key,
     "LADDER-F": handle_ladder,
     "RIFT-F": handle_rift,
+    "SLOT-F": handle_slot,
+    "KITCHEN-DOOR-F": handle_kitchen_door,
+    "CONFERENCE-DOOR-F": handle_conference_door,
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,
     "RED-ELEVATOR-BUTTON-F": handle_red_elevator_button,
     "BLATHER-F": handle_blather,

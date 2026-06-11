@@ -128,6 +128,16 @@ def resolve_obj(caller, noun: str):
 # Pattern matcher
 # ---------------------------------------------------------------------------
 
+# ZIL preposition synonym groups (syntax.zil:8-12). A pattern keyword like WITH
+# matches any word in its group, so "slide card through slot" hits a WITH slot.
+_PREP_SYNONYMS = {
+    "WITH": ("with", "using", "through", "thru"),
+    "IN": ("in", "inside", "into"),
+    "ON": ("on", "onto"),
+    "OVER": ("over", "above"),
+}
+
+
 def _match_pattern(args: str, pattern: list) -> list | None:
     """
     Try to match args against a ZIL syntax pattern.
@@ -147,7 +157,11 @@ def _match_pattern(args: str, pattern: list) -> list | None:
         if token == "OBJECT":
             parts.append(r"(.+?)")
         else:
-            parts.append(re.escape(token.lower()))
+            syns = _PREP_SYNONYMS.get(token.upper())
+            if syns:
+                parts.append("(?:" + "|".join(re.escape(s) for s in syns) + ")")
+            else:
+                parts.append(re.escape(token.lower()))
     regex = r"^\s*" + r"\s+".join(parts) + r"\s*$"
     m = re.match(regex, args.lower(), re.IGNORECASE)
     return list(m.groups()) if m else None
@@ -1329,12 +1343,18 @@ def make_command(verb: str, entries: list, aliases: list, timeless: bool = False
                 # original verb rather than chasing its own tail.
                 if handler_name != "V-AGAIN":
                     self.caller.ndb.last_command = self.raw_string.strip()
-                # ZIL PRSO semantics: the object's ACTION routine gets first
-                # crack at the verb. If it consumes it, skip the default.
+                # ZIL action precedence: the direct object's (PRSO) ACTION gets
+                # first crack at the verb, then the indirect object's (PRSI) —
+                # e.g. SLOT-F fires when the slot is the PRSI of SLIDE/PUT. If
+                # either consumes the verb, skip the generic handler.
                 if nouns:
                     obj = resolve_obj(self.caller, nouns[0])
                     if obj and dispatch_object(obj, self.caller, handler_name, nouns):
                         return
+                    if len(nouns) > 1:
+                        prsi = resolve_obj(self.caller, nouns[1])
+                        if prsi and dispatch_object(prsi, self.caller, handler_name, nouns):
+                            return
                 HANDLERS.get(handler_name, _h_stub)(self.caller, nouns)
                 return
         self.caller.msg("I don't understand what you mean.")

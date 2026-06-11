@@ -622,6 +622,95 @@ def _disable_self(gs, name: str) -> None:
             gs.scheduler.disable(i)
 
 
+# ---------------------------------------------------------------------------
+# Card-access turnoff / close demons (globals.zil / compone.zil)
+# Each clears the enable flag a card set, after its delay, unless the relevant
+# car is mid-transit (the elevators re-queue themselves in that case).
+# ---------------------------------------------------------------------------
+
+def _turnoff(gs, flag: str, room_zil: str, message: str,
+             name: str, requeue_if_transit: bool = False):
+    """Factory body shared by the elevator/teleport/mini turnoff demons."""
+    def routine() -> bool:
+        if requeue_if_transit and gs.flags.get("ELEVATOR-IN-TRANSIT"):
+            gs.scheduler.enable(gs.scheduler.queue(routine, 120))
+            return False
+        gs.flags[flag] = False
+        if _here_id(gs) == room_zil or (room_zil == "*"):
+            _send(gs, message)
+        return False
+    routine.__name__ = name
+    routine._state = {}
+    return routine
+
+
+def make_i_turnoff_upper_elevator(gs: "GameState", state: dict | None = None):
+    return _turnoff(gs, "UPPER-ELEVATOR-ON", "UPPER-ELEVATOR",
+                    "\nA recording says \"Elevator no longer enabled.\"",
+                    "i_turnoff_upper_elevator", requeue_if_transit=True)
+
+
+def make_i_turnoff_lower_elevator(gs: "GameState", state: dict | None = None):
+    return _turnoff(gs, "LOWER-ELEVATOR-ON", "LOWER-ELEVATOR",
+                    "\nA recording says \"Elevator no longer enabled.\"",
+                    "i_turnoff_lower_elevator", requeue_if_transit=True)
+
+
+def make_i_turnoff_teleportation(gs: "GameState", state: dict | None = None):
+    def i_turnoff_teleportation() -> bool:
+        gs.flags["TELEPORTATION-ON"] = False
+        if _here_id(gs) in ("BOOTH-1", "BOOTH-2", "BOOTH-3"):
+            _send(gs, "\nThe ready light goes dark.")
+        return False
+    i_turnoff_teleportation.__name__ = "i_turnoff_teleportation"
+    i_turnoff_teleportation._state = {}
+    return i_turnoff_teleportation
+
+
+def make_i_turnoff_mini(gs: "GameState", state: dict | None = None):
+    def i_turnoff_mini() -> bool:
+        gs.flags["MINI-ACTIVATED"] = False
+        if _here_id(gs) == "MINI-BOOTH":
+            _send(gs, "\nThe hum of the booth's machinery dies away.")
+        return False
+    i_turnoff_mini.__name__ = "i_turnoff_mini"
+    i_turnoff_mini._state = {}
+    return i_turnoff_mini
+
+
+def make_i_turnoff_shuttle(gs: "GameState", state: dict | None = None):
+    def i_turnoff_shuttle() -> bool:
+        gs.flags["SHUTTLE-ON"] = False
+        return False
+    i_turnoff_shuttle.__name__ = "i_turnoff_shuttle"
+    i_turnoff_shuttle._state = {}
+    return i_turnoff_shuttle
+
+
+def make_i_kitchen_door_closes(gs: "GameState", state: dict | None = None):
+    """I-KITCHEN-DOOR-CLOSES (globals.zil:1470) — auto-shuts unless you're in it."""
+    state = state if state is not None else {"every_turn": False}
+
+    def i_kitchen_door_closes() -> bool:
+        if _here_id(gs) == "KITCHEN":
+            # Don't shut on the player; convert to an every-turn watcher once.
+            if not state["every_turn"]:
+                state["every_turn"] = True
+                gs.scheduler.enable(gs.scheduler.queue(i_kitchen_door_closes, -1))
+            return False
+        door = _by_zil_id("KITCHEN-DOOR")
+        if door:
+            door.db.is_open = False
+        if _here_id(gs) == "MESS-HALL":
+            _send(gs, "\nThe kitchen door slides quietly closed.")
+        _disable_self(gs, "i_kitchen_door_closes")
+        return False
+
+    i_kitchen_door_closes.__name__ = "i_kitchen_door_closes"
+    i_kitchen_door_closes._state = state
+    return i_kitchen_door_closes
+
+
 def make_i_upper_elevator_arrive(gs: "GameState", state: dict | None = None):
     state = state if state is not None else {}
 

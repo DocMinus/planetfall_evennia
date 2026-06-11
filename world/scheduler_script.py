@@ -25,6 +25,12 @@ from world.interrupts import (
     make_i_sink_pod,
     make_i_upper_elevator_arrive,
     make_i_lower_elevator_arrive,
+    make_i_turnoff_upper_elevator,
+    make_i_turnoff_lower_elevator,
+    make_i_turnoff_teleportation,
+    make_i_turnoff_mini,
+    make_i_turnoff_shuttle,
+    make_i_kitchen_door_closes,
 )
 
 # Maps routine name -> maker function so we can restore closures after reload.
@@ -44,6 +50,13 @@ _MAKER_BY_NAME = {
     # a press that hasn't yet "arrived" survives a reload.
     "i_upper_elevator_arrive": make_i_upper_elevator_arrive,
     "i_lower_elevator_arrive": make_i_lower_elevator_arrive,
+    # Card-access turnoff / close demons (queued on demand by SLOT-F).
+    "i_turnoff_upper_elevator": make_i_turnoff_upper_elevator,
+    "i_turnoff_lower_elevator": make_i_turnoff_lower_elevator,
+    "i_turnoff_teleportation": make_i_turnoff_teleportation,
+    "i_turnoff_mini": make_i_turnoff_mini,
+    "i_turnoff_shuttle": make_i_turnoff_shuttle,
+    "i_kitchen_door_closes": make_i_kitchen_door_closes,
 }
 
 _DEFAULT_TICKS = {
@@ -58,6 +71,12 @@ _DEFAULT_TICKS = {
     "i_sink_pod": -1,
     "i_upper_elevator_arrive": 50,
     "i_lower_elevator_arrive": 100,
+    "i_turnoff_upper_elevator": 180,
+    "i_turnoff_lower_elevator": 200,
+    "i_turnoff_teleportation": 30,
+    "i_turnoff_mini": 30,
+    "i_turnoff_shuttle": 100,
+    "i_kitchen_door_closes": 50,
 }
 
 
