@@ -124,8 +124,10 @@ def _h_look(caller, nouns):
         caller.msg("You are in a void.")
         return
     caller.msg(f"\n{loc.key}")
-    if loc.db.desc:
-        caller.msg(loc.db.desc)
+    from world.action_handlers import dispatch_room, M_LOOK
+    if not dispatch_room(loc, caller, M_LOOK):
+        if loc.db.desc:
+            caller.msg(loc.db.desc)
     loc.db.first_visit = False
     visible = [
         obj for obj in loc.contents
@@ -357,6 +359,39 @@ def _h_take_off(caller, nouns):
     caller.msg(f"You remove the {obj.key}.")
 
 
+def _h_lamp_on(caller, nouns):
+    """Generic 'turn on' for a LIGHTBIT object (object ACTION handlers, e.g.
+    Floyd, intercept this first via dispatch_object)."""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    if not obj:
+        caller.msg(f"You see no {nouns[0]} here." if nouns else "Turn on what?")
+        return
+    if "LIGHTBIT" not in (obj.db.obj_flags or []):
+        caller.msg(f"You can't turn on the {obj.key}.")
+        return
+    if "ONBIT" in (obj.db.obj_flags or []):
+        caller.msg("It's already on.")
+        return
+    obj.db.obj_flags = list(obj.db.obj_flags or []) + ["ONBIT"]
+    caller.msg(f"The {obj.key} is now on.")
+
+
+def _h_lamp_off(caller, nouns):
+    """Generic 'turn off' for a LIGHTBIT object."""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    if not obj:
+        caller.msg(f"You see no {nouns[0]} here." if nouns else "Turn off what?")
+        return
+    if "LIGHTBIT" not in (obj.db.obj_flags or []):
+        caller.msg(f"You can't turn off the {obj.key}.")
+        return
+    if "ONBIT" not in (obj.db.obj_flags or []):
+        caller.msg("It's already off.")
+        return
+    obj.db.obj_flags = [f for f in (obj.db.obj_flags or []) if f != "ONBIT"]
+    caller.msg(f"The {obj.key} is now off.")
+
+
 def _h_stub(caller, nouns):
     caller.msg("That action isn't implemented yet.")
 
@@ -390,6 +425,8 @@ HANDLERS: dict = {
     "V-WEAR":        _h_wear,
     "V-TAKE-OFF":    _h_take_off,
     "V-REMOVE":      _h_take_off,
+    "V-LAMP-ON":     _h_lamp_on,
+    "V-LAMP-OFF":    _h_lamp_off,
 }
 
 
@@ -403,10 +440,17 @@ def make_command(verb: str, entries: list, aliases: list, timeless: bool = False
     sorted_entries = sorted(entries, key=lambda e: len(e[0]), reverse=True)
 
     def func(self):
+        from world.action_handlers import dispatch_object
         args = self.args.strip()
         for pattern, handler_name in self._pf_entries:
             nouns = _match_pattern(args, pattern)
             if nouns is not None:
+                # ZIL PRSO semantics: the object's ACTION routine gets first
+                # crack at the verb. If it consumes it, skip the default.
+                if nouns:
+                    obj = resolve_obj(self.caller, nouns[0])
+                    if obj and dispatch_object(obj, self.caller, handler_name, nouns):
+                        return
                 HANDLERS.get(handler_name, _h_stub)(self.caller, nouns)
                 return
         self.caller.msg("I don't understand what you mean.")

@@ -19,8 +19,13 @@ class PlanetfallRoom(ObjectParent, DefaultRoom):
         self.db.first_visit = True      # bool: False after player first enters
 
     def on_enter(self, character):
-        """Called when any character enters this room. Stub — wired in Phase 3."""
-        pass
+        """Called when any character enters this room.
+
+        Dispatches to the room's ZIL ACTION routine with the M-ENTER reason
+        argument (Phase 6). Rooms with no registered handler are a no-op.
+        """
+        from world.action_handlers import dispatch_room, M_ENTER
+        dispatch_room(self, character, M_ENTER)
 
     def at_object_receive(self, moved_obj, source_location, move_type="move", **kwargs):
         super().at_object_receive(moved_obj, source_location, move_type=move_type, **kwargs)
