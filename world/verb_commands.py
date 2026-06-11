@@ -630,6 +630,37 @@ def _h_walk(caller, nouns):
     caller.msg("You can't go that way.")
 
 
+# Fallback movement commands, one per compass/vertical direction. Real exits
+# create their own commands at cmdset priority 101; CharacterCmdSet (where these
+# live) is priority 0, so an exit always outranks the matching fallback. A
+# fallback therefore only fires for a direction that has NO exit in the current
+# room, turning Evennia's "Command 'down' is not available. Maybe you meant…"
+# into ZIL's "You can't go that way." (Each delegates to _h_walk, so on the off
+# chance it ever runs with an exit present it still traverses correctly.)
+_DIRECTION_COMMANDS = {
+    "north": ["n"], "south": ["s"], "east": ["e"], "west": ["w"],
+    "northeast": ["ne"], "northwest": ["nw"],
+    "southeast": ["se"], "southwest": ["sw"],
+    "up": ["u"], "down": ["d"], "out": ["o"], "in": [],
+}
+
+
+def _make_direction_command(direction: str, aliases: list) -> type:
+    def func(self):
+        _h_walk(self.caller, [direction])
+
+    return type(
+        f"CmdDir{direction.title()}",
+        (PlanetfallCommand,),
+        {
+            "key": direction,
+            "aliases": list(aliases),
+            "func": func,
+            "__doc__": f"Move {direction}.",
+        },
+    )
+
+
 def _h_stub(caller, nouns):
     caller.msg("That action isn't implemented yet.")
 
@@ -752,5 +783,9 @@ def build_all_commands() -> list:
     ]
 
 
-# Built once at import time; registered by CharacterCmdSet.
-ALL_COMMANDS: list = build_all_commands()
+# Built once at import time; registered by CharacterCmdSet. The direction
+# fallbacks are appended so a directionless room reports "You can't go that
+# way." rather than Evennia's command-not-found suggestions.
+ALL_COMMANDS: list = build_all_commands() + [
+    _make_direction_command(d, a) for d, a in _DIRECTION_COMMANDS.items()
+]
