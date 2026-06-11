@@ -79,7 +79,14 @@ class PlanetfallCommand(Command):
             return
         from world.scheduler_script import get_or_create_game_state_script
         script = get_or_create_game_state_script()
-        if self.timeless:
+        # A handler may set a non-default action cost (ZIL `<SETG C-ELAPSED n>`,
+        # e.g. SEARCH=32, LISTEN/READ=18, WAIT=40) via _set_elapsed(); honour it
+        # for this one command, then it falls back to the 7-tick default.
+        override = getattr(self.caller.ndb, "pf_elapsed", None)
+        if override is not None:
+            self.caller.ndb.pf_elapsed = None
+            script.get_gs().c_elapsed = override
+        elif self.timeless:
             script.set_timeless()
         else:
             script.reset_elapsed()

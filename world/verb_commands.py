@@ -666,6 +666,402 @@ def _make_direction_command(direction: str, aliases: list) -> type:
     )
 
 
+# ---------------------------------------------------------------------------
+# Generic verb handlers (verbs.zil) — the fall-through behaviour for verbs that
+# no object's ACTION routine consumes. Object-specific reactions live in
+# world/action_handlers.py OBJ_HANDLERS and get first crack via dispatch_object.
+# ---------------------------------------------------------------------------
+
+import random as _random
+
+
+def _set_elapsed(caller, ticks: int) -> None:
+    """ZIL <SETG C-ELAPSED n> — make this command cost `ticks` instead of 7."""
+    caller.ndb.pf_elapsed = ticks
+
+
+def _prso(caller, nouns):
+    """Resolve the verb's direct object, messaging if it isn't here."""
+    if not nouns:
+        return None
+    obj = resolve_obj(caller, nouns[0])
+    if obj is None:
+        caller.msg(f"You see no {_strip_articles(nouns[0])} here.")
+    return obj
+
+
+def _is(obj, flag) -> bool:
+    return flag in (obj.db.obj_flags or [])
+
+
+def _do_walk(caller, direction: str) -> None:
+    """ZIL DO-WALK — funnel a verb (ENTER/EXIT/GO-UP/…) into movement."""
+    _h_walk(caller, [direction])
+    caller.ndb.pf_clock_handled = True
+
+
+# --- HACK-HACK / fixed-flavour tables (verbs.zil) --------------------------
+
+_YUKS = ("Fat chance.", "A valiant attempt.", "You can't be serious.",
+         "Not bloody likely.", "An interesting idea...", "What a concept!")
+_WHEEEEE = ("You've spent too much time among the Leaping Loon-toads of Leonia.",
+            "Having fun?", "Wheeeeeee!!!")
+_HELLOS = ("Hello.", "Nice weather we're having.", "Goodbye.")
+
+
+def _hack_hack(caller, obj, lead: str) -> None:
+    """ZIL HACK-HACK (verbs.zil:1145) — '<lead> the <obj><ho-hum>'."""
+    caller.msg(f"{lead}the {obj.key}{_random.choice(_HO_HUM)}")
+
+
+# --- futile-action verbs ---------------------------------------------------
+
+def _h_kick(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        _hack_hack(caller, obj, "Kicking ")
+
+def _h_wave(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        _hack_hack(caller, obj, "Waving ")
+
+def _h_rub(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        _hack_hack(caller, obj, "Fiddling with ")
+
+def _h_pull(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        _hack_hack(caller, obj, "Pulling ")
+
+def _h_push_up(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        _hack_hack(caller, obj, "Pushing up ")
+
+def _h_push_down(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        _hack_hack(caller, obj, "Pushing down ")
+
+def _h_mung(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        _hack_hack(caller, obj, "Trying to destroy ")
+
+
+# --- simple fixed-message verbs (no object) --------------------------------
+
+def _h_curse(caller, nouns):
+    caller.msg("Such language from an Ensign in the Stellar Patrol!")
+
+def _h_yell(caller, nouns):
+    caller.msg("Aarrrrggggggghhhhhhhh!")
+
+def _h_zork(caller, nouns):
+    caller.msg("Gesundheit!")
+
+def _h_no(caller, nouns):
+    caller.msg("You sound rather negative.")
+
+def _h_yes(caller, nouns):
+    caller.msg("You sound rather positive.")
+
+def _h_maybe(caller, nouns):
+    caller.msg("You sound rather indecisive.")
+
+def _h_smile(caller, nouns):
+    caller.msg("How pleasant!")
+
+def _h_fly(caller, nouns):
+    caller.msg("Humans are not usually equipped for flying.")
+
+def _h_rape(caller, nouns):
+    caller.msg("What a (ahem!) strange idea.")
+
+def _h_kiss(caller, nouns):
+    caller.msg("I'd sooner kiss a pile of Antarian swamp mold.")
+
+def _h_skip(caller, nouns):
+    caller.msg(_random.choice(_WHEEEEE))
+
+def _h_slide(caller, nouns):
+    caller.msg(_random.choice(_YUKS))
+
+def _h_help(caller, nouns):
+    caller.msg("If you're really stuck, you can order a complete map and "
+               "InvisiClues Hint Booklet using the order form in your game "
+               "package.")
+
+def _h_fix_it(caller, nouns):
+    caller.msg("You shouldn't expect sweeping general commands like this to "
+               "work. If you want to repair something, you must perform the "
+               "specific steps required.")
+
+def _h_span(caller, nouns):
+    caller.msg("You can't.")
+
+def _h_cant_do_that(caller, nouns):
+    caller.msg("You can't do that.")    # V-TURN / V-LOCK / V-UNLOCK / V-PUT-UNDER
+
+def _h_throw_off(caller, nouns):
+    caller.msg("It's difficult to see how that can be done.")
+
+def _h_step_on(caller, nouns):
+    caller.msg("That's a silly thing to do.")
+
+def _h_answer(caller, nouns):
+    caller.msg("Nobody is awaiting your answer.")
+
+
+# --- fixed-message verbs that mention the object ---------------------------
+
+def _h_eat(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        caller.msg(f"I don't think that the {obj.key} would agree with you.")
+
+def _h_smell(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        caller.msg(f"It smells just like {_article(obj)} {obj.key}.")
+
+def _h_taste(caller, nouns):
+    obj = _prso(caller, nouns)
+    if not obj:
+        return
+    if obj.db.zil_id in ("HIGH-PROTEIN", "RED-GOO", "BROWN-GOO", "GREEN-GOO"):
+        caller.msg("It tastes edible.")
+    elif obj.db.zil_id == "CHEMICAL-FLUID":
+        caller.msg("It burns your tongue.")
+    else:
+        caller.msg(f"It tastes just like {_article(obj)} {obj.key}.")
+
+def _h_listen(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        _set_elapsed(caller, 18)
+        caller.msg(f"The {obj.key} makes no sound.")
+
+def _h_follow(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        caller.msg(f"The {obj.key} is right here!")
+
+def _h_pour(caller, nouns):
+    caller.msg("Pouring or spilling non-liquids is specifically forbidden by "
+               "section 17.9.2 of the Galactic Adventure Game Compendium of "
+               "Rules.")
+
+def _h_salute(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        caller.msg(f"The {obj.key} fails to return your salute.")
+
+def _h_flush(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        caller.msg(f"Flush {_article(obj)} {obj.key}?")
+
+def _h_play(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        caller.msg(f"How does one play {_article(obj)} {obj.key}?")
+
+def _h_alarm(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        caller.msg(f"The {obj.key} isn't sleeping.")
+
+def _h_reply(caller, nouns):
+    obj = _prso(caller, nouns)
+    if obj:
+        caller.msg(f"It is hardly likely that the {obj.key} is interested.")
+
+def _h_attack(caller, nouns):
+    obj = _prso(caller, nouns)
+    if not obj:
+        return
+    if _is(obj, "ACTORBIT"):
+        caller.msg(f"The {obj.key} is frightened and backs away.")
+    else:
+        caller.msg(f"I've known strange beings, but attacking "
+                   f"{_article(obj)} {obj.key}???")
+
+def _h_knock(caller, nouns):
+    obj = _prso(caller, nouns)
+    if not obj:
+        return
+    if "door" in {s.lower() for s in (obj.db.synonyms or [])} or "DOORBIT" in (obj.db.obj_flags or []):
+        caller.msg("Nobody's home.")
+    else:
+        caller.msg(f"Why knock on {_article(obj)} {obj.key}?")
+
+def _h_look_under(caller, nouns):
+    obj = _prso(caller, nouns)
+    if not obj:
+        return
+    stuff = "slime" if obj.db.zil_id == "AMBASSADOR" else "dust"
+    caller.msg(f"There is nothing but {stuff} there.")
+
+def _h_search(caller, nouns):
+    # Object ACTION routines (CREVICE, etc.) intercept SEARCH first; this is the
+    # generic fall-through.
+    _set_elapsed(caller, 32)
+    caller.msg("You find nothing unusual.")
+
+def _h_reach(caller, nouns):
+    obj = _prso(caller, nouns)
+    if not obj:
+        return
+    has = any(o for o in obj.contents)
+    word = "something" if has else "nothing"
+    caller.msg(f"There is {word} inside the {obj.key}.")
+
+def _h_set(caller, nouns):
+    obj = _prso(caller, nouns)
+    if not obj:
+        return
+    if obj.db.zil_id in ("COMBINATION-DIAL", "LASER-DIAL"):
+        caller.msg("You must specify a number to set the dial to.")
+    else:
+        caller.msg(f"Turning the {obj.key} accomplishes nothing.")
+
+def _h_hello(caller, nouns):
+    if nouns:
+        obj = resolve_obj(caller, nouns[0])
+        if obj:
+            caller.msg("Until now, I've only heard demented Denebian Devils "
+                       f"say \"Hello\" to {_article(obj)} {obj.key}.")
+            return
+    caller.msg(_random.choice(_HELLOS))
+
+def _h_move(caller, nouns):
+    obj = _prso(caller, nouns)
+    if not obj:
+        return
+    if _is(obj, "TAKEBIT"):
+        caller.msg(f"Moving the {obj.key} reveals nothing.")
+    else:
+        caller.msg(f"You can't move the {obj.key}.")
+
+def _h_give(caller, nouns):
+    # GIVE OBJECT TO ACTOR — PRSO is the gift, PRSI the recipient.
+    if len(nouns) < 2:
+        caller.msg("Give it to whom?")
+        return
+    gift = resolve_obj(caller, nouns[0])
+    recipient = resolve_obj(caller, nouns[1])
+    if not gift:
+        caller.msg(f"You see no {_strip_articles(nouns[0])} here.")
+        return
+    if gift not in caller.contents:
+        caller.msg(f"You're not holding the {gift.key}.")
+        return
+    if not recipient or not _is(recipient, "ACTORBIT"):
+        rname = recipient.key if recipient else _strip_articles(nouns[1])
+        caller.msg(f"You can't give {_article(gift)} {gift.key} to a {rname}!")
+        return
+    caller.msg(f"The {recipient.key} declines your offer.")
+
+def _h_show(caller, nouns):
+    if len(nouns) < 2:
+        caller.msg("Show it to whom?")
+        return
+    item = resolve_obj(caller, nouns[0])
+    viewer = resolve_obj(caller, nouns[1])
+    if not item:
+        caller.msg(f"You see no {_strip_articles(nouns[0])} here.")
+        return
+    if item not in caller.contents:
+        caller.msg(f"You're not holding the {item.key}.")
+        return
+    if viewer and _is(viewer, "ACTORBIT"):
+        caller.msg(f"The {viewer.key} looks at the {item.key}.")
+    else:
+        vname = viewer.key if viewer else _strip_articles(nouns[1])
+        caller.msg(f"Why would you want to show something to a {vname}?")
+
+def _h_oil(caller, nouns):
+    obj = _prso(caller, nouns)
+    if not obj:
+        return
+    oil_can = next((o for o in caller.contents if o.db.zil_id == "OIL-CAN"), None)
+    if not oil_can:
+        caller.msg("Oil it with what?")
+        return
+    if obj.db.zil_id == "FLOYD" and _is(obj, "RLANDBIT"):
+        caller.msg("Floyd thanks you for your thoughtfulness.")
+    else:
+        caller.msg(f"The {obj.key} doesn't need oiling.")
+
+def _h_scrub(caller, nouns):
+    obj = _prso(caller, nouns)
+    if not obj:
+        return
+    have_tool = any(o.db.zil_id in ("SCRUB-BRUSH", "TOWEL") for o in caller.contents)
+    if not have_tool:
+        caller.msg("You don't have anything to scrub with!")
+    elif _is(obj, "ACTORBIT"):
+        caller.msg(f"The {obj.key} prefers cleaning himself.")
+    else:
+        caller.msg(f"The {obj.key} is a bit shinier now.")
+
+def _h_diagnose_full(caller, nouns):
+    """V-DIAGNOSE (verbs.zil:1431) — sickness / sleep / hunger status."""
+    _set_elapsed(caller, 18)
+    gs = _gs()
+    sick = gs.flags.get("SICKNESS-LEVEL", 0) if gs else 0
+    sleepy = gs.flags.get("SLEEPY-LEVEL", 0) if gs else 0
+    hunger = gs.flags.get("HUNGER-LEVEL", 0) if gs else 0
+    lines = []
+    if sick == 0:
+        lines.append("You are in perfect health.")
+    else:
+        deg = ("severely" if sick > 7 else "very" if sick > 5
+               else "somewhat" if sick > 3 else "a bit")
+        lines.append(f"You are {deg} sick and feverish.")
+    if sleepy == 0:
+        lines.append("You feel well-rested.")
+    else:
+        deg = ("phenomenally" if sleepy > 2 else "quite" if sleepy > 1 else "sort of")
+        lines.append(f"You feel {deg} tired.")
+    if hunger == 0:
+        lines.append("You seem to be well-fed.")
+    else:
+        deg = ("awesomely phenomenally" if hunger > 4 else "noticeably"
+               if hunger > 2 else "fairly")
+        lines.append(f"You seem to be {deg} thirsty and hungry.")
+    caller.msg("\n".join(lines))
+
+
+# --- movement-delegating verbs (ZIL DO-WALK) -------------------------------
+
+def _h_go_up(caller, nouns):
+    _do_walk(caller, "up")
+
+def _h_enter(caller, nouns):
+    _do_walk(caller, "in")
+
+def _h_exit(caller, nouns):
+    _do_walk(caller, "out")
+
+def _h_leave(caller, nouns):
+    _do_walk(caller, "out")
+
+def _h_climb_up(caller, nouns):
+    _do_walk(caller, "up")
+
+def _h_climb_down(caller, nouns):
+    _do_walk(caller, "down")
+
+def _h_walk_dir(caller, nouns):
+    """V-WALK-AROUND / V-WALK-TO — ZIL USE-DIRECTIONS prompt."""
+    caller.msg("You should specify a direction to walk.")
+
+
 def _h_stub(caller, nouns):
     caller.msg("That action isn't implemented yet.")
 
@@ -687,7 +1083,7 @@ HANDLERS: dict = {
     "V-CLOSE":       _h_close,
     "V-WAIT":        _h_wait,
     "V-READ":        _h_read,
-    "V-DIAGNOSE":    _h_diagnose,
+    "V-DIAGNOSE":    _h_diagnose_full,
     "V-SCORE":       _h_score,
     "V-PUT":         _h_put,
     "V-PUT-ON":      _h_put,
@@ -706,6 +1102,69 @@ HANDLERS: dict = {
     "V-RESTORE":     _h_restore,
     "V-PUSH":        _h_push,
     "V-WALK":        _h_walk,
+    # Generic verb fall-throughs (verbs.zil) — engine feature #2.
+    "V-KICK":        _h_kick,
+    "V-WAVE":        _h_wave,
+    "V-RUB":         _h_rub,
+    "V-PULL":        _h_pull,
+    "V-PUSH-UP":     _h_push_up,
+    "V-PUSH-DOWN":   _h_push_down,
+    "V-MUNG":        _h_mung,
+    "V-CURSE":       _h_curse,
+    "V-YELL":        _h_yell,
+    "V-SCOLD":       _h_yell,
+    "V-ZORK":        _h_zork,
+    "V-NO":          _h_no,
+    "V-YES":         _h_yes,
+    "V-MAYBE":       _h_maybe,
+    "V-SMILE":       _h_smile,
+    "V-FLY":         _h_fly,
+    "V-RAPE":        _h_rape,
+    "V-KISS":        _h_kiss,
+    "V-SKIP":        _h_skip,
+    "V-SLIDE":       _h_slide,
+    "V-HELP":        _h_help,
+    "V-FIX-IT":      _h_fix_it,
+    "V-SPAN":        _h_span,
+    "V-TURN":        _h_cant_do_that,
+    "V-LOCK":        _h_cant_do_that,
+    "V-UNLOCK":      _h_cant_do_that,
+    "V-PUT-UNDER":   _h_cant_do_that,
+    "V-THROW-OFF":   _h_throw_off,
+    "V-STEP-ON":     _h_step_on,
+    "V-ANSWER":      _h_answer,
+    "V-EAT":         _h_eat,
+    "V-SMELL":       _h_smell,
+    "V-TASTE":       _h_taste,
+    "V-LISTEN":      _h_listen,
+    "V-FOLLOW":      _h_follow,
+    "V-POUR":        _h_pour,
+    "V-SALUTE":      _h_salute,
+    "V-FLUSH":       _h_flush,
+    "V-PLAY":        _h_play,
+    "V-ALARM":       _h_alarm,
+    "V-REPLY":       _h_reply,
+    "V-ATTACK":      _h_attack,
+    "V-KNOCK":       _h_knock,
+    "V-LOOK-UNDER":  _h_look_under,
+    "V-LOOK-BEHIND": _h_look_under,
+    "V-SEARCH":      _h_search,
+    "V-REACH":       _h_reach,
+    "V-SET":         _h_set,
+    "V-HELLO":       _h_hello,
+    "V-MOVE":        _h_move,
+    "V-GIVE":        _h_give,
+    "V-SHOW":        _h_show,
+    "V-OIL":         _h_oil,
+    "V-SCRUB":       _h_scrub,
+    "V-GO-UP":       _h_go_up,
+    "V-ENTER":       _h_enter,
+    "V-EXIT":        _h_exit,
+    "V-LEAVE":       _h_leave,
+    "V-CLIMB-UP":    _h_climb_up,
+    "V-CLIMB-DOWN":  _h_climb_down,
+    "V-WALK-AROUND": _h_walk_dir,
+    "V-WALK-TO":     _h_walk_dir,
 }
 
 
