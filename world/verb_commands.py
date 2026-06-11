@@ -418,6 +418,9 @@ def _h_restore(caller, nouns):
     script = get_or_create_game_state_script()
     for field, value in blob["script"].items():
         script.attributes.add(field, value)
+    # A snapshot is only ever taken while alive, so restoring always revives
+    # (the `dead` halt-state is not part of the save blob).
+    script.attributes.add("dead", False)
     script.ndb.game_state = None
     script.ndb.floyd = None
     script._rebuild()

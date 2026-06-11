@@ -88,6 +88,8 @@ class GameState:
         self.chronometer_munged: bool = False
         self.scheduler: Scheduler = Scheduler()
         self.player = None             # set to Character on login; used by interrupts for output
+        self.dead: bool = False        # ZIL FINISH state — game over via JIGS-UP
+        self.death_reason: str | None = None
 
         # Named game flags (ZIL globals). Door-open conditional exits read the
         # door object directly; this dict holds non-object globals such as
@@ -120,6 +122,35 @@ class GameState:
         self.internal_moves += self.c_elapsed
         self._update_display()
         return self.scheduler.tick(self.c_elapsed)
+
+    def die(self, reason: str = "") -> bool:
+        """ZIL JIGS-UP (verbs.zil:364) — the uniform death path.
+
+        Prints the death cause, the "**** You have died ****" banner, and the
+        end-of-game score summary, then marks the game over (`dead`). Mirrors
+        JIGS-UP's `<TELL .DESC>` + banner + `<FINISH T>`. Returns True so it
+        composes with the fatal bool the clock/scheduler already propagate —
+        a fatal interrupt or object handler just `return gs.die(cause)`.
+        """
+        self.dead = True
+        self.death_reason = reason or None
+        if self.player:
+            self.player.msg(self._death_banner(reason))
+        return True
+
+    def _death_banner(self, reason: str) -> str:
+        lines = []
+        if reason:
+            lines.append(reason)
+        lines.append("\n    ****  You have died  ****\n")
+        lines.append(
+            f"In that game you scored {self.score} out of a possible "
+            f"{self.MAX_SCORE} points, in {self.day} "
+            f"day{'s' if self.day != 1 else ''}, giving you the rank of "
+            f"{self.rank_for(self.score)}."
+        )
+        lines.append("\nWould you like to RESTORE a saved game, or QUIT?")
+        return "\n".join(lines)
 
     def add_score(self, points: int, reason: str | None = None) -> None:
         """Award `points` to the running score (verbs.zil SETG SCORE)."""

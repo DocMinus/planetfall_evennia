@@ -261,7 +261,16 @@ def handle_blather(ctx: ObjAction) -> bool:
             "you more demerits.")
         return True
     if v in ("V-ATTACK", "V-KICK"):
-        msg("Blather removes several of your appendages and internal organs.")
+        # ZIL JIGS-UP (globals.zil:751): attacking Blather is fatal.
+        from world.scheduler_script import get_game_state_script
+        script = get_game_state_script()
+        gs = script.get_gs() if script else None
+        if gs:
+            gs.die("Blather removes several of your appendages and internal "
+                   "organs.")
+        else:
+            msg("Blather removes several of your appendages and internal "
+                "organs.")
         return True
     if v == "V-SALUTE":
         msg("Blather's sneer softens a bit. \"First right thing you've done "

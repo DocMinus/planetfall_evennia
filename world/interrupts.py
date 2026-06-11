@@ -241,8 +241,10 @@ def make_i_blowup_feinstein(gs: "GameState", state: dict | None = None):
             state["stage"] += 1
             gs.scheduler.enable(gs.scheduler.queue(i_blowup_feinstein, 150))
         else:
-            _send(gs, "The Feinstein tears apart around you.  Everything goes dark.")
-            return True
+            return gs.die(
+                "An enormous explosion tears the walls of the ship apart. If "
+                "only you had made it to an escape pod..."
+            )
         return False
 
     i_blowup_feinstein.__name__ = "i_blowup_feinstein"
@@ -277,7 +279,9 @@ def make_i_sleep_warnings(gs: "GameState", state: dict | None = None):
             if level < len(_SLEEP_MESSAGES) - 1:
                 gs.scheduler.enable(gs.scheduler.queue(i_sleep_warnings, 600))
             else:
-                return True
+                return gs.die(
+                    "Unfortunately, you don't seem to have survived the night."
+                )
         return False
 
     i_sleep_warnings.__name__ = "i_sleep_warnings"
@@ -311,7 +315,7 @@ def make_i_hunger_warnings(gs: "GameState", state: dict | None = None):
             if level < len(_HUNGER_MESSAGES) - 1:
                 gs.scheduler.enable(gs.scheduler.queue(i_hunger_warnings, 500))
             else:
-                return True
+                return gs.die("You collapse from extreme thirst and hunger.")
         return False
 
     i_hunger_warnings.__name__ = "i_hunger_warnings"
@@ -345,7 +349,10 @@ def make_i_sickness_warnings(gs: "GameState", state: dict | None = None):
             if level < len(_SICKNESS_MESSAGES) - 1:
                 gs.scheduler.enable(gs.scheduler.queue(i_sickness_warnings, 400))
             else:
-                return True
+                return gs.die(
+                    "You finally succumb to the ravages of your illness and "
+                    "collapse."
+                )
         return False
 
     i_sickness_warnings.__name__ = "i_sickness_warnings"

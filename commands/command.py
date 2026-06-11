@@ -47,6 +47,29 @@ class PlanetfallCommand(Command):
 
     timeless: bool = False
 
+    # Commands still usable once the game is over (ZIL FINISH menu). QUIT is an
+    # Evennia default command, not a PlanetfallCommand, so it is never gated.
+    _ALLOWED_WHEN_DEAD = frozenset({"restore", "restart", "score", "version"})
+
+    def at_pre_cmd(self) -> bool:
+        """Abort timed play once the game is over (ZIL FINISH halts the loop).
+
+        After a JIGS-UP death only the recovery verbs work; everything else is
+        refused without ticking the clock (Evennia skips func/at_post_cmd when
+        at_pre_cmd returns truthy).
+        """
+        if self.key in self._ALLOWED_WHEN_DEAD:
+            return False
+        from world.scheduler_script import get_game_state_script
+        script = get_game_state_script()
+        gs = script.get_gs() if script else None
+        if gs and gs.dead:
+            self.caller.msg(
+                "The game is over. Please RESTORE a saved game or QUIT."
+            )
+            return True
+        return False
+
     def at_post_cmd(self) -> None:
         # A handler that already advanced the clock itself (e.g. V-WALK, which
         # traverses an exit whose at_traverse ticks the clock) sets this

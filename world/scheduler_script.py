@@ -92,6 +92,7 @@ class GameStateScript(DefaultScript):
         self.db.internal_moves = 0
         self.db.day = 1
         self.db.score = 0
+        self.db.dead = False
         self.db.chronometer_present = False
         self.db.chronometer_munged = False
         self.db.flags = {}
@@ -117,12 +118,18 @@ class GameStateScript(DefaultScript):
         caller is the Character who issued the command.
         """
         gs = self.get_gs()
+        # An object handler (e.g. attacking Blather) may have killed the player
+        # during func(); the clock stops the moment the game is over (ZIL FINISH).
+        if gs.dead:
+            self._persist(gs)
+            return
         fatal = gs.advance_clock()
+        # A fatal interrupt routes its own faithful cause through gs.die();
+        # this fallback covers any fatal path that didn't (so the banner and
+        # the `dead` halt-state still fire exactly once).
+        if fatal and not gs.dead:
+            gs.die("Your adventure ends here.")
         self._persist(gs)
-        if fatal:
-            caller.msg(
-                "\n*** Your adventure ends here.  Type 'quit' or disconnect. ***"
-            )
 
     def get_floyd(self) -> "FloydNPC":
         """Return the live FloydNPC, rebuilding from db if needed."""
@@ -151,6 +158,7 @@ class GameStateScript(DefaultScript):
         gs.internal_moves = self.db.internal_moves or 0
         gs.day = self.db.day or 1
         gs.score = self.db.score or 0
+        gs.dead = bool(self.db.dead)
         gs.chronometer_present = bool(self.db.chronometer_present)
         gs.chronometer_munged = bool(self.db.chronometer_munged)
         # Overlay saved flags onto GameState's default seed (keeps NO-MICROBE
@@ -218,6 +226,7 @@ class GameStateScript(DefaultScript):
         self.db.internal_moves = gs.internal_moves
         self.db.day = gs.day
         self.db.score = gs.score
+        self.db.dead = gs.dead
         self.db.chronometer_present = gs.chronometer_present
         self.db.chronometer_munged = gs.chronometer_munged
         self.db.flags = dict(gs.flags)
