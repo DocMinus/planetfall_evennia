@@ -85,6 +85,7 @@ class GameStateScript(DefaultScript):
         self.db.day = 1
         self.db.chronometer_present = False
         self.db.chronometer_munged = False
+        self.db.flags = {}
         self.db.interrupt_states = {}
         self.db.floyd_state = {}
 
@@ -142,6 +143,10 @@ class GameStateScript(DefaultScript):
         gs.day = self.db.day or 1
         gs.chronometer_present = bool(self.db.chronometer_present)
         gs.chronometer_munged = bool(self.db.chronometer_munged)
+        # Overlay saved flags onto GameState's default seed (keeps NO-MICROBE
+        # default if it was never persisted).
+        if self.db.flags:
+            gs.flags.update(self.db.flags)
         self.ndb.game_state = gs
 
         saved_states: dict = self.db.interrupt_states or {}
@@ -204,6 +209,7 @@ class GameStateScript(DefaultScript):
         self.db.day = gs.day
         self.db.chronometer_present = gs.chronometer_present
         self.db.chronometer_munged = gs.chronometer_munged
+        self.db.flags = dict(gs.flags)
 
         states: dict = {}
         for intr in gs.scheduler._interrupts:

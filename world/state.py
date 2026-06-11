@@ -88,6 +88,11 @@ class GameState:
         self.scheduler: Scheduler = Scheduler()
         self.player = None             # set to Character on login; used by interrupts for output
 
+        # Named game flags (ZIL globals). Door-open conditional exits read the
+        # door object directly; this dict holds non-object globals such as
+        # NO-MICROBE (comptwo.zil:2474, starts T). See world/exit_handlers.py.
+        self.flags: dict = {"NO-MICROBE": True}
+
     def advance_clock(self) -> bool:
         """
         Called after each player action. Mirrors the post-action block in
