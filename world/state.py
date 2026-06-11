@@ -146,6 +146,7 @@ class GameState:
             "ACCESS-PANEL-FULL": True,       # the bad board starts in the panel
             "ITS-CRACKED": False,
             "COMM-SHUTDOWN": False,
+            "HOLE-TRIP-FLAG": False,         # Floyd has been through the robot hole
             "CRYO-SCORE-FLAG": False,       # comptwo.zil
         }
 

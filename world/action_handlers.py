@@ -1253,6 +1253,109 @@ def handle_medicine(ctx: ObjAction) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Subsystem 8 — Magnet / dead Floyd / robot hole (compone.zil)
+# ---------------------------------------------------------------------------
+
+def handle_magnet(ctx: ObjAction) -> bool:
+    """MAGNET-F (compone.zil:1570) — fishes out the key; scrambles carried cards."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if v == "V-TAKE":
+        # Picking it up starts the card-scrambling demon (I-MAGNET).
+        if gs and not any(getattr(i.routine, "__name__", None) == "i_magnet"
+                          for i in gs.scheduler._interrupts):
+            import world.interrupts as I
+            gs.scheduler.enable(gs.scheduler.queue(I.make_i_magnet(gs), -1))
+        return False   # fall through to the generic take
+    if v in ("V-ATTRACT", "V-ZATTRACT", "V-PUT-ON"):
+        if obj.location is not caller:
+            caller.msg("You're not holding the magnet.")
+            return True
+        key = _by_zil_id("KEY")
+        prsi = _prsi(ctx)
+        target = prsi.db.zil_id if prsi else None
+        if key and _bit(key, "TOUCHBIT") and target == "KEY":
+            key.move_to(caller, quiet=True, move_type="get")
+            caller.msg("The key jumps against the ends of the magnet and sticks "
+                       "there. Proud of your feat, you remove the key from the "
+                       "magnet.")
+        elif key and not _bit(key, "TOUCHBIT") and target in ("KEY", "CREVICE"):
+            key.move_to(caller, quiet=True, move_type="get")
+            _set_bit(key, "INVISIBLE", False)
+            _set_bit(key, "TRYTAKEBIT", False)
+            _set_bit(key, "TOUCHBIT", True)
+            caller.msg("With a spray of dust and a loud clank, a piece of metal "
+                       "leaps from the crevice and affixes itself to the "
+                       "magnet. It is a steel key! With a tug, you remove the "
+                       "key from the magnet.")
+        else:
+            caller.msg("Nothing interesting happens.")
+        return True
+    return False
+
+
+def handle_dead_floyd(ctx: ObjAction) -> bool:
+    """DEAD-FLOYD-F (compone.zil:2303)."""
+    caller, v = ctx.caller, ctx.verb
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        caller.msg("You turn to look at Floyd, but a tremendous sense of loss "
+                   "overcomes you, and you turn away.")
+        return True
+    if v == "V-LAMP-ON":
+        caller.msg("As you touch Floyd's on-off switch, it falls off in your "
+                   "hands.")
+        return True
+    if v == "V-LAMP-OFF":
+        caller.msg("I'm afraid that Floyd has already been turned off, "
+                   "permanently, and gone to that great robot shop in the sky.")
+        return True
+    return False
+
+
+def handle_robot_hole(ctx: ObjAction) -> bool:
+    """ROBOT-HOLE-F (comptwo.zil:243) + Floyd's fetch of the good board."""
+    caller, v = ctx.caller, ctx.verb
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        caller.msg("It's too small for you to get through. It was presumably "
+                   "intended for robots, such as the broken repair robot lying "
+                   "over there.")
+        return True
+    if v == "V-LOOK-INSIDE":
+        caller.msg("You can make out a small supply room of some sort.")
+        return True
+    if v in ("V-OPEN", "V-CLOSE"):
+        caller.msg("There's no door, just an opening in the wall.")
+        return True
+    if v in ("V-POINT", "V-THROUGH"):
+        return _floyd_through_hole(caller)
+    return False
+
+
+def _floyd_through_hole(caller) -> bool:
+    """FLOYD-THROUGH-HOLE (comptwo.zil:258) — Floyd fetches the shiny board."""
+    gs = _gs()
+    floyd = _by_zil_id("FLOYD")
+    if not (floyd and floyd.location is caller.location):
+        return False
+    if gs and gs.flags.get("HOLE-TRIP-FLAG"):
+        caller.msg("\"Not again,\" whines Floyd.")
+        return True
+    caller.ndb.pf_elapsed = 50
+    if gs:
+        gs.flags["HOLE-TRIP-FLAG"] = True
+    good = _by_zil_id("GOOD-BOARD")
+    if good:
+        _set_bit(good, "INVISIBLE", False)
+    caller.msg("Floyd squeezes through the opening and is gone for quite a "
+               "while. You hear thudding noises and squeals of enjoyment. After "
+               "a while the noise stops, and Floyd emerges, looking downcast. "
+               "\"Floyd found a rubber ball inside. Lots of fun for a while, "
+               "but must have been old, because it fell apart. Nothing else "
+               "interesting inside. Just a shiny fromitz board.\"")
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Subsystem 7 — Teleport booths (globals.zil TELEPORT)
 # ---------------------------------------------------------------------------
 
@@ -1355,6 +1458,9 @@ OBJ_HANDLERS: dict = {
     "TELEPORTATION-BUTTON-1-F": handle_teleport_button,
     "TELEPORTATION-BUTTON-2-F": handle_teleport_button,
     "TELEPORTATION-BUTTON-3-F": handle_teleport_button,
+    "MAGNET-F": handle_magnet,
+    "DEAD-FLOYD-F": handle_dead_floyd,
+    "ROBOT-HOLE-F": handle_robot_hole,
 }
 ROOM_HANDLERS.update({
     "CONTROL-CABIN-F": handle_control_cabin,

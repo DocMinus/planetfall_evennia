@@ -807,6 +807,32 @@ def make_i_turnoff_mini(gs: "GameState", state: dict | None = None):
     return i_turnoff_mini
 
 
+_MAGNET_CARDS = ("KITCHEN-CARD", "SHUTTLE-CARD", "TELEPORTATION-CARD",
+                 "UPPER-ELEVATOR-CARD", "LOWER-ELEVATOR-CARD", "MINI-CARD",
+                 "ID-CARD")
+
+
+def make_i_magnet(gs: "GameState", state: dict | None = None):
+    """I-MAGNET (compone.zil:1601) — a carried magnet scrambles held cards."""
+    def i_magnet() -> bool:
+        magnet = _by_zil_id("MAGNET")
+        player = gs.player
+        if not (magnet and player and magnet.location is player):
+            _disable_self(gs, "i_magnet")
+            return False
+        for cid in _MAGNET_CARDS:
+            card = _by_zil_id(cid)
+            if card and card.location is player:
+                flags = card.db.obj_flags or []
+                if "SCRAMBLEDBIT" not in flags:
+                    card.db.obj_flags = list(flags) + ["SCRAMBLEDBIT"]
+                break
+        return False
+    i_magnet.__name__ = "i_magnet"
+    i_magnet._state = {}
+    return i_magnet
+
+
 def make_i_turnoff_shuttle(gs: "GameState", state: dict | None = None):
     def i_turnoff_shuttle() -> bool:
         gs.flags["SHUTTLE-ON"] = False
