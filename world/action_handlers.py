@@ -1252,6 +1252,55 @@ def handle_medicine(ctx: ObjAction) -> bool:
     return False
 
 
+# ---------------------------------------------------------------------------
+# Subsystem 7 — Teleport booths (globals.zil TELEPORT)
+# ---------------------------------------------------------------------------
+
+_BUTTON_DEST = {
+    "TELEPORTATION-BUTTON-1-F": "BOOTH-1",
+    "TELEPORTATION-BUTTON-2-F": "BOOTH-2",
+    "TELEPORTATION-BUTTON-3-F": "BOOTH-3",
+}
+
+
+def _teleport(gs, caller, dest_zil: str) -> None:
+    """TELEPORT (globals.zil:1505)."""
+    if not gs or not gs.flags.get("TELEPORTATION-ON"):
+        caller.msg("A sign flashes \"Teleportaashun buux not aktivaatid.\"")
+        return
+    dest = _by_zil_id(dest_zil)
+    if dest is None:
+        caller.msg("Nothing happens.")
+        return
+    caller.msg("You experience a strange feeling in the pit of your stomach.")
+    floyd = _by_zil_id("FLOYD")
+    if floyd and floyd.location is caller.location:
+        caller.msg("Floyd gives a terrified squeal, and clutches at his "
+                   "guidance mechanism.")
+        floyd.move_to(dest, quiet=True, move_type="teleport")
+    here = caller.location
+    if here:
+        for obj in list(here.contents):
+            if obj is not caller and _bit(obj, "TAKEBIT"):
+                obj.move_to(dest, quiet=True, move_type="move")
+    caller.move_to(dest, quiet=True, move_type="teleport")
+    gs.flags["TELEPORTATION-ON"] = False
+    _disable_interrupt(gs, "i_turnoff_teleportation")
+    from world.verb_commands import build_look
+    caller.msg(build_look(caller, dest))
+
+
+def handle_teleport_button(ctx: ObjAction) -> bool:
+    """TELEPORTATION-BUTTON-1/2/3-F (globals.zil:1531)."""
+    if ctx.verb != "V-PUSH":
+        return False
+    dest = _BUTTON_DEST.get(ctx.obj.db.action)
+    if dest:
+        _teleport(_gs(), ctx.caller, dest)
+        return True
+    return False
+
+
 def handle_kitchen_door(ctx: ObjAction) -> bool:
     """KITCHEN-DOOR-F (compone.zil:772) — opens only via the card slot."""
     if ctx.verb == "V-OPEN":
@@ -1303,6 +1352,9 @@ OBJ_HANDLERS: dict = {
     "BAD-BEDISTOR-F": handle_bad_bedistor,
     "GOOD-BEDISTOR-F": handle_good_bedistor,
     "SPOOL-READER-F": handle_spool_reader,
+    "TELEPORTATION-BUTTON-1-F": handle_teleport_button,
+    "TELEPORTATION-BUTTON-2-F": handle_teleport_button,
+    "TELEPORTATION-BUTTON-3-F": handle_teleport_button,
 }
 ROOM_HANDLERS.update({
     "CONTROL-CABIN-F": handle_control_cabin,

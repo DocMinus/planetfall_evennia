@@ -629,6 +629,24 @@ def _h_push(caller, nouns):
     else.
     """
     import random
+    # ZIL V-PUSH INTNUM branch (verbs.zil:1085): pushing a booth number presses
+    # the matching teleport button (or rejects it if it's this very booth).
+    if nouns and _strip_articles(nouns[0]).strip() in ("1", "2", "3"):
+        n = _strip_articles(nouns[0]).strip()
+        here = caller.location.db.zil_id if caller.location else None
+        if here in ("BOOTH-1", "BOOTH-2", "BOOTH-3"):
+            if here == f"BOOTH-{n}":
+                caller.msg(f"There's no button here that's labelled with the "
+                           f"number {n}.")
+                return
+            from world.action_handlers import _by_zil_id as _byz, handle_teleport_button, ObjAction
+            btn = _byz(f"TELEPORTATION-BUTTON-{n}")
+            if btn:
+                handle_teleport_button(ObjAction(obj=btn, caller=caller,
+                                                 verb="V-PUSH", nouns=nouns))
+                return
+        caller.msg("Push a number?!?")
+        return
     name = "that"
     if nouns:
         obj = resolve_obj(caller, nouns[0])
