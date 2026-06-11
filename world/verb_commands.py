@@ -327,6 +327,111 @@ def _h_score(caller, nouns):
     caller.msg(line)
 
 
+# ---------------------------------------------------------------------------
+# SAVE / RESTORE (Phase 10)
+# ---------------------------------------------------------------------------
+
+# GameStateScript.db fields that make up a complete game snapshot. Each is a
+# primitive / plain dict, so the snapshot is JSON-safe and Evennia-storable.
+_SAVE_SCRIPT_FIELDS = (
+    "internal_moves", "day", "score",
+    "chronometer_present", "chronometer_munged",
+    "flags", "interrupt_states", "floyd_state",
+)
+
+# Per-object mutable state captured for each inventory item. The rest of an
+# object's db (zil_id, synonyms, action, …) is static game data reloaded with
+# the world, so only the fields that change in play are saved.
+_SAVE_OBJ_FIELDS = ("obj_flags", "value", "fdesc_seen", "is_open", "is_locked")
+
+
+def _save_slot(nouns) -> str:
+    """Named save slot, or 'autosave' when SAVE/RESTORE is given no argument.
+
+    The raw noun is used verbatim (lowercased, spaces → underscores); articles
+    are NOT stripped, so 'my game' stays a distinct slot rather than collapsing.
+    """
+    return nouns[0].strip().lower().replace(" ", "_") if nouns and nouns[0].strip() else "autosave"
+
+
+def _h_save(caller, nouns):
+    """V-SAVE (verbs.zil) — snapshot game state to a named slot on the player.
+
+    Captures the GameStateScript clock/Floyd/flags/score, the player's room
+    (by zil_id), and the player's inventory (each item's mutable db state).
+    """
+    import copy
+    from world.scheduler_script import get_or_create_game_state_script
+
+    script = get_or_create_game_state_script()
+    # Flush live GameState/Floyd to db so the snapshot is current.
+    script._persist(script.get_gs())
+
+    inventory = []
+    for obj in caller.contents:
+        if not obj.db.zil_id:
+            continue
+        inventory.append({
+            "zil_id": obj.db.zil_id,
+            **{f: copy.deepcopy(obj.attributes.get(f)) for f in _SAVE_OBJ_FIELDS},
+        })
+
+    blob = {
+        "script": {f: copy.deepcopy(script.attributes.get(f)) for f in _SAVE_SCRIPT_FIELDS},
+        "location": caller.location.db.zil_id if caller.location else None,
+        "inventory": inventory,
+    }
+
+    saves = dict(caller.db.saves or {})
+    slot = _save_slot(nouns)
+    saves[slot] = blob
+    caller.db.saves = saves
+    caller.msg(f'Game saved to "{slot}".')
+
+
+def _h_restore(caller, nouns):
+    """V-RESTORE (verbs.zil) — reload a snapshot saved by _h_save."""
+    from world.scheduler_script import get_or_create_game_state_script
+
+    slot = _save_slot(nouns)
+    blob = (caller.db.saves or {}).get(slot)
+    if not blob:
+        caller.msg(f'No saved game in slot "{slot}".')
+        return
+
+    # 1. Restore the GameStateScript db and rebuild its live GameState/Floyd.
+    script = get_or_create_game_state_script()
+    for field, value in blob["script"].items():
+        script.attributes.add(field, value)
+    script.ndb.game_state = None
+    script.ndb.floyd = None
+    script._rebuild()
+
+    # 2. Teleport the player back to the saved room.
+    room = _by_zil_id(blob["location"]) if blob["location"] else None
+    if room and caller.location is not room:
+        caller.move_to(room, quiet=True, move_type="teleport")
+
+    # 3. Rebuild inventory: drop held items absent from the save, then pull in
+    #    and re-state every saved item.
+    dest = room or caller.location
+    saved_ids = {item["zil_id"] for item in blob["inventory"]}
+    for obj in list(caller.contents):
+        if obj.db.zil_id not in saved_ids and dest:
+            obj.move_to(dest, quiet=True, move_type="drop")
+    for item in blob["inventory"]:
+        obj = _by_zil_id(item["zil_id"])
+        if obj is None:
+            continue
+        if obj.location is not caller:
+            obj.move_to(caller, quiet=True, move_type="get")
+        for field in _SAVE_OBJ_FIELDS:
+            obj.attributes.add(field, item.get(field))
+
+    caller.msg(f'Game restored from "{slot}".')
+    _h_look(caller, [])
+
+
 def _h_put(caller, nouns):
     item = resolve_obj(caller, nouns[0])
     container = resolve_obj(caller, nouns[1]) if len(nouns) > 1 else None
@@ -480,6 +585,8 @@ HANDLERS: dict = {
     "V-LAMP-ON":     _h_lamp_on,
     "V-LAMP-OFF":    _h_lamp_off,
     "V-AGAIN":       _h_again,
+    "V-SAVE":        _h_save,
+    "V-RESTORE":     _h_restore,
 }
 
 
