@@ -136,6 +136,13 @@ class GameStateScript(DefaultScript):
         # the `dead` halt-state still fire exactly once).
         if fatal and not gs.dead:
             gs.die("Your adventure ends here.")
+        # ZIL end-of-turn: the player's room ACTION runs with M-END each turn
+        # (corridor hints, chase scenes). Skipped once the game is over.
+        if not gs.dead:
+            loc = getattr(caller, "location", None)
+            if loc is not None and hasattr(loc, "db"):
+                from world.action_handlers import dispatch_room, M_END
+                dispatch_room(loc, caller, M_END)
         self._persist(gs)
 
     def get_floyd(self) -> "FloydNPC":

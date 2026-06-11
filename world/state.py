@@ -111,7 +111,9 @@ class GameState:
             "BRIGS-UP": 0,                  # Blather brig-drag counter
             "IN-WEB": False,                # ADVENTURER in SAFETY-WEB (vehicle-as-flag)
             "IN-BED": False,                # ADVENTURER in a BED (vehicle-as-flag)
-            "LADDER-FLAG": False,           # ladder-across-rift puzzle
+            "LADDER-FLAG": False,           # ladder spans the rift (compone.zil:647)
+            "LADDER-EXTENDED": False,        # ladder extended to full length
+            "PADLOCK-REMOVED": False,        # padlock taken off the brig door
             "CRYO-SCORE-FLAG": False,       # comptwo.zil
         }
 

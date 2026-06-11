@@ -108,6 +108,10 @@ def resolve_obj(caller, noun: str):
     best = None
     best_score = 0
     for obj in candidates:
+        # ZIL ACCESSIBLE?: an INVISIBLE object can't be referred to until it is
+        # revealed (e.g. the key hidden in the crevice).
+        if "INVISIBLE" in (obj.db.obj_flags or []):
+            continue
         syns = {s.lower() for s in (obj.db.synonyms or [])}
         adjs = {a.lower() for a in (obj.db.adjectives or [])}
         name_words = set(obj.key.lower().split())
@@ -179,6 +183,7 @@ def build_look(caller, loc) -> str:
         if obj is not caller
         and not isinstance(obj, DefaultExit)
         and "NDESCBIT" not in (obj.db.obj_flags or [])
+        and "INVISIBLE" not in (obj.db.obj_flags or [])
     ]
     if visible:
         lines.append("")
