@@ -58,16 +58,41 @@ def _article(obj) -> str:
     return "an" if "VOWELBIT" in (obj.db.obj_flags or []) else "a"
 
 
+# ZIL pronoun words that resolve to P-IT-OBJECT (the last-referenced object).
+_PRONOUNS = frozenset({"it", "them", "him", "her", "that"})
+
+
+def _accessible(caller, obj) -> bool:
+    """ZIL ACCESSIBLE? — is obj in inventory, the room, or its local-globals?"""
+    if obj.location is caller:
+        return True
+    loc = caller.location
+    if not loc:
+        return False
+    if obj.location is loc:
+        return True
+    return (obj.db.zil_id or "?") in (loc.db.globals or [])
+
+
 def resolve_obj(caller, noun: str):
     """
     Find the best-matching visible object for a noun phrase.
     Searches caller's inventory, current room, and room's local-globals.
+
+    ZIL THIS-IS-IT: a successful resolution is remembered on
+    `caller.ndb.last_it`, so a later "it"/"them"/"him" resolves to it as long
+    as it is still accessible (P-IT-OBJECT + P-IT-LOC == HERE).
     """
     from evennia.objects.objects import DefaultExit
 
     noun = _strip_articles(noun)
     if not noun:
         return None
+
+    if noun in _PRONOUNS:
+        it = getattr(caller.ndb, "last_it", None)
+        return it if (it and _accessible(caller, it)) else None
+
     words = set(noun.split())
 
     candidates: list = list(caller.contents)
@@ -90,6 +115,8 @@ def resolve_obj(caller, noun: str):
         if score > best_score:
             best = obj
             best_score = score
+    if best is not None:
+        caller.ndb.last_it = best   # THIS-IS-IT
     return best
 
 
