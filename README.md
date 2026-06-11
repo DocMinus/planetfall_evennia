@@ -73,6 +73,7 @@ The server starts two listeners:
 | `score` | Show your current score |
 | `diagnose` | Show your health status |
 | `north` / `n`, `south` / `s` … | Move in a direction |
+| `go <direction>` / `walk <direction>` | Same as the bare direction |
 | `again` / `g` | Repeat the last command |
 | `quit` / `q` | Disconnect |
 
