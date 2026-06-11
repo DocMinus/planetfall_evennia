@@ -5,9 +5,10 @@ An unofficial fan port of **Planetfall** (1983, Infocom) to
 The game world (105 rooms, 137 objects, 8 NPCs, 200+ verb patterns) is
 derived from the original ZIL source code via a custom extraction pipeline.
 
-> **Status:** Phases 0–5 complete — world loads, clock ticks, Floyd follows
-> you, all verb commands are wired. Puzzle handlers and conditional exits are
-> in progress (see `EVENNIA_PLAN_2.md`).
+> **Status:** Phases 0–12 complete — world loads, clock ticks, Floyd follows
+> you, all verb commands are wired, scoring/AGAIN/SAVE-RESTORE work, conditional
+> and transport (elevator/shuttle) exits are faithful, and Blather/the Ambassador
+> roam the ship. The remaining puzzle handlers are tracked in `EVENNIA_PLAN_3.md`.
 
 ---
 
@@ -47,7 +48,7 @@ The server starts two listeners:
 2. Log in with the superuser account you created.
 3. Teleport to the starting room:
    ```
-   @tel/quiet BRIG
+   @tel/quiet DECK-NINE
    ```
 4. Type `look` to see where you are.
 
