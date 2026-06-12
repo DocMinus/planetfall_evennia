@@ -63,10 +63,17 @@ class PlanetfallExit(ObjectParent, DefaultExit):
 
         moved = super().at_traverse(traversing_object, target_location, **kwargs)
         if moved is not False and traversing_object.location is target_location:
-            # A completed step costs DEFAULT-MOVE (20); refusals above stay at 7.
-            script.set_move_elapsed()
+            # A completed step costs this room's C-MOVE for the direction walked,
+            # else DEFAULT-MOVE (20); refusals above stay at 7.
+            script.set_move_elapsed(self._move_cost())
             script.advance(traversing_object)
         return moved
+
+    def _move_cost(self):
+        """Source room's C-MOVE cost for this exit's direction, or None (→ 20)."""
+        src = self.location
+        c_move = src.db.c_move if src else None
+        return c_move.get(self.key) if c_move else None
 
     def _conditional_open(self, traversing_object) -> bool:
         """Return True if a conditional exit may be traversed; else message + False.

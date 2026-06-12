@@ -1,0 +1,109 @@
+{
+  "BALCONY": {
+    "down": 25,
+    "up": 30
+  },
+  "BIO-LOCK-EAST": {
+    "west": 10
+  },
+  "BIO-LOCK-WEST": {
+    "east": 10
+  },
+  "COMPUTER-ROOM": {
+    "northeast": 25
+  },
+  "CORRIDOR-JUNCTION": {
+    "east": 30,
+    "west": 160
+  },
+  "COURTYARD": {
+    "down": 15
+  },
+  "CRAG": {
+    "down": 10,
+    "up": 40
+  },
+  "DECK-EIGHT": {
+    "down": 10
+  },
+  "DECK-NINE": {
+    "east": 15,
+    "west": 15
+  },
+  "DORM-CORRIDOR": {
+    "east": 160
+  },
+  "ELEVATOR-LOBBY": {
+    "west": 30
+  },
+  "ESCALATOR": {
+    "down": 15,
+    "up": 30
+  },
+  "FORK": {
+    "down": 15,
+    "northeast": 25,
+    "southeast": 25
+  },
+  "GANGWAY": {
+    "down": 10
+  },
+  "HELIPAD": {
+    "down": 15
+  },
+  "INFIRMARY": {
+    "out": 25,
+    "southeast": 25
+  },
+  "LAWANDA-PLATFORM": {
+    "up": 30
+  },
+  "MAIN-LAB": {
+    "southwest": 25
+  },
+  "MECH-CORRIDOR-S": {
+    "southeast": 25,
+    "southwest": 25
+  },
+  "PLAIN-HALL": {
+    "northeast": 25
+  },
+  "PROJECT-CORRIDOR-WEST": {
+    "northwest": 25
+  },
+  "REACTOR-ACCESS-STAIRS": {
+    "up": 30
+  },
+  "REACTOR-CONTROL": {
+    "down": 20
+  },
+  "REACTOR-LOBBY": {
+    "west": 15
+  },
+  "REC-CORRIDOR": {
+    "southwest": 25
+  },
+  "REPAIR-ROOM": {
+    "up": 30
+  },
+  "ROBOT-SHOP": {
+    "northwest": 25
+  },
+  "SYSTEMS-CORRIDOR-WEST": {
+    "down": 15,
+    "southwest": 25
+  },
+  "TOOL-ROOM": {
+    "northeast": 25
+  },
+  "TOWER-CORE": {
+    "up": 30
+  },
+  "UNDERWATER": {
+    "up": 35
+  },
+  "WINDING-STAIR": {
+    "down": 15,
+    "up": 30
+  }
+}

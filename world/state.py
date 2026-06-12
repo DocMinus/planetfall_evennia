@@ -279,13 +279,15 @@ class GameState:
         """Restore the default action / failed-move tick cost (7)."""
         self.c_elapsed = self.C_ELAPSED_DEFAULT
 
-    def set_move_elapsed(self) -> None:
-        """A successful step costs DEFAULT-MOVE (20) — verbs.zil:436, globals.zil:8.
+    def set_move_elapsed(self, cost: int | None = None) -> None:
+        """A successful step costs its room's per-direction C-MOVE, else
+        DEFAULT-MOVE (20) — verbs.zil:436, globals.zil:8.
 
-        A "per" transit routine may then override c_elapsed for a timed ride
-        (long hall, ladder, shuttle); this is just the default for a plain move.
+        `cost` is the room's C-MOVE entry for the direction walked (the exit
+        looks it up); None/0 falls back to DEFAULT-MOVE. A "per" transit routine
+        may further override c_elapsed for a timed ride (long hall, shuttle).
         """
-        self.c_elapsed = self.DEFAULT_MOVE
+        self.c_elapsed = cost or self.DEFAULT_MOVE
 
     def _update_display(self) -> None:
         if self.chronometer_present and not self.chronometer_munged:

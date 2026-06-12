@@ -42,12 +42,13 @@ def load_world(data_dir=DATA_DIR):
     rooms   = _json(data_dir / "rooms.json")
     objects = _json(data_dir / "objects.json")
     npcs    = _json(data_dir / "npcs.json")
+    c_move  = _json(data_dir / "c_move.json")     # per-room directional move costs
 
     # All-or-nothing: a failure partway through must not leave a half-built
     # world behind, since _is_loaded() would then skip all future loads.
     with transaction.atomic():
         print(f"  Creating {len(rooms)} rooms...")
-        room_reg = _create_rooms(rooms)
+        room_reg = _create_rooms(rooms, c_move)
 
         print(f"  Creating {len(objects)} objects...")
         obj_reg = _create_objects(objects)
@@ -86,7 +87,8 @@ def _json(path):
         return json.load(f)
 
 
-def _create_rooms(rooms):
+def _create_rooms(rooms, c_move=None):
+    c_move = c_move or {}
     reg = {}
     for r in rooms:
         zil_id = r["id"]
@@ -96,6 +98,9 @@ def _create_rooms(rooms):
         room.db.globals     = r.get("globals", [])
         room.db.pseudo      = {p["word"]: p["object"] for p in r.get("pseudo", [])}
         room.db.action      = r.get("action")
+        # ZIL C-MOVE: non-default per-direction move costs (V-WALK), e.g. stairs
+        # cost more. Absent directions fall back to DEFAULT-MOVE (20).
+        room.db.c_move      = c_move.get(zil_id)
         room.db.first_visit = True
         if r.get("ldesc"):
             room.db.desc = r["ldesc"]
