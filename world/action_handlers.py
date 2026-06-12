@@ -307,6 +307,114 @@ def _arrival_pending(gs, name: str) -> bool:
     )
 
 
+# ---------------------------------------------------------------------------
+# Subsystem 10 — Scenery & flavour (globals.zil); the distinctive responses,
+# including the death traps. Anything not handled falls through to the generic
+# verb handlers, which is almost always right for pure scenery.
+# ---------------------------------------------------------------------------
+
+def handle_celery(ctx: ObjAction) -> bool:
+    """CELERY-F (globals.zil:791) — the ambassador's celery is fatal to eat."""
+    caller, v = ctx.caller, ctx.verb
+    if v == "V-EAT":
+        gs = _gs()
+        if gs:
+            gs.die("Oops. Looks like Blow'k-Bibben-Gordoan metabolism is not "
+                   "compatible with our own. You die of all sorts of "
+                   "convulsions.")
+        return True
+    if v == "V-TAKE":
+        caller.msg("The ambassador seems perturbed by your lack of normal "
+                   "protocol.")
+        return True
+    return False
+
+
+def handle_ground(ctx: ObjAction) -> bool:
+    """GROUND-F (globals.zil:62)."""
+    caller, v = ctx.caller, ctx.verb
+    if v in ("V-CLIMB-ON", "V-BOARD", "V-SIT"):
+        caller.ndb.pf_elapsed = 28
+        caller.msg("You sit down on the floor. After a brief rest, you stand "
+                   "again.")
+        return True
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN") and _here_zil(caller) == "ADMIN-CORRIDOR-S":
+        caller.msg("A narrow, jagged crevice runs across the floor.")
+        return True
+    return False
+
+
+def handle_window(ctx: ObjAction) -> bool:
+    """WINDOW-F (globals.zil:83) — views; diving through the balcony is fatal."""
+    caller, v = ctx.caller, ctx.verb
+    here = _here_zil(caller)
+    if v == "V-THROUGH" and here == "BALCONY":
+        gs = _gs()
+        if gs:
+            gs.die("You slice yourself to ribbons on the broken windows and "
+                   "then plummet into the swirling ocean below. Very clever.")
+        return True
+    if v == "V-OPEN":
+        caller.msg("This window doesn't open.")
+        return True
+    if v == "V-LOOK-INSIDE":
+        views = {
+            "BIO-LAB": "You see the Bio Lock.",
+            "BALCONY": "Water. Lots and lots of water.",
+            "HELICOPTER": "You see the helipad and the ocean beyond.",
+            "LARGE-OFFICE": "You can see the dormitories and other parts of the "
+                            "complex in the distance. Water is visible in every "
+                            "direction.",
+        }
+        caller.msg(views.get(here, "You see little of interest through it."))
+        return True
+    return False
+
+
+def handle_cliff(ctx: ObjAction) -> bool:
+    """CLIFF-F (globals.zil:143) — leaping off the West Wing cliff is fatal."""
+    caller, v = ctx.caller, ctx.verb
+    if _here_zil(caller) == "WEST-WING" and v in ("V-LEAP", "V-JUMP"):
+        gs = _gs()
+        if gs:
+            gs.die("Brilliant idea!")
+        return True
+    if v in ("V-CLIMB-UP", "V-CLIMB-FOO"):
+        from world.verb_commands import _h_walk
+        _h_walk(caller, ["up"])
+        caller.ndb.pf_clock_handled = True
+        return True
+    if v == "V-CLIMB-DOWN":
+        from world.verb_commands import _h_walk
+        _h_walk(caller, ["down"])
+        caller.ndb.pf_clock_handled = True
+        return True
+    return False
+
+
+def handle_ocean(ctx: ObjAction) -> bool:
+    """OCEAN-F (globals.zil:167)."""
+    caller, v = ctx.caller, ctx.verb
+    if v in ("V-TAKE", "V-THROUGH", "V-RUB"):
+        caller.msg("You can't reach the ocean from here.")
+        return True
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        caller.msg("It stretches as far as you can see.")
+        return True
+    return False
+
+
+def handle_tables(ctx: ObjAction) -> bool:
+    """TABLES-F (globals.zil:188) — the mess-hall look-under gag."""
+    caller, v = ctx.caller, ctx.verb
+    if v in ("V-LOOK-UNDER", "V-LOOK-BEHIND") and _here_zil(caller) == "MESS-HALL":
+        caller.msg("Wow!!! Under the table are three keys, a sack of food, a "
+                   "reactor elevator access pass, one hundred gold pieces ... "
+                   "Just kidding. Actually, there's nothing there.")
+        return True
+    return False
+
+
 def handle_blue_elevator_button(ctx: ObjAction) -> bool:
     """BLUE-ELEVATOR-BUTTON-F (compone.zil:2548) — call the upper car down."""
     if ctx.verb != "V-PUSH":
@@ -1869,6 +1977,13 @@ OBJ_HANDLERS.update({
     "RED-ELEVATOR-BUTTON-F": handle_red_elevator_button,
     "BLATHER-F": handle_blather,
     "AMBASSADOR-F": handle_ambassador,
+    # Subsystem 10 scenery.
+    "CELERY-F": handle_celery,
+    "GROUND-F": handle_ground,
+    "WINDOW-F": handle_window,
+    "CLIFF-F": handle_cliff,
+    "OCEAN-F": handle_ocean,
+    "TABLES-F": handle_tables,
 })
 
 

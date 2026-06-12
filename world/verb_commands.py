@@ -1246,6 +1246,17 @@ def _h_disembark(caller, nouns):
         _do_walk(caller, "out")
 
 
+def _h_point(caller, nouns):
+    """V-POINT (verbs.zil:1517) — object actions (robot hole) get first crack."""
+    floyd = next((o for o in (caller.location.contents if caller.location else [])
+                  if o.db.zil_id == "FLOYD"), None)
+    if floyd:
+        caller.msg("Floyd looks where you're pointing, but sees nothing of "
+                   "interest.")
+    else:
+        caller.msg("It's usually impolite to point.")
+
+
 def _h_sleep(caller, nouns):
     """V-SLEEP (verbs.zil:1726)."""
     gs = _gs()
@@ -1374,6 +1385,7 @@ HANDLERS: dict = {
     "V-STAND":       _h_stand,
     "V-DISEMBARK":   _h_disembark,
     "V-SLEEP":       _h_sleep,
+    "V-POINT":       _h_point,
 }
 
 
