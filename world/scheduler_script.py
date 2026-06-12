@@ -190,6 +190,10 @@ class GameStateScript(DefaultScript):
         """Restore default tick cost (c_elapsed = 7) for the next action."""
         self.get_gs().reset_elapsed()
 
+    def set_move_elapsed(self) -> None:
+        """Set a successful step's cost to DEFAULT-MOVE (c_elapsed = 20)."""
+        self.get_gs().set_move_elapsed()
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------

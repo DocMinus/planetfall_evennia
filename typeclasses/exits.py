@@ -41,13 +41,17 @@ class PlanetfallExit(ObjectParent, DefaultExit):
 
         if exit_type == "per":
             # A "per" routine computes the real destination (the static one is a
-            # placeholder) and may set gs.c_elapsed for timed transit. Resetting
-            # first means a refusal still ticks the default turn cost.
+            # placeholder) and may set gs.c_elapsed for timed transit (long
+            # hall, ladder, shuttle). Seed the default-move cost (20) first; the
+            # routine overrides it for a timed ride, and a refusal drops back to
+            # the failed-move default (7).
             from world.exit_handlers import dispatch_per
-            script.reset_elapsed()
+            script.set_move_elapsed()
             dest = dispatch_per(traversing_object, self)
             if dest is not None:
                 traversing_object.move_to(dest, move_type="traverse")
+            else:
+                script.reset_elapsed()
             script.advance(traversing_object)
             return False
 
@@ -59,7 +63,8 @@ class PlanetfallExit(ObjectParent, DefaultExit):
 
         moved = super().at_traverse(traversing_object, target_location, **kwargs)
         if moved is not False and traversing_object.location is target_location:
-            script.reset_elapsed()
+            # A completed step costs DEFAULT-MOVE (20); refusals above stay at 7.
+            script.set_move_elapsed()
             script.advance(traversing_object)
         return moved
 

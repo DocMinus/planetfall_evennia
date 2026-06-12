@@ -130,11 +130,13 @@ planetfall_evennia/
 
 ## How the Clock Works
 
-Every command that is not marked `timeless` advances the game clock by 7
-ticks (Planetfall's default action cost). The `GameStateScript` Evennia
-`Script` owns a `GameState` + `Scheduler` instance. After each command the
-scheduler fires any queued interrupt routines whose countdown has reached
-zero — sleep warnings, hunger messages, Floyd's idle chatter, etc.
+Every command that is not marked `timeless` advances the game clock. Most
+actions cost 7 ticks (Planetfall's default), but a **successful move costs 20**
+(`DEFAULT-MOVE`); a few verbs and the transit routines (shuttle, long hall,
+ladder) set their own cost. The `GameStateScript` Evennia `Script` owns a
+`GameState` + `Scheduler` instance. After each command the scheduler fires any
+queued interrupt routines whose countdown has reached zero — sleep warnings,
+hunger messages, Floyd's idle chatter, etc.
 
 State (clock, interrupt queue, Floyd's position) is persisted to the Evennia
 database after every advance and rebuilt on server restart.

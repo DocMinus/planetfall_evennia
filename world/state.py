@@ -267,13 +267,25 @@ class GameState:
             return "Space Cadet"
         return "Beginner"
 
+    # ZIL action-cost constants (globals.zil:8, misc.zil:428).
+    DEFAULT_MOVE = 20        # a *successful* move (no per-room C-MOVE override)
+    C_ELAPSED_DEFAULT = 7    # any other action, and a *failed* move
+
     def set_timeless(self) -> None:
         """Mark current action as consuming no time (c_elapsed = 0)."""
         self.c_elapsed = 0
 
     def reset_elapsed(self) -> None:
-        """Restore default tick cost for next action."""
-        self.c_elapsed = 7
+        """Restore the default action / failed-move tick cost (7)."""
+        self.c_elapsed = self.C_ELAPSED_DEFAULT
+
+    def set_move_elapsed(self) -> None:
+        """A successful step costs DEFAULT-MOVE (20) — verbs.zil:436, globals.zil:8.
+
+        A "per" transit routine may then override c_elapsed for a timed ride
+        (long hall, ladder, shuttle); this is just the default for a plain move.
+        """
+        self.c_elapsed = self.DEFAULT_MOVE
 
     def _update_display(self) -> None:
         if self.chronometer_present and not self.chronometer_munged:
