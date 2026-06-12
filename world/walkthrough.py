@@ -136,21 +136,47 @@ def _by_zil(zil_id):
     return res[0] if res else None
 
 
-def fresh_game(char_key="WalkthroughTester"):
-    """Reset to a clean game: fresh GameState, test Character at DECK-NINE.
+def reload_world():
+    """Wipe every Planetfall room/object/NPC and reload pristine from JSON.
 
-    Returns (char, gs). Reuses an existing tester character if present.
+    The harness must start from a known-good world each run; live probing
+    mutates persistent objects (Floyd's flags, door OPENBITs, item locations),
+    so a deterministic walkthrough needs a clean rebuild, not just a fresh
+    GameState. The dev DB's world is fully regenerable from world/data/*.json.
+    """
+    from evennia.objects.models import ObjectDB
+    from typeclasses.rooms import PlanetfallRoom
+    from typeclasses.objects import PlanetfallObject
+    from typeclasses.characters import PlanetfallNPC
+    paths = {PlanetfallRoom.path, PlanetfallObject.path, PlanetfallNPC.path}
+    # Subclasses (Character extends PlanetfallNPC) share the NPC schema; match
+    # on any object carrying a zil_id or our tester key, plus the typeclasses.
+    for obj in ObjectDB.objects.all():
+        if obj.db_typeclass_path in paths or str(obj.db_typeclass_path).endswith("characters.Character"):
+            obj.delete()
+    from world.loader import load_world
+    load_world()
+
+
+def fresh_game(char_key="WalkthroughTester", reload=True):
+    """Reset to a clean game: fresh world + GameState, tester at DECK-NINE.
+
+    Returns (char, gs). With ``reload=True`` (default) the whole world is
+    rebuilt from JSON for determinism; pass ``reload=False`` to reuse the
+    current DB (faster, but only safe if nothing has been mutated).
     """
     random.seed(SEED)
     from evennia import create_object
     from typeclasses.characters import Character
-    from world.scheduler_script import get_game_state_script
+    from world.scheduler_script import get_game_state_script, get_or_create_game_state_script
+
+    if reload:
+        reload_world()
 
     # Wipe and recreate the game_state singleton for a deterministic start.
     script = get_game_state_script()
     if script is not None:
         script.delete()
-    from world.scheduler_script import get_or_create_game_state_script
     script = get_or_create_game_state_script()
     gs = script.get_gs()
 
@@ -205,7 +231,24 @@ ESCAPE_POD = [
     Cmd("up", expect=("Courtyard",), note="arrive at the deserted complex"),
 ]
 
-WALKTHROUGH: list = list(ESCAPE_POD)
+# Milestone 2: descend through the long hall to the mechanical level and
+# activate Floyd in the robot shop (+2, the first scoring event).
+DESCEND_AND_FLOYD = [
+    Cmd("north", expect=("Plain Hall",)),
+    Cmd("north", expect=("Rec Area",)),
+    Cmd("east", expect=("Rec Corridor",)),
+    Cmd("east", expect=("Mess Corridor",)),
+    Cmd("east", expect=("Dorm Corridor",)),
+    Cmd("east", expect=("Corridor Junction",), note="long-hall transit"),
+    Cmd("south", expect=("Mech Corridor North",)),
+    Cmd("south", expect=("Mech Corridor",)),
+    Cmd("south", expect=("Mech Corridor South",)),
+    Cmd("southeast", expect=("Robot Shop",)),
+    Cmd("turn on robot", expect=("Floyd's name is Floyd",),
+        check=lambda gs: gs.score == 2, note="Floyd activation awards +2"),
+]
+
+WALKTHROUGH: list = list(ESCAPE_POD) + list(DESCEND_AND_FLOYD)
 
 
 def dev_run(steps=None, verbose=True):
