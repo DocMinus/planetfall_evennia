@@ -12,9 +12,12 @@ derived from the original ZIL source code via a custom extraction pipeline.
 > Phase 13 puzzle subsystems are in: a uniform death/JIGS-UP + win path, the
 > generic verbs, the brig escape, card-slot access, survival (sleep/food/
 > sickness), the shuttle driving sim, the reactor repair (Defense + Course
-> Control + Comm chemistry), teleport booths, the Floyd sacrifice, the lab
-> mutant chase, and scenery flavour. Remaining depth (a few deep fabrication
-> chains and verbatim scenery) is tracked in `EVENNIA_PLAN_3.md`.
+> Control + Comm chemistry + laser/miniaturization), the cryo endgame, teleport
+> booths, the Floyd sacrifice, the lab mutant chase, and scenery flavour.
+> **The game is winnable end to end** — fix the three reactor systems, repair
+> the computer (shrink into the relay and laser the speck), and the cryo
+> sequence delivers the victory. Remaining polish (some verbatim scenery, a
+> Floyd dialogue branch) is tracked in `EVENNIA_PLAN_3.md`.
 
 ---
 
