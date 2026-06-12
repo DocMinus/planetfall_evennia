@@ -1128,6 +1128,176 @@ def handle_systems_monitors(room, character, rarg):
 
 
 # ---------------------------------------------------------------------------
+# Subsystem 5b — Comm chemistry (compone.zil) + laser miniaturization
+# ---------------------------------------------------------------------------
+
+_CHEM_COLORS = {1: "red", 2: "blue", 3: "green", 4: "yellow", 5: "gray",
+                6: "brown", 7: "black", 8: "clear", 9: "clear"}
+_CHEM_BUTTON_COLOR = {
+    "RED-BUTTON": 1, "BLUE-BUTTON": 2, "GREEN-BUTTON": 3, "YELLOW-BUTTON": 4,
+    "GRAY-BUTTON": 5, "BROWN-BUTTON": 6, "BLACK-BUTTON": 7,
+    "ROUND-WHITE-BUTTON": 8, "SQUARE-WHITE-BUTTON": 9,
+}
+
+
+def _comm_init(gs) -> None:
+    """RANDOMIZE-ORDER + STEPS-TO-GO (compone.zil:3124) — the secret sequence."""
+    if gs.flags.get("COMM-SEQ") is not None:
+        return
+    import random
+    steps = random.randint(2, 3)               # <+ 1 <RANDOM 2>>
+    seq = random.sample(range(1, 8), steps)     # distinct colours 1-7
+    gs.flags["COMM-SEQ"] = seq
+    gs.flags["CHEMICAL-REQUIRED"] = seq[0]
+
+
+def handle_chem_button(ctx: ObjAction) -> bool:
+    """CHEM-BUTTON-F (compone.zil:1787) — dispense a coloured fluid to the flask."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    if v != "V-PUSH":
+        return False
+    gs = _gs()
+    color = _CHEM_BUTTON_COLOR.get(obj.db.zil_id, 0)
+    placed = gs.flags.get("SPOUT-PLACED") if gs else None
+    flask = _by_zil_id("FLASK")
+    fluid = _by_zil_id("CHEMICAL-FLUID")
+    if placed == "FLASK":
+        if fluid and fluid.location is flask:
+            caller.msg("Another dose of the chemical fluid pours out of the "
+                       "spout, splashes over the already-full flask, spills "
+                       "onto the floor, and dries up.")
+        else:
+            if fluid and flask:
+                fluid.move_to(flask, quiet=True, move_type="move")
+            gs.flags["CHEMICAL-FLAG"] = color
+            caller.msg(f"The flask fills with some {_CHEM_COLORS[color]} "
+                       "chemical fluid. The fluid gradually turns milky white.")
+    else:
+        where = placed.lower().replace("-", " ") if placed else "spout"
+        caller.msg(f"Some sort of chemical fluid pours out of the spout, spills "
+                   f"all over the {where}, and dries up.")
+    return True
+
+
+def handle_chemical_dispenser(ctx: ObjAction) -> bool:
+    """CHEMICAL-DISPENSER-F (compone.zil:1680) — place a vessel under the spout."""
+    caller, v = ctx.caller, ctx.verb
+    gs = _gs()
+    if v in ("V-PUT-UNDER", "V-PUT"):
+        item = resolve_obj_local(caller, ctx.nouns[0]) if ctx.nouns else None
+        placed = gs.flags.get("SPOUT-PLACED") if gs else None
+        if placed:
+            cur = _by_zil_id(placed)
+            caller.msg(f"The {cur.key if cur else placed} is already resting "
+                       "under the spout.")
+        elif item:
+            gs.flags["SPOUT-PLACED"] = item.db.zil_id
+            caller.msg(f"The {item.key} is now sitting under the spout.")
+        return True
+    return False
+
+
+def handle_chemical_fluid(ctx: ObjAction) -> bool:
+    """CHEMICAL-FLUID-F (compone.zil:2964) — pour into the funnel to fix comm."""
+    caller, v = ctx.caller, ctx.verb
+    gs = _gs()
+    if v == "V-EAT":
+        if gs:
+            gs.die("Mmmmm....that tasted just like delicious poisonous "
+                   "chemicals!")
+        return True
+    if v in ("V-POUR", "V-PUT"):
+        flask = _by_zil_id("FLASK")
+        if flask and flask.location is not caller:
+            caller.msg("You're not holding the flask.")
+            return True
+        prsi = _prsi(ctx)
+        target = prsi.db.zil_id if prsi else None
+        fluid = ctx.obj
+        if target == "FUNNEL-HOLE":
+            _comm_init(gs)
+            fluid.location = None
+            gs.flags["CHEMICAL-FLAG_used"] = True
+            if gs.flags.get("CHEMICAL-FLAG") == gs.flags.get("CHEMICAL-REQUIRED"):
+                seq = list(gs.flags.get("COMM-SEQ") or [])
+                if seq:
+                    seq.pop(0)
+                gs.flags["COMM-SEQ"] = seq
+                if not seq:
+                    gs.flags["COMM-FIXED"] = True
+                    _award(gs, 6)
+                    caller.msg("The liquid disappears into the hole. The lights "
+                               "on the enunciator panel blink rapidly and then "
+                               "go dark. The coolant system warning light goes "
+                               "off, and another flashes, indicating that the "
+                               "help message is now being sent.")
+                else:
+                    gs.flags["CHEMICAL-REQUIRED"] = seq[0]
+                    caller.msg("The liquid disappears into the hole. The lights "
+                               "blink rapidly and all go off except one, a "
+                               f"{_CHEM_COLORS[seq[0]]} light.")
+            else:
+                gs.flags["COMM-SHUTDOWN"] = True
+                if gs.flags.get("COMM-FIXED"):
+                    gs.flags["COMM-FIXED"] = False
+                    _award(gs, -6)
+                caller.msg("An alarm sounds briefly, and a sign flashes "
+                           "\"Sistum Shutdown.\" A moment later, the lights in "
+                           "the room dim and the send console shuts down.")
+            gs.flags["CHEMICAL-FLAG"] = 0
+            return True
+        # Poured elsewhere.
+        fluid.location = None
+        caller.msg(f"It pours over the {prsi.key if prsi else 'ground'} and "
+                   "evaporates.")
+        return True
+    return False
+
+
+def handle_flask(ctx: ObjAction) -> bool:
+    """FLASK-F (compone.zil:1543) — a simple chemical container (look only)."""
+    return False
+
+
+def handle_laser_dial(ctx: ObjAction) -> bool:
+    """LASER-DIAL-F (comptwo.zil:2594) — set the miniaturization level."""
+    caller, v = ctx.caller, ctx.verb
+    gs = _gs()
+    if v == "V-SET":
+        n = None
+        for tok in ctx.nouns:
+            tok = tok.strip()
+            if tok.isdigit():
+                n = int(tok)
+        if n is None:
+            caller.msg("You must specify a number to set the dial to.")
+        else:
+            gs.flags["LASER-DIAL"] = n
+            caller.msg(f"The dial is now set to {n}.")
+        return True
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        caller.msg(f"The dial is currently set to {_flag(gs, 'LASER-DIAL', 0)}.")
+        return True
+    return False
+
+
+def handle_laser(ctx: ObjAction) -> bool:
+    """LASER-F (comptwo.zil:2652) — fire to miniaturize (relay puzzle)."""
+    caller, v = ctx.caller, ctx.verb
+    if v in ("V-ZAP", "V-SZAP", "V-LAMP-ON"):
+        gs = _gs()
+        dial = _flag(gs, "LASER-DIAL", 0)
+        if dial <= 0:
+            caller.msg("Nothing happens. Perhaps the dial needs setting first.")
+        else:
+            caller.msg("The laser emits a brilliant beam. You feel a curious "
+                       "shrinking sensation as the room seems to swell around "
+                       "you...")
+        return True
+    return False
+
+
+# ---------------------------------------------------------------------------
 # Subsystem 6 — Cryo / Project Control endgame (comptwo.zil)
 # ---------------------------------------------------------------------------
 
@@ -1236,6 +1406,36 @@ def handle_projcon_office(room, character, rarg):
             gs.flags["MURAL-FLAG"] = True
             character.msg("Floyd surveys the mural and scratches his head. \"I "
                           "don't remember seeing this before,\" he comments.")
+            return True
+    return False
+
+
+def handle_comm_room(room, character, rarg):
+    """COMM-ROOM-F (compone.zil:2822) — send-station status + enunciator hint."""
+    gs = _gs()
+    if rarg == M_LOOK:
+        text = ("This is a small room with no windows. The sole exit is "
+                "southwest. The console on the left is the \"Reeseev "
+                "Staashun\", its \"Tranzmishun Reeseevd\" light blinking. The "
+                "console on the right is the \"Send Staashun.\" Next to its "
+                "screen is a flashing sign which says ")
+        if _flag(gs, "COMM-SHUTDOWN"):
+            text += "\"Sistum Shutdown.\""
+        elif _flag(gs, "COMM-FIXED"):
+            text += "\"Tranzmishun in pragres.\""
+        else:
+            text += "\"Malfunkshun in Sendeeng Kuulint Sistum.\""
+        text += (" Next to this console is an enunciator panel, and a "
+                 "funnel-shaped hole labelled \"Kuulint Sistum Manyuuwul "
+                 "Oovuriid.\"")
+        return text
+    if rarg == M_END and gs and not gs.flags.get("COMM-FIXED") \
+            and not gs.flags.get("COMM-SHUTDOWN"):
+        _comm_init(gs)
+        req = gs.flags.get("CHEMICAL-REQUIRED", 0)
+        if req in _CHEM_COLORS:
+            character.msg(f"A {_CHEM_COLORS[req]} colored light is flashing on "
+                          "the enunciator panel.")
             return True
     return False
 
@@ -1582,6 +1782,12 @@ OBJ_HANDLERS: dict = {
     "MAGNET-F": handle_magnet,
     "DEAD-FLOYD-F": handle_dead_floyd,
     "ROBOT-HOLE-F": handle_robot_hole,
+    "CHEM-BUTTON-F": handle_chem_button,
+    "CHEMICAL-DISPENSER-F": handle_chemical_dispenser,
+    "CHEMICAL-FLUID-F": handle_chemical_fluid,
+    "FLASK-F": handle_flask,
+    "LASER-DIAL-F": handle_laser_dial,
+    "LASER-F": handle_laser,
 }
 ROOM_HANDLERS.update({
     "CONTROL-CABIN-F": handle_control_cabin,
@@ -1591,6 +1797,7 @@ ROOM_HANDLERS.update({
     "CRYO-ANTEROOM-F": handle_cryo_anteroom,
     "PROJCON-OFFICE-F": handle_projcon_office,
     "CRYO-ELEVATOR-F": handle_cryo_elevator,
+    "COMM-ROOM-F": handle_comm_room,
 })
 OBJ_HANDLERS.update({
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,

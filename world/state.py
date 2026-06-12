@@ -146,6 +146,13 @@ class GameState:
             "ACCESS-PANEL-FULL": True,       # the bad board starts in the panel
             "ITS-CRACKED": False,
             "COMM-SHUTDOWN": False,
+            # Comm chemistry (compone.zil) — colour mixer + pour sequence.
+            "CHEMICAL-FLAG": 0,              # colour now in the flask (1-9, 0 empty)
+            "CHEMICAL-REQUIRED": 0,          # colour the enunciator wants next (1-7)
+            "SPOUT-PLACED": None,            # zil_id of the vessel under the spout
+            "COMM-SEQ": None,                # remaining required colours (list)
+            "LASER-DIAL": 0,                 # laser miniaturization dial setting
+            "SPECK-REMOVED": False,          # the speck has been lifted from the relay
             "HOLE-TRIP-FLAG": False,         # Floyd has been through the robot hole
             "MURAL-FLAG": False,             # Floyd has commented on the projcon mural
             "CRYO-SCORE-FLAG": False,       # comptwo.zil
