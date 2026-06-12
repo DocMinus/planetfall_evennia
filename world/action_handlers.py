@@ -1127,6 +1127,127 @@ def handle_systems_monitors(room, character, rarg):
             f"indicate{'s' if all_fixed else ''} a malfunctioning condition.")
 
 
+# ---------------------------------------------------------------------------
+# Subsystem 6 — Cryo / Project Control endgame (comptwo.zil)
+# ---------------------------------------------------------------------------
+
+_CRYO_ANTEROOM_DESC = (
+    "The elevator closes as you leave it, and you find yourself in a small, "
+    "chilly room. To the north, through a wide arch, is an enormous chamber "
+    "lined from floor to ceiling with thousands of cryo-units. You can see "
+    "similar chambers beyond, and your mind staggers at the thought of the "
+    "millions of individuals asleep for countless centuries.\n\n"
+    "In the anteroom where you stand is a solitary cryo-unit, its cover "
+    "frosted. Next to the cryo-unit is a complicated control panel."
+)
+
+
+def handle_cryo_anteroom(room, character, rarg):
+    """CRYO-ANTEROOM-F (comptwo.zil:1393) — the endgame.
+
+    M-LOOK describes the chamber; M-END wakes Veldina and resolves the game,
+    branching on which of the three planetary systems you repaired.
+    """
+    if rarg == M_LOOK:
+        return _CRYO_ANTEROOM_DESC
+    if rarg != M_END:
+        return False
+
+    gs = _gs()
+    if gs is None or gs.dead:
+        return True
+    comm = gs.flags.get("COMM-FIXED")
+    defense = gs.flags.get("DEFENSE-FIXED")
+    course = gs.flags.get("COURSE-CONTROL-FIXED")
+
+    wake = (
+        "A door slides open and a medical robot glides in. It opens the "
+        "cryo-unit and administers an injection to its inhabitant. As the robot "
+        "glides away, a figure rises from the cryo-unit -- a handsome, "
+        "middle-aged woman with flowing red hair. She spends some time studying "
+        "readouts from the control panel"
+    )
+    wake += ", pressing several keys." if (comm and defense) else "."
+
+    if course:
+        text = wake + (
+            "\n\nAs other cryo-units in the chambers beyond begin opening, the "
+            "woman turns to you, bows gracefully, and speaks in a beautiful, "
+            "lilting voice. \"I am Veldina, leader of Resida. Thanks to you, the "
+            "cure has been discovered, and the planetary systems repaired. We "
+            "are eternally grateful.\""
+        )
+        if comm and defense:
+            text += (
+                "\n\n\"You will also be glad to hear that a ship of your Stellar "
+                "Patrol now orbits the planet.\" A landing party from the S.P.S. "
+                "Flathead materializes nearby. Captain Sterling acknowledges "
+                "your heroic actions and informs you of your promotion to "
+                "Lieutenant First Class. The grateful people of Resida offer you "
+                "leadership of their world, and a familiar figure comes "
+                "bounding toward you! \"Hi!\" shouts Floyd. \"Floyd feeling "
+                "better now!\""
+            )
+            return gs.victory(text)
+        # Planet saved but you're stranded.
+        text += "\n\n\"Unfortunately, a second ship from your Stellar Patrol has "
+        text += ("been destroyed by our malfunctioning meteor defenses.\""
+                 if not defense else
+                 "come looking for survivors, and because of our malfunctioning "
+                 "communications system, has given up and departed.\"")
+        text += (" I fear that you are stranded on Resida, possibly forever. "
+                 "However, we show our gratitude by offering you an unlimited "
+                 "bank account and a house in the country.")
+        return gs.victory(text)
+
+    # Course control not repaired: the orbit has decayed.
+    text = wake + (
+        "\n\nShe turns to you and, with a strained voice says, \"You have fixed "
+        "our computer and a Cure has been discovered, and we are grateful. But "
+        "alas, it was all in vain. Our planetary course control system has "
+        "malfunctioned, and the orbit has now decayed beyond correction. Soon "
+        "Resida will plunge into the sun.\""
+    )
+    if comm and defense:
+        text += ("\n\nVeldina examines the control panel again. \"Fortunately, "
+                 "another ship from your Stellar Patrol has arrived, so at least "
+                 "you will survive.\" A landing party from the S.P.S. Flathead "
+                 "materializes and takes you away from the doomed world.")
+        return gs.victory(text)
+    return gs.die(text)
+
+
+def handle_projcon_office(room, character, rarg):
+    """PROJCON-OFFICE-F (comptwo.zil:1321) — the computer-fixed mural reveal."""
+    gs = _gs()
+    if rarg == M_LOOK:
+        text = ("This office looks like a headquarters of some kind. Exits lead "
+                "north and east. The west wall displays a logo. ")
+        if _flag(gs, "COMPUTER-FIXED"):
+            text += ("The mural that previously adorned the south wall has slid "
+                     "away, revealing an open doorway to a large elevator!")
+        else:
+            text += ("The south wall is completely covered by a garish mural "
+                     "which clashes with the other decor of the room.")
+        return text
+    if rarg == M_END and gs and not gs.flags.get("MURAL-FLAG"):
+        floyd = _by_zil_id("FLOYD")
+        if floyd and floyd.location is character.location:
+            gs.flags["MURAL-FLAG"] = True
+            character.msg("Floyd surveys the mural and scratches his head. \"I "
+                          "don't remember seeing this before,\" he comments.")
+            return True
+    return False
+
+
+def handle_cryo_elevator(room, character, rarg):
+    """CRYO-ELEVATOR-F (comptwo.zil:1362)."""
+    if rarg == M_LOOK:
+        return ("This is a large, plain elevator with one solitary button and a "
+                f"door to the north which is {_ddesc('CRYO-ELEVATOR-DOOR')}.")
+    return False
+
+
 def handle_control_cabin(room, character, rarg):
     """CONTROL-CABIN-F (globals.zil:1681) — the M-LOOK driving display."""
     if rarg != M_LOOK:
@@ -1467,6 +1588,9 @@ ROOM_HANDLERS.update({
     "PLANETARY-DEFENSE-F": handle_planetary_defense,
     "PLANETARY-COURSE-CONTROL-F": handle_course_control,
     "SYSTEMS-MONITORS-F": handle_systems_monitors,
+    "CRYO-ANTEROOM-F": handle_cryo_anteroom,
+    "PROJCON-OFFICE-F": handle_projcon_office,
+    "CRYO-ELEVATOR-F": handle_cryo_elevator,
 })
 OBJ_HANDLERS.update({
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,

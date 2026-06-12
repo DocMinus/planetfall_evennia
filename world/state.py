@@ -147,6 +147,7 @@ class GameState:
             "ITS-CRACKED": False,
             "COMM-SHUTDOWN": False,
             "HOLE-TRIP-FLAG": False,         # Floyd has been through the robot hole
+            "MURAL-FLAG": False,             # Floyd has commented on the projcon mural
             "CRYO-SCORE-FLAG": False,       # comptwo.zil
         }
 
@@ -182,6 +183,26 @@ class GameState:
         self.death_reason = reason or None
         if self.player:
             self.player.msg(self._death_banner(reason))
+        return True
+
+    def victory(self, text: str) -> bool:
+        """ZIL FINISH (a winning end) — print the ending, then end the game.
+
+        Like die() it sets `dead` (the game is over and only RESTORE/QUIT work),
+        but the banner celebrates rather than mourns.
+        """
+        self.dead = True
+        self.death_reason = None
+        if self.player:
+            banner = (
+                f"{text}\n\n    ****  You have won  ****\n\n"
+                f"In that game you scored {self.score} out of a possible "
+                f"{self.MAX_SCORE} points, in {self.day} "
+                f"day{'s' if self.day != 1 else ''}, giving you the rank of "
+                f"{self.rank_for(self.score)}.\n\n"
+                "Would you like to RESTORE a saved game, or QUIT?"
+            )
+            self.player.msg(banner)
         return True
 
     def _death_banner(self, reason: str) -> str:
