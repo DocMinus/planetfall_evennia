@@ -5,10 +5,16 @@ An unofficial fan port of **Planetfall** (1983, Infocom) to
 The game world (105 rooms, 137 objects, 8 NPCs, 200+ verb patterns) is
 derived from the original ZIL source code via a custom extraction pipeline.
 
-> **Status:** Phases 0–12 complete — world loads, clock ticks, Floyd follows
-> you, all verb commands are wired, scoring/AGAIN/SAVE-RESTORE work, conditional
-> and transport (elevator/shuttle) exits are faithful, and Blather/the Ambassador
-> roam the ship. The remaining puzzle handlers are tracked in `EVENNIA_PLAN_3.md`.
+> **Status:** Phases 0–13 complete — the game is playable end to end, from the
+> Feinstein's destruction (escape-pod sequence) through the planet-side puzzles
+> to the winning cryo endgame. The clock/interrupt engine, Floyd, scoring,
+> AGAIN/SAVE-RESTORE, and all conditional/transport exits are faithful, and the
+> Phase 13 puzzle subsystems are in: a uniform death/JIGS-UP + win path, the
+> generic verbs, the brig escape, card-slot access, survival (sleep/food/
+> sickness), the shuttle driving sim, the reactor repair (Defense + Course
+> Control + Comm chemistry), teleport booths, the Floyd sacrifice, the lab
+> mutant chase, and scenery flavour. Remaining depth (a few deep fabrication
+> chains and verbatim scenery) is tracked in `EVENNIA_PLAN_3.md`.
 
 ---
 
