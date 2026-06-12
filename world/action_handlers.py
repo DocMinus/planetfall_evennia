@@ -2050,6 +2050,48 @@ def handle_kitchen_door(ctx: ObjAction) -> bool:
     return False
 
 
+def handle_combination_dial(ctx: ObjAction) -> bool:
+    """COMBINATION-DIAL-F (compone.zil:268) — open the conference-room safe."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        caller.msg("The dial can be turned to any number between 0 and 1000.")
+        return True
+    if v == "V-SET":
+        n = _laser_number(ctx)
+        if n is None:
+            caller.msg("You must specify a number to set the dial to.")
+        elif _bit(obj, "MUNGEDBIT"):
+            caller.msg("The dial has somehow become fused and won't move.")
+        elif n == gs.flags.get("DIAL-NUMBER"):
+            caller.msg("That's what the dial is set to now!")
+        elif n == gs.flags.get("NUMBER-NEEDED"):
+            gs.flags["DIAL-NUMBER"] = 0
+            door = _by_zil_id("CONFERENCE-DOOR")
+            if door:
+                door.db.is_open = True
+            caller.msg("The door swings open, and the dial resets to 0.")
+        elif n > 1000:
+            caller.msg("The dial cannot be turned to a number that high.")
+        else:
+            gs.flags["DIAL-NUMBER"] = n
+            caller.msg(f"The dial is now set to {n}.")
+        return True
+    return False
+
+
+def handle_combination_paper(ctx: ObjAction) -> bool:
+    """COMBINATION-PAPER-F (comptwo.zil:1680) — the combination, found in the
+    lab uniform pocket."""
+    caller, v = ctx.caller, ctx.verb
+    if v in ("V-READ", "V-EXAMINE", "V-LOOK-CRETIN"):
+        gs = _gs()
+        caller.msg("Week uv 14-Juun--2882. Kombinaashun tuu Konfurins Ruum: "
+                   f"{_flag(gs, 'NUMBER-NEEDED', 0)}.")
+        return True
+    return False
+
+
 def handle_conference_door(ctx: ObjAction) -> bool:
     """CONFERENCE-DOOR-F (compone.zil:291) — combination-locked door."""
     obj, caller, v = ctx.obj, ctx.caller, ctx.verb
@@ -2107,6 +2149,8 @@ OBJ_HANDLERS: dict = {
     "LASER-F": handle_laser,
     "LAB-UNIFORM-F": handle_lab_uniform,
     "LAB-DESK-F": handle_lab_desk,
+    "COMBINATION-DIAL-F": handle_combination_dial,
+    "COMBINATION-PAPER-F": handle_combination_paper,
 }
 ROOM_HANDLERS.update({
     "CONTROL-CABIN-F": handle_control_cabin,

@@ -168,6 +168,9 @@ class GameState:
             "LAB-LIGHTS-ON": False,
             "LAB-FLOODED": False,            # bio-lab flooded with fungicide mist
             "UNIFORM-OPENED": False,         # lab uniform pocket searched
+            # Conference-room combination safe (compone.zil) — Subsystem 6.
+            "NUMBER-NEEDED": __import__("random").randint(1, 1000),  # misc.zil:112
+            "DIAL-NUMBER": 0,
             "CRYO-SCORE-FLAG": False,       # comptwo.zil
         }
 
