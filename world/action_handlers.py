@@ -1430,42 +1430,155 @@ def handle_flask(ctx: ObjAction) -> bool:
     return False
 
 
+def _laser_number(ctx):
+    for tok in ctx.nouns:
+        tok = tok.strip()
+        if tok.isdigit():
+            return int(tok)
+    return None
+
+
 def handle_laser_dial(ctx: ObjAction) -> bool:
-    """LASER-DIAL-F (comptwo.zil:2594) — set the miniaturization level."""
+    """LASER-DIAL-F (comptwo.zil:2594) — set the beam from 1 (red) to 6 (violet)."""
     caller, v = ctx.caller, ctx.verb
     gs = _gs()
     if v == "V-SET":
-        n = None
-        for tok in ctx.nouns:
-            tok = tok.strip()
-            if tok.isdigit():
-                n = int(tok)
+        n = _laser_number(ctx)
         if n is None:
             caller.msg("You must specify a number to set the dial to.")
+        elif n == gs.flags.get("LASER-SETTING"):
+            caller.msg("That's where it's set now!")
+        elif n > 6 or n == 0:
+            caller.msg("The dial can only be set from 1 to 6.")
         else:
-            gs.flags["LASER-DIAL"] = n
+            gs.flags["LASER-SETTING"] = n
             caller.msg(f"The dial is now set to {n}.")
         return True
     if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
-        caller.msg(f"The dial is currently set to {_flag(gs, 'LASER-DIAL', 0)}.")
+        caller.msg(f"The dial is currently set to {_flag(gs, 'LASER-SETTING', 5)}.")
         return True
     return False
+
+
+def _zap_count(gs) -> bool:
+    """ZAP-COUNT (comptwo.zil:2640) — True if the laser has no shot to fire."""
+    laser = _by_zil_id("LASER")
+    for bat, key in (("OLD-BATTERY", "OLD-SHOTS"), ("NEW-BATTERY", "NEW-SHOTS")):
+        b = _by_zil_id(bat)
+        if b and laser and b.location is laser:
+            if gs.flags.get(key, 0) > 0:
+                gs.flags[key] -= 1
+                return False
+            return True
+    return True   # no battery
 
 
 def handle_laser(ctx: ObjAction) -> bool:
-    """LASER-F (comptwo.zil:2652) — fire to miniaturize (relay puzzle)."""
-    caller, v = ctx.caller, ctx.verb
-    if v in ("V-ZAP", "V-SZAP", "V-LAMP-ON"):
-        gs = _gs()
-        dial = _flag(gs, "LASER-DIAL", 0)
-        if dial <= 0:
-            caller.msg("Nothing happens. Perhaps the dial needs setting first.")
+    """LASER-F (comptwo.zil:2652) — the miniaturization laser."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if v == "V-SET":   # "set laser to N" → set the dial
+        return handle_laser_dial(ctx)
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        bat = next((b for b in ("OLD-BATTERY", "NEW-BATTERY")
+                    if (_by_zil_id(b) and _by_zil_id(b).location is obj)), None)
+        depr = f"contains {('an' if bat == 'OLD-BATTERY' else 'a')} " \
+               f"{_by_zil_id(bat).key}" if bat else "is empty"
+        caller.msg("The laser, though portable, is still fairly heavy. It has a "
+                   "dial with six settings, currently on setting "
+                   f"{gs.flags.get('LASER-SETTING', 5)}. The depression on top "
+                   f"{depr}.")
+        return True
+    if v in ("V-PUT", "V-INSERT"):
+        item = resolve_obj_local(caller, ctx.nouns[0]) if ctx.nouns else None
+        if item and item.db.zil_id in ("OLD-BATTERY", "NEW-BATTERY"):
+            if any(_by_zil_id(b) and _by_zil_id(b).location is obj
+                   for b in ("OLD-BATTERY", "NEW-BATTERY")):
+                caller.msg("There's already a battery in the laser.")
+            else:
+                item.move_to(obj, quiet=True, move_type="move")
+                caller.msg("The battery clicks into the depression.")
+            return True
+        return False
+    if v in ("V-ZAP", "V-SZAP"):
+        if obj.location is not caller:
+            caller.msg("You're not holding the laser.")
+            return True
+        if gs and not gs.flags.get("LASER-SCORE-FLAG"):
+            gs.flags["LASER-SCORE-FLAG"] = True
+            gs.add_score(2)
+        # The target is the referenced object that isn't the laser itself
+        # (handles both "fire laser at speck" and "shoot speck with laser").
+        target_obj = None
+        for n in ctx.nouns:
+            o = resolve_obj_local(caller, n)
+            if o and o is not obj:
+                target_obj = o
+                break
+        target = target_obj.db.zil_id if target_obj else None
+        if _zap_count(gs):
+            caller.msg("Click.")
+            return True
+        # The laser fires — start warming, and resolve the target.
+        gs.flags["LASER-JUST-SHOT"] = True
+        if not any(getattr(i.routine, "__name__", None) == "i_warmth"
+                   for i in gs.scheduler._interrupts):
+            import world.interrupts as I
+            gs.scheduler.enable(gs.scheduler.queue(I.make_i_warmth(gs), -1))
+        if target == "SPECK":
+            _shoot_speck(gs, caller)
+        elif target in ("ME", "HANDS", "ADVENTURER"):
+            caller.msg("Ouch! You managed to burn yourself nicely.")
         else:
-            caller.msg("The laser emits a brilliant beam. You feel a curious "
-                       "shrinking sensation as the room seems to swell around "
-                       "you...")
+            caller.msg("A thin beam shoots from the laser.")
         return True
     return False
+
+
+_BEAM_MISSES = ("The beam just misses the speck!", "A near miss!",
+                "A good shot, but just a little wide of the target.")
+
+
+def _shoot_speck(gs, caller) -> None:
+    """SHOOT-SPECK (comptwo.zil:2842) — two precise hits fix the computer."""
+    import random
+    if gs.flags.get("LASER-SETTING") != 1:
+        relay = _by_zil_id("RELAY")
+        if relay:
+            relay.location = None
+        caller.msg("A thin beam slices through the red plastic covering of the "
+                   "relay like a hot knife through butter. Air rushes in and "
+                   "the relay collapses into a heap of plastic shards.")
+        return
+    # Setting 1 (red): marksmanship ramps up with each miss.
+    if random.randint(1, 100) <= gs.flags.get("MARKSMANSHIP-COUNTER", 0):
+        if gs.flags.get("SPECK-HIT"):
+            gs.flags["COMPUTER-FIXED"] = True
+            door = _by_zil_id("CRYO-ELEVATOR-DOOR")
+            if door:
+                door.db.is_open = True
+                _set_bit(door, "INVISIBLE", False)
+            projcon = _by_zil_id("PROJCON-OFFICE")
+            if projcon:
+                _set_bit(projcon, "TOUCHBIT", False)
+            gs.scheduler.enable(gs.scheduler.queue(
+                __import__("world.interrupts", fromlist=["make_i_fry"]).make_i_fry(gs), 200))
+            gs.add_score(8)
+            speck = _by_zil_id("SPECK")
+            if speck:
+                speck.location = None
+            caller.msg("The beam hits the speck again! This time, it vaporizes "
+                       "into a fine cloud of ash. The relay slowly begins to "
+                       "close, and a voice whispers in your ear \"Sector 384 "
+                       "will activate in 200 millichrons. Proceed to exit "
+                       "station.\"")
+        else:
+            gs.flags["SPECK-HIT"] = True
+            caller.msg("The speck is hit by the beam! It sizzles a little, but "
+                       "isn't destroyed yet.")
+    else:
+        gs.flags["MARKSMANSHIP-COUNTER"] = gs.flags.get("MARKSMANSHIP-COUNTER", 0) + 12
+        caller.msg(random.choice(_BEAM_MISSES))
 
 
 # ---------------------------------------------------------------------------
@@ -1608,6 +1721,39 @@ def handle_comm_room(room, character, rarg):
             character.msg(f"A {_CHEM_COLORS[req]} colored light is flashing on "
                           "the enunciator panel.")
             return True
+    return False
+
+
+_FAMILIAR_WRENCHING = ("You feel the familiar wrenching of your innards, and "
+                       "find yourself in a vast room whose distant walls are "
+                       "rushing straight toward you...")
+
+
+def handle_station_384(room, character, rarg):
+    """STATION-384-F (comptwo.zil:2410) — entering from the strip un-shrinks you.
+
+    BEEN-HERE is set by V-TYPE *after* the arrival move (so the entry M-ENTER
+    no-ops); returning here from the strip then wrenches you back to full size
+    in the mini-booth — or, once the computer is fixed, out via the auxiliary
+    booth (with the cryo-access announcement).
+    """
+    gs = _gs()
+    if rarg == M_ENTER and gs and gs.flags.get("BEEN-HERE"):
+        gs.flags["BEEN-HERE"] = False
+        if gs.flags.get("COMPUTER-FIXED"):
+            character.msg("A voice seems to whisper in your ear \"Main "
+                          "Miniaturization and Teleportation Booth has "
+                          "malfunctioned...switching to Auxiliary Booth...\" "
+                          + _FAMILIAR_WRENCHING)
+            import world.interrupts as I
+            gs.scheduler.enable(gs.scheduler.queue(I.make_i_announcement(gs), 130))
+            dest = _by_zil_id("AUXILIARY-BOOTH")
+        else:
+            character.msg(_FAMILIAR_WRENCHING)
+            dest = _by_zil_id("MINI-BOOTH")
+        if dest:
+            character.move_to(dest, quiet=True, move_type="teleport")
+        return True
     return False
 
 
@@ -1971,6 +2117,7 @@ ROOM_HANDLERS.update({
     "PROJCON-OFFICE-F": handle_projcon_office,
     "CRYO-ELEVATOR-F": handle_cryo_elevator,
     "COMM-ROOM-F": handle_comm_room,
+    "STATION-384-F": handle_station_384,
 })
 OBJ_HANDLERS.update({
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,

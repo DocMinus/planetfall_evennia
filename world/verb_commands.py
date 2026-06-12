@@ -105,6 +105,20 @@ def resolve_obj(caller, noun: str):
             if obj and obj not in candidates:
                 candidates.append(obj)
 
+    # ZIL ACCESSIBLE?: you can also refer to things inside a visible container —
+    # one that is open or transparent (the dial in the laser, the speck in the
+    # translucent relay). Search one level into such containers.
+    def _is_see_in(o):
+        # ZIL SEE-INSIDE?: visible contents iff not invisible and (open or
+        # transparent) — the relay is TRANSBIT but not a CONTBIT container.
+        flags = o.db.obj_flags or []
+        return "INVISIBLE" not in flags and (o.db.is_open or "TRANSBIT" in flags)
+    for container in list(candidates):
+        if _is_see_in(container):
+            for inner in container.contents:
+                if inner not in candidates and not isinstance(inner, DefaultExit):
+                    candidates.append(inner)
+
     best = None
     best_score = 0
     for obj in candidates:
@@ -1246,6 +1260,69 @@ def _h_disembark(caller, nouns):
         _do_walk(caller, "out")
 
 
+def _h_zap(caller, nouns):
+    """V-ZAP / V-SZAP fallback (verbs.zil PRE-ZAP) — fire the held laser.
+
+    Reached only when no object's ACTION consumed the verb (e.g. "fire at
+    speck" with the laser implied from inventory). Locates the laser and the
+    target and re-dispatches to LASER-F.
+    """
+    from world.action_handlers import dispatch_object
+    laser = next((o for o in caller.contents if o.db.zil_id == "LASER"), None)
+    target_noun = None
+    for n in nouns:
+        obj = resolve_obj(caller, n)
+        if obj and obj.db.zil_id == "LASER":
+            laser = obj
+        elif n and n.strip():
+            target_noun = n
+    if not laser:
+        caller.msg("You have nothing to shoot it with.")
+        return
+    dn = [laser.key] + ([target_noun] if target_noun else [])
+    if not dispatch_object(laser, caller, "V-ZAP", dn):
+        caller.msg("Nothing happens.")
+
+
+def _h_type(caller, nouns):
+    """V-TYPE (verbs.zil:1630) — the mini-booth sector keypad."""
+    gs = _gs()
+    here = caller.location.db.zil_id if caller.location else None
+    num = next((int(t.strip()) for t in nouns if t.strip().isdigit()), None)
+    if here != "MINI-BOOTH":
+        caller.msg("Type on what???")
+        return
+    if num is None:
+        caller.msg("This keyboard only has numeric keys. You can type numbers "
+                   "on it, but not words.")
+        return
+    if not (gs and gs.flags.get("MINI-ACTIVATED")):
+        caller.msg("A recording says \"Internal computer repair booth not "
+                   "activated.\"")
+        return
+    if num == 384:
+        caller.msg("You notice the walls of the booth sliding away in all "
+                   "directions, followed by a momentary queasiness in the pit "
+                   "of your stomach...\n")
+        station = _by_zil_id("STATION-384")
+        if station:
+            caller.move_to(station, quiet=True, move_type="teleport")
+        gs.flags["BEEN-HERE"] = True   # set AFTER the move (M-ENTER no-ops)
+        caller.msg(build_look(caller, caller.location))
+    elif num < 10:
+        caller.msg("After a pause a recorded voice says \"There are no "
+                   "one-digit computer sectors...clearing entry...please type "
+                   "damaged sector number.\"")
+    elif num > 1024:
+        caller.msg("A recorded voice says \"Databanks indicate no computer "
+                   "sector corresponding to that number. Please check with your "
+                   "supervisor.\"")
+    else:
+        gs.die("Ooops! You seem to have transported yourself into an active "
+               "sector of the computer. You are fried by powerful electric "
+               "currents.")
+
+
 def _h_point(caller, nouns):
     """V-POINT (verbs.zil:1517) — object actions (robot hole) get first crack."""
     floyd = next((o for o in (caller.location.contents if caller.location else [])
@@ -1386,6 +1463,9 @@ HANDLERS: dict = {
     "V-DISEMBARK":   _h_disembark,
     "V-SLEEP":       _h_sleep,
     "V-POINT":       _h_point,
+    "V-TYPE":        _h_type,
+    "V-ZAP":         _h_zap,
+    "V-SZAP":        _h_zap,
 }
 
 

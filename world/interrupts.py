@@ -812,6 +812,62 @@ _MAGNET_CARDS = ("KITCHEN-CARD", "SHUTTLE-CARD", "TELEPORTATION-CARD",
                  "ID-CARD")
 
 
+def make_i_warmth(gs: "GameState", state: dict | None = None):
+    """I-WARMTH (comptwo.zil:2789) — the laser heats up when fired, then cools."""
+    def i_warmth() -> bool:
+        f = gs.flags
+        if f.get("LASER-JUST-SHOT"):
+            f["LASER-JUST-SHOT"] = False
+            f["WARMTH-FLAG"] = f.get("WARMTH-FLAG", 0) + 1
+            feels = {3: "slightly warm now", 6: "somewhat warm now",
+                     9: "very warm now", 12: "quite hot"}.get(f["WARMTH-FLAG"])
+            if feels:
+                _send(gs, f"\nThe laser feels {feels}, but that doesn't seem to "
+                      "affect its performance at all.")
+        else:
+            if f.get("WARMTH-FLAG", 0) == 0:
+                _disable_self(gs, "i_warmth")
+            else:
+                f["WARMTH-FLAG"] -= 1
+                cools = {12: "quite hot", 9: "very warm", 6: "somewhat warm",
+                         3: "slightly warm"}.get(f["WARMTH-FLAG"])
+                if cools:
+                    _send(gs, f"\nThe laser has cooled, but it still feels "
+                          f"{cools}.")
+        return False
+    i_warmth.__name__ = "i_warmth"
+    i_warmth._state = {}
+    return i_warmth
+
+
+def make_i_fry(gs: "GameState", state: dict | None = None):
+    """I-FRY (comptwo.zil:2880) — Sector 384 powers up; leave the strip or die."""
+    def i_fry() -> bool:
+        if _here_id(gs) in ("MIDDLE-OF-STRIP", "STRIP-NEAR-STATION",
+                            "STRIP-NEAR-RELAY"):
+            return gs.die(
+                "\nWith a furious storm of electrical mayhem, Sector 384 comes "
+                "to life. A few micro-volts course through the silicon strip on "
+                "which you stand. Unfortunately, at your current size, this is "
+                "enough to barbecue you.")
+        return False
+    i_fry.__name__ = "i_fry"
+    i_fry._state = {}
+    return i_fry
+
+
+def make_i_announcement(gs: "GameState", state: dict | None = None):
+    """I-ANNOUNCEMENT (comptwo.zil:2424) — cryo access now open."""
+    def i_announcement() -> bool:
+        _send(gs, "\nA recorded announcement blares from the public address "
+              "system. \"Revival procedure beginning. Cryo-chamber access from "
+              "Project Control Office now open.\"")
+        return False
+    i_announcement.__name__ = "i_announcement"
+    i_announcement._state = {}
+    return i_announcement
+
+
 _MONSTER_IDS = ("RAT-ANT", "TRIFFID", "TROLL", "GRUE")
 _MONSTER_ENTRANCES = (
     "One of them trips over an experiment and crashes to the floor.",

@@ -151,7 +151,16 @@ class GameState:
             "CHEMICAL-REQUIRED": 0,          # colour the enunciator wants next (1-7)
             "SPOUT-PLACED": None,            # zil_id of the vessel under the spout
             "COMM-SEQ": None,                # remaining required colours (list)
-            "LASER-DIAL": 0,                 # laser miniaturization dial setting
+            # Laser / miniaturization endgame (comptwo.zil) — Subsystem 5.
+            "LASER-SETTING": 5,              # dial 1-6 (1 red … 6 violet)
+            "SPECK-HIT": False,              # speck hit once (needs two)
+            "MARKSMANSHIP-COUNTER": 0,       # ramps up each miss (PROB to hit)
+            "WARMTH-FLAG": 0,                # laser heat level
+            "LASER-JUST-SHOT": False,        # fired this turn (I-WARMTH)
+            "LASER-SCORE-FLAG": False,       # +2 first time the laser is fired
+            "OLD-SHOTS": __import__("random").randint(2, 4),    # compone.zil:3122
+            "NEW-SHOTS": __import__("random").randint(20, 29),  # compone.zil:3123
+            "BEEN-HERE": False,              # just typed 384 in the mini-booth
             "SPECK-REMOVED": False,          # the speck has been lifted from the relay
             "HOLE-TRIP-FLAG": False,         # Floyd has been through the robot hole
             "MURAL-FLAG": False,             # Floyd has commented on the projcon mural
