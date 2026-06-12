@@ -155,6 +155,10 @@ class GameState:
             "SPECK-REMOVED": False,          # the speck has been lifted from the relay
             "HOLE-TRIP-FLAG": False,         # Floyd has been through the robot hole
             "MURAL-FLAG": False,             # Floyd has commented on the projcon mural
+            # Lab / microbe storyline (comptwo.zil) — Subsystem 9.
+            "LAB-LIGHTS-ON": False,
+            "LAB-FLOODED": False,            # bio-lab flooded with fungicide mist
+            "UNIFORM-OPENED": False,         # lab uniform pocket searched
             "CRYO-SCORE-FLAG": False,       # comptwo.zil
         }
 

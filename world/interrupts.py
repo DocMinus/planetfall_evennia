@@ -812,6 +812,39 @@ _MAGNET_CARDS = ("KITCHEN-CARD", "SHUTTLE-CARD", "TELEPORTATION-CARD",
                  "ID-CARD")
 
 
+_MONSTER_IDS = ("RAT-ANT", "TRIFFID", "TROLL", "GRUE")
+_MONSTER_ENTRANCES = (
+    "One of them trips over an experiment and crashes to the floor.",
+    "They snarl and drool as they catch sight of you.",
+    "They scrabble over each other in their eagerness to reach you.",
+)
+
+
+def make_i_chase_scene(gs: "GameState", state: dict | None = None):
+    """I-CHASE-SCENE (comptwo.zil:2040) — the mutants pursue you from the lab."""
+    state = state if state is not None else {"last": None}
+
+    def i_chase_scene() -> bool:
+        import random
+        here = _here_id(gs)
+        if gs.flags.get("LAB-FLOODED"):
+            return False   # the fungicide mist has stopped them
+        # Caught: a mutant is already in the room with you.
+        if _in_room("RAT-ANT", here):
+            return gs.die("\nDozens of hungry eyes fix on you as the mutations "
+                          "surround you and begin feasting.")
+        # Otherwise they storm into your room, right on your heels.
+        for mid in _MONSTER_IDS:
+            _move_npc(mid, here)
+        _send(gs, "\nThe mutants burst into the room right on your heels! "
+              + random.choice(_MONSTER_ENTRANCES))
+        return False
+
+    i_chase_scene.__name__ = "i_chase_scene"
+    i_chase_scene._state = state
+    return i_chase_scene
+
+
 def make_i_magnet(gs: "GameState", state: dict | None = None):
     """I-MAGNET (compone.zil:1601) — a carried magnet scrambles held cards."""
     def i_magnet() -> bool:

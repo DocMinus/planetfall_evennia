@@ -115,28 +115,91 @@ def handle_deck_nine(room, character, rarg):
 
 
 def handle_bio_lab(room, character, rarg):
-    """BIO-LAB-F (comptwo.zil:2049) — lighting-dependent description.
+    """BIO-LAB-F (comptwo.zil:2049) — description + the mutant chase (M-END)."""
+    gs = _gs()
+    if rarg == M_LOOK:
+        text = ("This is a huge laboratory filled with many biological "
+                "experiments. The lighting is ")
+        if _flag(gs, "LAB-LIGHTS-ON"):
+            text += "bright."
+        else:
+            text += ("dim, and a faint blue glow comes from a gaping crack in "
+                     "the northern wall.")
+        text += " Some of the experiments seem to be out of control..."
+        return text
+    if rarg == M_END and gs:
+        # Standing in the Bio Lab triggers the chase; the fungicide mist (if
+        # the lab is flooded) stuns the mutants — but only a gas-masked player
+        # survives the mist.
+        if not any(getattr(i.routine, "__name__", None) == "i_chase_scene"
+                   for i in gs.scheduler._interrupts):
+            import world.interrupts as I
+            gs.scheduler.enable(gs.scheduler.queue(I.make_i_chase_scene(gs), -1))
+        _disable_interrupt(gs, "i_sleep_warnings")
+        if gs.flags.get("LAB-FLOODED"):
+            mask = _by_zil_id("GAS-MASK")
+            character.msg("The air is filled with mist, which is affecting the "
+                          "mutants. They appear to be stunned and confused, but "
+                          "are slowly recovering.")
+            if not (mask and _bit(mask, "WORNBIT")):
+                gs.die(" Unfortunately, you don't seem to be that hardy.")
+        else:
+            gs.die("The mutants attack you and rip you to shreds within "
+                   "seconds.")
+        return True
+    return False
 
-    The M-END chase-scene branch is endgame logic deferred to Phase 11.
-    """
-    if rarg != M_LOOK:
-        return False
-    from world.scheduler_script import get_game_state_script
-    script = get_game_state_script()
-    gs = script.get_gs() if script else None
-    text = (
-        "This is a huge laboratory filled with many biological experiments. "
-        "The lighting is "
-    )
-    if _flag(gs, "LAB-LIGHTS-ON"):
-        text += "bright."
-    else:
-        text += (
-            "dim, and a faint blue glow comes from a gaping crack in the "
-            "northern wall."
-        )
-    text += " Some of the experiments seem to be out of control..."
-    return text
+
+def handle_lab_uniform(ctx: ObjAction) -> bool:
+    """LAB-UNIFORM-F (comptwo.zil:1633) — disguise; pocket hides the tele card."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        state = "open" if obj.db.is_open else "closed"
+        caller.msg("It is a plain lab uniform. The logo above the pocket "
+                   "depicts a flame burning above some kind of sleep chamber. "
+                   f"The pocket is {state}.")
+        return True
+    if v in ("V-SEARCH", "V-OPEN", "V-LOOK-INSIDE"):
+        if not (gs and gs.flags.get("UNIFORM-OPENED")):
+            obj.db.is_open = True
+            gs.flags["UNIFORM-OPENED"] = True
+            for cid in ("TELEPORTATION-CARD", "COMBINATION-PAPER"):
+                item = _by_zil_id(cid)
+                if item:
+                    item.move_to(obj, quiet=True, move_type="move")
+            caller.msg("You discover a small piece of paper and a teleportation "
+                       "access card in the pocket of the uniform.")
+        elif any(o for o in obj.contents):
+            caller.msg("Opening the uniform's pocket reveals its contents.")
+        else:
+            caller.msg("The pocket is empty.")
+        return True
+    if v == "V-WEAR":
+        patrol = _by_zil_id("PATROL-UNIFORM")
+        if patrol and _bit(patrol, "WORNBIT"):
+            caller.msg("It won't fit on top of the Patrol uniform.")
+            return True
+    return False
+
+
+def handle_lab_desk(ctx: ObjAction) -> bool:
+    """LAB-DESK-F (comptwo.zil:2268) — search reveals the fungicide memo."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    if v in ("V-EXAMINE", "V-SEARCH") and not _bit(obj, "TOUCHBIT"):
+        _set_bit(obj, "TOUCHBIT", True)
+        memo = _by_zil_id("MEMO")
+        if memo:
+            memo.move_to(caller, quiet=True, move_type="get")
+        caller.msg("After inspecting the various papers on the desk, you find "
+                   "only one item of interest, a memo of some sort.")
+        return True
+    return False
+
+
+def handle_lab_office(room, character, rarg):
+    """LAB-OFFICE-F (comptwo.zil:2224) — M-LOOK passthrough (static desc)."""
+    return False
 
 
 ROOM_HANDLERS: dict = {
@@ -1788,6 +1851,8 @@ OBJ_HANDLERS: dict = {
     "FLASK-F": handle_flask,
     "LASER-DIAL-F": handle_laser_dial,
     "LASER-F": handle_laser,
+    "LAB-UNIFORM-F": handle_lab_uniform,
+    "LAB-DESK-F": handle_lab_desk,
 }
 ROOM_HANDLERS.update({
     "CONTROL-CABIN-F": handle_control_cabin,

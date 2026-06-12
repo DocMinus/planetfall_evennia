@@ -34,6 +34,7 @@ from world.interrupts import (
     make_i_kitchen_door_closes,
     make_i_shuttle,
     make_i_magnet,
+    make_i_chase_scene,
 )
 
 # Maps routine name -> maker function so we can restore closures after reload.
@@ -63,6 +64,7 @@ _MAKER_BY_NAME = {
     "i_kitchen_door_closes": make_i_kitchen_door_closes,
     "i_shuttle": make_i_shuttle,
     "i_magnet": make_i_magnet,
+    "i_chase_scene": make_i_chase_scene,
 }
 
 _DEFAULT_TICKS = {
@@ -86,6 +88,7 @@ _DEFAULT_TICKS = {
     "i_kitchen_door_closes": 50,
     "i_shuttle": -1,
     "i_magnet": -1,
+    "i_chase_scene": -1,
 }
 
 
