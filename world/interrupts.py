@@ -912,6 +912,102 @@ _MONSTER_ENTRANCES = (
 )
 
 
+def make_i_clear_floyd_peer(gs: "GameState", state: dict | None = None):
+    """I-CLEAR-FLOYD-PEER (comptwo.zil:1763) — Floyd stops staring after a bit."""
+    def i_clear_floyd_peer() -> bool:
+        gs.flags["FLOYD-PEERED"] = False
+        return False
+    i_clear_floyd_peer.__name__ = "i_clear_floyd_peer"
+    i_clear_floyd_peer._state = {}
+    return i_clear_floyd_peer
+
+
+def _monster_death(gs) -> bool:
+    """MONSTER-DEATH (comptwo.zil) — leaving the bio-door open during the foray."""
+    return gs.die(
+        "The mutated monsters, sensing freedom, swarm out through the open "
+        "bio-lock door and fall upon you. You don't last long.")
+
+
+def make_i_floyd_foray(gs: "GameState", state: dict | None = None):
+    """I-FLOYD-FORAY (comptwo.zil:1949) — Floyd's run into the bio-lab.
+
+    Each turn advances FORAY-COUNTER. If the east bio-door is open at the
+    wrong moment the mutations escape and kill you; played correctly (door
+    closed for the growls/knocks, opened on the knock so Floyd can stumble
+    out, then closed again) Floyd emerges with the mini-card and dies a hero.
+    """
+    def i_floyd_foray() -> bool:
+        f = gs.flags
+        f["FORAY-COUNTER"] = f.get("FORAY-COUNTER", 0) + 1
+        n = f["FORAY-COUNTER"]
+        door_open = _door_is_open("BIO-DOOR-EAST")
+        floyd_obj = _by_zil_id("FLOYD")
+        here = _here_id(gs)
+
+        if n in (2, 3):
+            if door_open:
+                return _monster_death(gs)
+            _send(gs, "\nFrom within the lab you hear ferocious growlings, the "
+                  "sounds of a skirmish, and then a high-pitched metallic "
+                  "scream!" if n == 2 else
+                  "\nYou hear, slightly muffled by the door, three fast knocks, "
+                  "followed by the distinctive sound of tearing metal.")
+            return False
+        if n == 4:
+            if door_open:
+                if floyd_obj and here:
+                    floyd_obj.location = _by_zil_id(here)
+                _send(gs, "\nFloyd stumbles out of the Bio Lab, clutching the "
+                      "mini-booth card. The mutations rush toward the open "
+                      "doorway!")
+            else:
+                # You never opened up for him — he's lost inside.
+                if floyd_obj:
+                    floyd_obj.db.obj_flags = [
+                        x for x in (floyd_obj.db.obj_flags or []) if x != "RLANDBIT"]
+                _disable_self(gs, "i_floyd_foray")
+                _send(gs, "\nThe three knocks come again, followed by a wild "
+                      "scream. Then, all is silence from within the Bio Lab.")
+            return False
+        if n >= 5:
+            if door_open:
+                return _monster_death(gs)
+            # Floyd makes it out, then succumbs: the card is yours.
+            _disable_self(gs, "i_floyd_foray")
+            _disable_self(gs, "i_floyd")
+            if floyd_obj:
+                floyd_obj.location = None
+                flags = [x for x in (floyd_obj.db.obj_flags or [])
+                         if x != "RLANDBIT"]
+                flags.append("INVISIBLE")
+                floyd_obj.db.obj_flags = flags
+            dead = _by_zil_id("DEAD-FLOYD")
+            lock = _by_zil_id("BIO-LOCK-EAST")
+            if dead and lock:
+                dead.location = lock
+            card = _by_zil_id("MINI-CARD")
+            if card and lock:
+                card.location = lock
+                cflags = [x for x in (card.db.obj_flags or [])
+                          if x not in ("INVISIBLE",)]
+                cflags.append("TOUCHBIT")
+                card.db.obj_flags = cflags
+            gs.add_score(2)
+            _send(gs, "\nFloyd staggers to the ground, dropping the mini card. "
+                  "He is badly torn apart, oil flowing from his lubrication "
+                  "system. He obviously has only moments to live.\n\nYou drop "
+                  "to your knees and cradle Floyd's head in your lap. \"Floyd "
+                  "did it ... got card. Floyd a good friend, huh?\" His eyes "
+                  "close, and he is silent. Goodbye, Floyd.")
+            return False
+        return False
+
+    i_floyd_foray.__name__ = "i_floyd_foray"
+    i_floyd_foray._state = {}
+    return i_floyd_foray
+
+
 def make_i_chase_scene(gs: "GameState", state: dict | None = None):
     """I-CHASE-SCENE (comptwo.zil:2040) — the mutants pursue you from the lab."""
     state = state if state is not None else {"last": None}

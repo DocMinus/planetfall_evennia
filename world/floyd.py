@@ -213,6 +213,18 @@ class FloydNPC:
             self._print('A small robot with large, friendly eyes rolls up to you. "Hi! Floyd\'s name is Floyd!"')
             return
 
+        # In the computer room Floyd recognises the broken computer and frets
+        # that the card is needed to fix it (compone.zil:2293 COMPUTER-ACTION) —
+        # this sets COMPUTER-FLAG, the gate on his bio-lock foray offer.
+        if room == "COMPUTER-ROOM" and not self.gs.flags.get("COMPUTER-FLAG"):
+            self.gs.flags["COMPUTER-FLAG"] = True
+            self.spoke = True
+            self._print('Floyd examines the glowing light. With a concerned '
+                        'frown, he says, "Uh oh. Computer is broken. A '
+                        'Doctor-person once told Floyd that Computer is the most '
+                        'important part of the Project."')
+            return
+
         # 6% chance Floyd wanders off to explore (ZIL PROB 6 + FLOYDBIT room).
         if self.follow and self._room_is_floydbit(room) and random.random() < 0.06:
             self._print("Floyd says \"Floyd going exploring. See you later.\" "

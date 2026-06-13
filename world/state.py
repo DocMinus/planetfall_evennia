@@ -164,6 +164,13 @@ class GameState:
             "SPECK-REMOVED": False,          # the speck has been lifted from the relay
             "HOLE-TRIP-FLAG": False,         # Floyd has been through the robot hole
             "MURAL-FLAG": False,             # Floyd has commented on the projcon mural
+            # Floyd's bio-lock card foray (comptwo.zil:1717) — Subsystem 8/9.
+            "COMPUTER-FLAG": False,          # Floyd has seen the computer is broken
+            "FLOYD-WAITING": False,          # Floyd waiting at the bio-lock to foray
+            "FLOYD-PEERED": False,           # Floyd has peered through the window
+            "WAITING-COUNTER": 0,            # nags before he gives up
+            "FLOYD-FORAYED": False,          # the foray has begun
+            "FORAY-COUNTER": 0,              # foray sequence step
             # Lab / microbe storyline (comptwo.zil) — Subsystem 9.
             "LAB-LIGHTS-ON": False,
             "LAB-FLOODED": False,            # bio-lab flooded with fungicide mist

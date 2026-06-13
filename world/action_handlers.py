@@ -150,6 +150,114 @@ def handle_bio_lab(room, character, rarg):
     return False
 
 
+def _floyd_obj_here(caller):
+    """Return the live Floyd object if it's in the caller's room and active."""
+    floyd = _by_zil_id("FLOYD")
+    if floyd and floyd.location is caller.location and _floyd_is_on(floyd):
+        return floyd
+    return None
+
+
+def handle_bio_lock_east(room, character, rarg):
+    """BIO-LOCK-EAST-F (comptwo.zil:1717) — Floyd's foray offer dialogue."""
+    if rarg != M_END:
+        return False
+    gs = _gs()
+    floyd = _floyd_obj_here(character)
+    if gs is None or floyd is None:
+        return False
+    from world.scheduler_script import get_game_state_script
+    fnpc = get_game_state_script().get_floyd()
+
+    if gs.flags.get("FLOYD-WAITING"):
+        if gs.flags.get("WAITING-COUNTER", 0) > 3:
+            gs.flags["FLOYD-WAITING"] = False
+            fnpc.gave_up = True
+            fnpc.follow = False
+            west = _by_zil_id("BIO-LOCK-WEST")
+            if west:
+                floyd.location = west
+                fnpc.current_room = "BIO-LOCK-WEST"
+            character.msg("\n\"Okay,\" says Floyd with uncharacteristic "
+                          "annoyance. \"Forget about the stupid card.\" He goes "
+                          "to the other end of the bio-lock and sulks.")
+        elif not gs.flags.get("FLOYD-FORAYED"):
+            gs.flags["WAITING-COUNTER"] = gs.flags.get("WAITING-COUNTER", 0) + 1
+            character.msg("\nFloyd looks at you with a dash of impatience and a "
+                          "healthy helping of nervousness. \"Well?\" he asks. "
+                          "\"Are you going to open the door?\"")
+        return True
+
+    if not fnpc.gave_up and not gs.flags.get("FLOYD-PEERED"):
+        gs.flags["FLOYD-PEERED"] = True
+        _queue(gs, "make_i_clear_floyd_peer", 40)
+        card = _by_zil_id("MINI-CARD")
+        if card:
+            _set_bit(card, "INVISIBLE", False)
+        if gs.flags.get("COMPUTER-FLAG"):
+            gs.flags["FLOYD-WAITING"] = True
+            character.msg(
+                "\nFloyd stands on his tiptoes and peers in the window. "
+                "\"Looks dangerous in there,\" says Floyd. \"I don't think you "
+                "should go inside. We'll need card there to fix computer. "
+                "Hmmm... I know! Floyd will get card. Robots are tough. Nothing "
+                "can hurt robots. You open the door, then Floyd will rush in. "
+                "Then you close door. When Floyd knocks, open door again. Okay? "
+                "Go!\"")
+        else:
+            character.msg("\nFloyd stands on his tiptoes and peers in the "
+                          "window. \"Ooo, look,\" he says. \"There's a "
+                          "miniaturization booth access card!\"")
+        return True
+    return False
+
+
+def handle_bio_door_east(ctx: ObjAction) -> bool:
+    """BIO-DOOR-EAST-F (comptwo.zil:1826) — drives Floyd's foray on open/close."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if gs is None:
+        return False
+    if v == "V-OPEN":
+        if obj.db.is_open:
+            caller.msg("It's already open.")
+            return True
+        floyd = _by_zil_id("FLOYD")
+        if (gs.flags.get("FLOYD-WAITING") and floyd and _floyd_is_on(floyd)
+                and gs.flags.get("FORAY-COUNTER", 0) == 0):
+            _queue(gs, "make_i_floyd_foray", -1)
+            gs.flags["FLOYD-FORAYED"] = True
+            obj.db.is_open = True
+            floyd.location = None   # he's in the lab now (ZIL REMOVE FLOYD)
+            _disable_interrupt(gs, "i_floyd")
+            caller.msg(
+                "The door opens and Floyd, pausing only for the briefest "
+                "moment, plunges into the Bio Lab. Immediately, he is set upon "
+                "by hideous, mutated monsters! More are heading straight toward "
+                "the open door! Floyd shrieks and yells to you to close the "
+                "door.")
+            return True
+        if not gs.flags.get("FLOYD-FORAYED") and not _arrival_pending(gs, "i_chase_scene"):
+            gs.die("Opening the door reveals a Bio-Lab full of horrible "
+                   "mutations. You stare at them, frozen with horror. Growling "
+                   "with hunger and delight, the mutations march into the "
+                   "bio-lock and devour you.")
+            return True
+        obj.db.is_open = True
+        caller.msg("The door slides open.")
+        return True
+    if v == "V-CLOSE":
+        if obj.db.is_open:
+            if gs.flags.get("FORAY-COUNTER", 0) == 4:
+                caller.ndb.pf_elapsed = 95   # the long, tense moment
+            obj.db.is_open = False
+            caller.msg("The door closes.")
+        else:
+            caller.msg("It's already closed.")
+        return True
+    return False
+
+
 def handle_lab_uniform(ctx: ObjAction) -> bool:
     """LAB-UNIFORM-F (comptwo.zil:1633) — disguise; pocket hides the tele card."""
     obj, caller, v = ctx.obj, ctx.caller, ctx.verb
@@ -205,6 +313,7 @@ def handle_lab_office(room, character, rarg):
 ROOM_HANDLERS: dict = {
     "DECK-NINE-F": handle_deck_nine,
     "BIO-LAB-F":   handle_bio_lab,
+    "BIO-LOCK-EAST-F": handle_bio_lock_east,
 }
 # Further room handlers are registered with ROOM_HANDLERS.update(...) below, as
 # their handler functions are defined (Subsystem 1 onward).
@@ -2250,6 +2359,7 @@ ROOM_HANDLERS.update({
     "STATION-384-F": handle_station_384,
 })
 OBJ_HANDLERS.update({
+    "BIO-DOOR-EAST-F": handle_bio_door_east,
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,
     "RED-ELEVATOR-BUTTON-F": handle_red_elevator_button,
     "ELEVATOR-BUTTON-F": handle_elevator_button,
