@@ -53,7 +53,19 @@ class Cmd:
 class WaitUntil:
     """Issue ``wait`` repeatedly until ``predicate(gs)`` is true (player reaction)."""
     predicate: Callable
-    max_waits: int = 40
+    max_waits: int = 60
+    note: str = ""
+
+
+@dataclass
+class EatIfHungry:
+    """Eat a survival-kit goo when hunger has risen (a no-op otherwise).
+
+    Mirrors how a player reacts to the hunger warnings: the goo handler
+    refuses ("you're not hungry") without consuming the goo below the
+    threshold, so these can be sprinkled liberally along the route.
+    """
+    threshold: int = 1
     note: str = ""
 
 
@@ -94,6 +106,20 @@ class Driver:
         return out
 
     def run_step(self, step):
+        if isinstance(step, EatIfHungry):
+            if self.gs.flags.get("HUNGER-LEVEL", 0) < step.threshold:
+                return
+            kit = next((o for o in self.char.contents
+                        if o.db.zil_id == "FOOD-KIT"), None)
+            if kit is None:
+                raise StepError(f"EatIfHungry: no survival kit carried. {step.note}")
+            if not kit.db.is_open:
+                self._emit("open survival kit")
+            goo = next((o for o in kit.contents), None)
+            if goo is None:
+                raise StepError(f"EatIfHungry: survival kit is empty. {step.note}")
+            self._emit(f"eat {goo.key}")
+            return
         if isinstance(step, WaitUntil):
             n = 0
             while not step.predicate(self.gs) and n < step.max_waits:
@@ -303,13 +329,26 @@ TOOLS_AND_CARDS = [
     Cmd("take upper elevator card", expect=("Taken",)),
     Cmd("take kitchen card", expect=("Taken",),
         check=lambda gs: _carries(gs.player, "UPPER-ELEVATOR-CARD", "KITCHEN-CARD")),
+    # The shuttle card (needed far later to drive the maglev) is one room
+    # further west, in the large office's desk — grab it now while we're here
+    # and the magnet is safely dropped.
+    Cmd("west", expect=("Large Office",)),
+    Cmd("open large desk", expect=("Opened",)),
+    Cmd("take shuttle card", expect=("Taken",),
+        check=lambda gs: _carries(gs.player, "SHUTTLE-CARD")),
+    Cmd("east", expect=("Small Office",)),
 ]
+
+# From here on the hunger clock (first warning ~2000 ticks) starts to bite, so
+# the route eats a survival-kit goo whenever it has risen. EatIfHungry is a
+# no-op until then, so these are safe to sprinkle liberally.
 
 # Milestone 4: ride the upper elevator from the lobby to the tower core.
 # Call the car (blue button) and wait for it to arrive, board it, enable it
 # with the upper card, push Up, ride to the tower, and step out to COMM-ROOM
 # (the first of the three reactor systems is up here).
 UPPER_ELEVATOR = [
+    EatIfHungry(),
     Cmd("east", expect=("Admin Corridor North",), note="leave the office"),
     Cmd("south", expect=("Admin Corridor",), note="recross the rift"),
     Cmd("south", expect=("Admin Corridor South",)),
@@ -343,6 +382,7 @@ def _floyd_with(gs):
 # (Each push is preceded by re-sliding that car's card, which refreshes the
 # timed turn-off so the trip can't be stranded by the demon.)
 LOWER_ELEVATOR = [
+    EatIfHungry(),
     Cmd("turn off floyd", expect=("betrayal",)),
     Cmd("search floyd", expect=("Loowur Elavaatur",),
         check=lambda gs: gs.flags.get("CARD-STOLEN")),
