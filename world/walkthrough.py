@@ -58,6 +58,19 @@ class WaitUntil:
 
 
 @dataclass
+class RepeatUntil:
+    """Issue ``text`` repeatedly until ``predicate(gs)`` is true.
+
+    For ramp-style actions a player keeps trying — e.g. lasering the relay
+    speck, where marksmanship improves with every miss.
+    """
+    text: str
+    predicate: Callable
+    max_n: int = 40
+    note: str = ""
+
+
+@dataclass
 class EatIfHungry:
     """Eat a survival-kit goo when hunger has risen (a no-op otherwise).
 
@@ -120,6 +133,17 @@ class Driver:
             self._emit(f"eat {goo.key}")
 
     def run_step(self, step):
+        if isinstance(step, RepeatUntil):
+            n = 0
+            while not step.predicate(self.gs) and n < step.max_n:
+                self._emit(step.text)
+                if self.gs.dead:
+                    break
+                n += 1
+            if not step.predicate(self.gs):
+                raise StepError(f"RepeatUntil '{step.text}' exhausted after "
+                                f"{n}: {step.note}")
+            return
         if isinstance(step, EatIfHungry):
             if self.gs.flags.get("HUNGER-LEVEL", 0) < step.threshold:
                 return
@@ -131,7 +155,7 @@ class Driver:
                 self._emit("open survival kit")
             goo = next((o for o in kit.contents), None)
             if goo is None:
-                raise StepError(f"EatIfHungry: survival kit is empty. {step.note}")
+                return   # out of goo; rely on other food / hope to finish
             self._emit(f"eat {goo.key}")
             return
         if isinstance(step, WaitUntil):
@@ -499,10 +523,69 @@ BIO_FORAY = [
         check=lambda gs: _carries(gs.player, "MINI-CARD")),
 ]
 
+# Milestone 9: fix the computer. Swap the laser's spent battery for the fresh
+# one (the old one can't outlast the marksmanship ramp), shrink into the
+# computer via the mini-booth, walk the strip to the relay, and laser the
+# speck until it's destroyed — COMPUTER-FIXED (+8), which opens the cryo route.
+COMPUTER_FIX = [
+    EatIfHungry(),
+    Cmd("west", expect=("Bio Lock West",)),
+    Cmd("west", expect=("Main Lab",)),
+    Cmd("south", expect=("Lab Storage",)),
+    Cmd("take new battery"),
+    Cmd("remove old battery from laser", expect=("Taken",)),
+    Cmd("put new battery in laser", expect=("clicks into",)),
+    Cmd("north", expect=("Main Lab",)),
+    Cmd("southwest", expect=("Computer Room",)),
+    Cmd("south", expect=("Miniaturization Booth",)),
+    Cmd("slide mini card through slot", expect=("activated",)),
+    Cmd("type 384", expect=("Station 384",), note="shrink into the computer"),
+    Cmd("east", expect=("Strip Near Station",)),
+    Cmd("north", expect=("Middle of Strip",)),
+    Cmd("north", expect=("Strip Near Relay",)),
+    Cmd("set dial to 1", expect=("set to 1",), note="red = the fine setting"),
+    RepeatUntil("shoot speck with laser",
+                lambda gs: gs.flags.get("COMPUTER-FIXED"), max_n=40,
+                note="two precise hits fix the computer"),
+]
+
+# Milestone 10: the cryo endgame. Un-shrink (re-enter Station 384 → auxiliary
+# booth), gear up in the lab office (gas mask) and flood the bio-lab, dash
+# across it to the cryo elevator, slam the button on the pursuing mutants
+# (CRYO-SCORE-FLAG, +5), descend, and step into the anteroom — where the cure
+# is found and the game is won.
+ESCAPE_AND_CRYO = [
+    Cmd("south", expect=("Middle of Strip",)),
+    Cmd("south", expect=("Strip Near Station",)),
+    Cmd("west", expect=("Auxiliary Booth",), note="re-grow via the aux booth"),
+    Cmd("north", expect=("Lab Office",)),
+    Cmd("open lab desk", expect=("Opened",)),
+    Cmd("take gas mask"),
+    Cmd("wear gas mask", expect=("put on",)),
+    Cmd("press fungicide button", expect=("hissing",),
+        check=lambda gs: gs.flags.get("LAB-FLOODED")),
+    Cmd("open office door"),
+    Cmd("west", expect=("Bio Lab",), note="cross the (flooded) lab, masked"),
+    Cmd("open east door"),
+    Cmd("west", expect=("Bio Lock East",)),
+    Cmd("west", expect=("Bio Lock West",)),
+    Cmd("west", expect=("Main Lab",)),
+    Cmd("southwest", expect=("Computer Room",)),
+    Cmd("west", expect=("ProjCon Office",)),
+    Cmd("south", expect=("Cryo-Elevator",)),
+    Cmd("push button", expect=("monsters reach it",),
+        check=lambda gs: gs.flags.get("CRYO-SCORE-FLAG")),
+    WaitUntil(lambda gs: _door_open("CRYO-ELEVATOR-DOOR"),
+              note="ride down to the anteroom"),
+    Cmd("north", expect=("You have won",),
+        check=lambda gs: gs.dead and gs.death_reason is None,
+        note="the cryo anteroom resolves the game — victory"),
+]
+
 WALKTHROUGH: list = (list(ESCAPE_POD) + list(DESCEND_AND_FLOYD)
                      + list(TOOLS_AND_CARDS) + list(DAY1_SLEEP)
                      + list(DAY2_DESCENT) + list(SHUTTLE) + list(COURSE_CONTROL)
-                     + list(BIO_FORAY))
+                     + list(BIO_FORAY) + list(COMPUTER_FIX) + list(ESCAPE_AND_CRYO))
 
 
 def dev_run(steps=None, verbose=True):

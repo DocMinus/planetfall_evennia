@@ -912,6 +912,19 @@ _MONSTER_ENTRANCES = (
 )
 
 
+def make_i_cryo_elevator_arrive(gs: "GameState", state: dict | None = None):
+    """I-CRYO-ELEVATOR-ARRIVE (comptwo.zil:1384) — the cryo car reaches bottom."""
+    def i_cryo_elevator_arrive() -> bool:
+        door = _by_zil_id("CRYO-ELEVATOR-DOOR")
+        if door:
+            door.db.is_open = True
+        _send(gs, "\nThe elevator door opens onto a room to the north.")
+        return False
+    i_cryo_elevator_arrive.__name__ = "i_cryo_elevator_arrive"
+    i_cryo_elevator_arrive._state = {}
+    return i_cryo_elevator_arrive
+
+
 def make_i_clear_floyd_peer(gs: "GameState", state: dict | None = None):
     """I-CLEAR-FLOYD-PEER (comptwo.zil:1763) — Floyd stops staring after a bit."""
     def i_clear_floyd_peer() -> bool:

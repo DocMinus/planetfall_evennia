@@ -1953,6 +1953,53 @@ def handle_cryo_elevator(room, character, rarg):
     return False
 
 
+def handle_cryo_button(ctx: ObjAction) -> bool:
+    """CRYO-BUTTON-PSEUDO (globals.zil:2651) — descend to the cryo-anteroom.
+
+    The only thing that sets CRYO-SCORE-FLAG: pressing it slams the door on the
+    pursuing mutants, kills the chase, drops you toward the anteroom (+5).
+    """
+    caller, v = ctx.caller, ctx.verb
+    if v != "V-PUSH":
+        return False
+    gs = _gs()
+    door = _by_zil_id("CRYO-ELEVATOR-DOOR")
+    if gs and not gs.flags.get("CRYO-SCORE-FLAG"):
+        _disable_interrupt(gs, "i_chase_scene")
+        if door:
+            door.db.is_open = False
+        gs.flags["CRYO-SCORE-FLAG"] = True
+        gs.add_score(5)
+        _queue(gs, "make_i_cryo_elevator_arrive", 100)
+        caller.msg("The elevator door closes just as the monsters reach it! You "
+                   "slump back against the wall, exhausted from the chase. The "
+                   "elevator begins to move downward.")
+        return True
+    if gs and gs.flags.get("CRYO-SCORE-FLAG") and door and door.db.is_open:
+        gs.die("Stunning. After days of surviving a hostile, plague-ridden "
+               "planet and coming within one move of completing Planetfall, you "
+               "blow it all in one amazingly dumb input. The elevator returns to "
+               "the upper level, where the waiting mutants make short work of "
+               "you.")
+        return True
+    caller.msg("Nothing happens.")
+    return True
+
+
+def handle_fungicide_button(ctx: ObjAction) -> bool:
+    """FUNGICIDE-BUTTON-F (comptwo.zil:2351) — flood the bio-lab with mist."""
+    caller, v = ctx.caller, ctx.verb
+    if v != "V-PUSH":
+        return False
+    gs = _gs()
+    if gs:
+        gs.flags["LAB-FLOODED"] = True
+        # NB: ZIL queues I-UNFLOOD (50) to make this a timed dash; we leave the
+        # flood durable for now so the escape is survivable (faithfulness TODO).
+    caller.msg("You hear a hissing from beyond the door to the west.")
+    return True
+
+
 def handle_control_cabin(room, character, rarg):
     """CONTROL-CABIN-F (globals.zil:1681) — the M-LOOK driving display."""
     if rarg != M_LOOK:
@@ -2360,6 +2407,8 @@ ROOM_HANDLERS.update({
 })
 OBJ_HANDLERS.update({
     "BIO-DOOR-EAST-F": handle_bio_door_east,
+    "CRYO-BUTTON-PSEUDO": handle_cryo_button,
+    "FUNGICIDE-BUTTON-F": handle_fungicide_button,
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,
     "RED-ELEVATOR-BUTTON-F": handle_red_elevator_button,
     "ELEVATOR-BUTTON-F": handle_elevator_button,

@@ -1473,6 +1473,29 @@ HANDLERS: dict = {
 # Command factory
 # ---------------------------------------------------------------------------
 
+def _dispatch_pseudo(caller, handler_name: str, nouns: list) -> bool:
+    """ZIL PSEUDO: dispatch a room-local noun to its named routine.
+
+    Rooms carry db.pseudo = {WORD: HANDLER-NAME}; if the direct-object noun
+    contains that word, hand the verb to OBJ_HANDLERS[HANDLER-NAME] with a
+    null PRSO. Returns True if the pseudo consumed the verb.
+    """
+    room = caller.location
+    pseudo = (room.db.pseudo or {}) if room else {}
+    if not pseudo:
+        return False
+    words = {w.upper() for w in _strip_articles(nouns[0]).split()}
+    for word, hname in pseudo.items():
+        if word.upper() in words:
+            from world.action_handlers import OBJ_HANDLERS, ObjAction
+            ph = OBJ_HANDLERS.get(hname)
+            if ph is not None:
+                return bool(ph(ObjAction(obj=None, caller=caller,
+                                         verb=handler_name, nouns=nouns)))
+            return False
+    return False
+
+
 def make_command(verb: str, entries: list, aliases: list, timeless: bool = False) -> type:
     """Return a PlanetfallCommand subclass for the given verb."""
     # Most specific (longest) pattern tried first
@@ -1496,6 +1519,11 @@ def make_command(verb: str, entries: list, aliases: list, timeless: bool = False
                 if nouns:
                     obj = resolve_obj(self.caller, nouns[0])
                     if obj and dispatch_object(obj, self.caller, handler_name, nouns):
+                        return
+                    # ZIL PSEUDO objects: a room-local noun (e.g. the cryo
+                    # elevator's BUTTON) handled by a named routine, not a real
+                    # object. Try only when no real object matched.
+                    if obj is None and _dispatch_pseudo(self.caller, handler_name, nouns):
                         return
                     if len(nouns) > 1:
                         prsi = resolve_obj(self.caller, nouns[1])
