@@ -105,6 +105,20 @@ class Driver:
             print(f"\n> {cmd_text}\n{out}")
         return out
 
+    def _eat_if_hungry(self, threshold=1):
+        """Eat the next survival-kit goo if hunger has risen (else a no-op)."""
+        if self.gs.flags.get("HUNGER-LEVEL", 0) < threshold:
+            return
+        kit = next((o for o in self.char.contents
+                    if o.db.zil_id == "FOOD-KIT"), None)
+        if kit is None:
+            return
+        if not kit.db.is_open:
+            self._emit("open survival kit")
+        goo = next((o for o in kit.contents), None)
+        if goo is not None:
+            self._emit(f"eat {goo.key}")
+
     def run_step(self, step):
         if isinstance(step, EatIfHungry):
             if self.gs.flags.get("HUNGER-LEVEL", 0) < step.threshold:
@@ -123,6 +137,9 @@ class Driver:
         if isinstance(step, WaitUntil):
             n = 0
             while not step.predicate(self.gs) and n < step.max_waits:
+                self._eat_if_hungry()   # a waiting player still eats when hungry
+                if self.gs.dead:
+                    raise StepError(f"died while waiting: {step.note}")
                 self._emit("wait")
                 n += 1
             if not step.predicate(self.gs):
@@ -339,63 +356,56 @@ TOOLS_AND_CARDS = [
     Cmd("east", expect=("Small Office",)),
 ]
 
-# From here on the hunger clock (first warning ~2000 ticks) starts to bite, so
-# the route eats a survival-kit goo whenever it has risen. EatIfHungry is a
-# no-op until then, so these are safe to sprinkle liberally.
-
-# Milestone 4: ride the upper elevator from the lobby to the tower core.
-# Call the car (blue button) and wait for it to arrive, board it, enable it
-# with the upper card, push Up, ride to the tower, and step out to COMM-ROOM
-# (the first of the three reactor systems is up here).
-UPPER_ELEVATOR = [
-    EatIfHungry(),
-    Cmd("east", expect=("Admin Corridor North",), note="leave the office"),
-    Cmd("south", expect=("Admin Corridor",), note="recross the rift"),
-    Cmd("south", expect=("Admin Corridor South",)),
-    Cmd("south", expect=("Corridor Junction",)),
-    Cmd("east", expect=("Elevator Lobby",)),
-    Cmd("press blue button", expect=("whirring",), note="call the upper car"),
-    WaitUntil(lambda gs: _door_open("UPPER-ELEVATOR-DOOR"),
-              note="wait for the upper car to arrive"),
-    Cmd("north", expect=("Upper Elevator",), note="board the car"),
-    Cmd("slide upper elevator card through slot", expect=("Elevator enabled",),
-        check=lambda gs: gs.flags.get("UPPER-ELEVATOR-ON")),
-    Cmd("push up button", expect=("sensation of vertical movement",),
-        check=lambda gs: gs.flags.get("ELEVATOR-IN-TRANSIT")),
-    WaitUntil(lambda gs: not gs.flags.get("ELEVATOR-IN-TRANSIT"),
-              note="ride up to the tower core"),
-    Cmd("out", expect=("Tower Core",),
-        check=lambda gs: gs.flags.get("UPPER-ELEVATOR-UP")),
-    Cmd("northeast", expect=("Comm Room",), note="reach the first reactor system"),
-]
-
 def _floyd_with(gs):
     from world.walkthrough import _by_zil
     floyd = _by_zil("FLOYD")
     return bool(floyd and gs.player and floyd.location is gs.player.location)
 
 
-# Milestone 5: get the lower-elevator card and ride down to the waiting area.
-# The deterministic route is to take the card from a de-activated Floyd
-# (search him while off), avoiding the day-2 friendly-reveal RNG. Then ride
-# the upper car back to the lobby and the lower car down to the waiting area.
-# (Each push is preceded by re-sliding that car's card, which refreshes the
-# timed turn-off so the trip can't be stranded by the demon.)
-LOWER_ELEVATOR = [
+# From here the hunger clock (first warning ~2000 ticks) bites; EatIfHungry is
+# a no-op until then, and the WaitUntil loops also eat as needed.
+
+# Milestone 4: end day 1 with a dorm sleep. The whole deep complex (shuttle +
+# reactor + computer + cryo) lies past the shuttle where there is no safe bed,
+# so we reset the sleep clock here to get a full fresh budget for day 2. Recross
+# the rift back to the near side and bed down in a dorm until morning.
+DAY1_SLEEP = [
     EatIfHungry(),
+    Cmd("east", expect=("Admin Corridor North",), note="leave the office"),
+    Cmd("south", expect=("Admin Corridor",), note="recross the rift"),
+    Cmd("south", expect=("Admin Corridor South",)),
+    Cmd("south", expect=("Corridor Junction",)),
+    Cmd("west", expect=("Dorm Corridor",), note="long-hall transit"),
+    Cmd("south", expect=("Dorm C",)),
+    # Take Floyd's lower-elevator card here: the magnet is long dropped (so the
+    # card won't scramble) and Floyd reliably catches up in the dorm. Search the
+    # de-activated robot for it (CARD-STOLEN, +1), then switch him back on.
+    WaitUntil(_floyd_with, max_waits=20, note="let Floyd catch up"),
     Cmd("turn off floyd", expect=("betrayal",)),
     Cmd("search floyd", expect=("Loowur Elavaatur",),
         check=lambda gs: gs.flags.get("CARD-STOLEN")),
     Cmd("turn on robot", note="reactivate Floyd"),
-    # Ride the upper car back down to the lobby.
-    Cmd("southwest", expect=("Tower Core",)),
-    Cmd("north", expect=("Upper Elevator",)),
-    Cmd("slide upper elevator card through slot", expect=("Elevator enabled",)),
-    Cmd("push down button", expect=("vertical movement",)),
-    WaitUntil(lambda gs: not gs.flags.get("ELEVATOR-IN-TRANSIT")),
-    Cmd("out", expect=("Elevator Lobby",)),
-    # Call, board, enable, and ride the lower car down to the waiting area.
-    Cmd("press red button", expect=("vibrating",)),
+    WaitUntil(lambda gs: gs.flags.get("SLEEPY-LEVEL", 0) > 0, max_waits=320,
+              note="stay up (eating as needed) until drowsy"),
+    Cmd("get in bed", expect=("soft and comfortable",)),
+    WaitUntil(lambda gs: gs.day >= 2, note="sleep through to day 2"),
+]
+
+# Milestone 5: day 2 — descend to the deep complex. Sleeping drops all non-worn
+# gear on the floor (faithful: ZIL WAKING-UP moves it to HERE), so first scoop
+# the essentials back up, then head to the elevator lobby and ride the lower car
+# down to the waiting area, Floyd in tow.
+DAY2_DESCENT = [
+    Cmd("take survival kit", note="food first — eating needs it back"),
+    Cmd("take laser"),
+    Cmd("take shuttle card"),
+    Cmd("take lower elevator card",
+        check=lambda gs: _carries(gs.player, "LOWER-ELEVATOR-CARD", "SHUTTLE-CARD", "LASER", "FOOD-KIT")),
+    EatIfHungry(),
+    Cmd("north", expect=("Dorm Corridor",)),
+    Cmd("east", expect=("Corridor Junction",), note="long-hall transit"),
+    Cmd("east", expect=("Elevator Lobby",)),
+    Cmd("press red button", expect=("vibrating",), note="call the lower car"),
     WaitUntil(lambda gs: _door_open("LOWER-ELEVATOR-DOOR"),
               note="wait for the lower car to arrive"),
     Cmd("south", expect=("Lower Elevator",)),
@@ -408,8 +418,8 @@ LOWER_ELEVATOR = [
 ]
 
 WALKTHROUGH: list = (list(ESCAPE_POD) + list(DESCEND_AND_FLOYD)
-                     + list(TOOLS_AND_CARDS) + list(UPPER_ELEVATOR)
-                     + list(LOWER_ELEVATOR))
+                     + list(TOOLS_AND_CARDS) + list(DAY1_SLEEP)
+                     + list(DAY2_DESCENT))
 
 
 def dev_run(steps=None, verbose=True):
