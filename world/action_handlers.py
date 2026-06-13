@@ -271,6 +271,37 @@ def handle_floyd(ctx: ObjAction) -> bool:
         )
         return True
 
+    # ZIL FLOYD-F ASK-FOR (compone.zil:2056): Floyd hands over what he holds.
+    if ctx.verb == "V-ASK-FOR":
+        item = _prsi(ctx)
+        if item is not None and item.location is floyd:
+            item.move_to(caller, quiet=True, move_type="get")
+            caller.msg(f"\"Okay,\" says Floyd, handing you the {item.key}, "
+                       "\"but only because you're Floyd's best friend.\"")
+        else:
+            caller.msg("Floyd doesn't appear to have that.")
+        return True
+
+    # ZIL FLOYD-F (compone.zil:2082): searching the de-activated robot turns up
+    # his own lower-elevator card — the deterministic "take it from off-Floyd"
+    # route (CARD-STOLEN), distinct from the day-2 friendly reveal.
+    if ctx.verb in ("V-SEARCH", "V-LOOK-INSIDE") and not on:
+        gs = _gs()
+        if gs and not gs.flags.get("CARD-REVEALED") and not gs.flags.get("CARD-STOLEN"):
+            card = _by_zil_id("LOWER-ELEVATOR-CARD")
+            if card:
+                _set_bit(card, "INVISIBLE", False)
+                card.move_to(caller, quiet=True, move_type="get")
+                gs.score_object(card)
+                gs.flags["CARD-STOLEN"] = True
+                caller.msg("In one of the robot's compartments you find and "
+                           "take a magnetic-striped card embossed \"Loowur "
+                           "Elavaatur Akses Kard.\"")
+                return True
+        caller.msg("Your search discovers nothing in the robot's compartments "
+                   "except a single crayon which you leave where you found it.")
+        return True
+
     # Anything else falls through to the generic verb handler.
     return False
 

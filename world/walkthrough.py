@@ -330,8 +330,46 @@ UPPER_ELEVATOR = [
     Cmd("northeast", expect=("Comm Room",), note="reach the first reactor system"),
 ]
 
+def _floyd_with(gs):
+    from world.walkthrough import _by_zil
+    floyd = _by_zil("FLOYD")
+    return bool(floyd and gs.player and floyd.location is gs.player.location)
+
+
+# Milestone 5: get the lower-elevator card and ride down to the waiting area.
+# The deterministic route is to take the card from a de-activated Floyd
+# (search him while off), avoiding the day-2 friendly-reveal RNG. Then ride
+# the upper car back to the lobby and the lower car down to the waiting area.
+# (Each push is preceded by re-sliding that car's card, which refreshes the
+# timed turn-off so the trip can't be stranded by the demon.)
+LOWER_ELEVATOR = [
+    Cmd("turn off floyd", expect=("betrayal",)),
+    Cmd("search floyd", expect=("Loowur Elavaatur",),
+        check=lambda gs: gs.flags.get("CARD-STOLEN")),
+    Cmd("turn on robot", note="reactivate Floyd"),
+    # Ride the upper car back down to the lobby.
+    Cmd("southwest", expect=("Tower Core",)),
+    Cmd("north", expect=("Upper Elevator",)),
+    Cmd("slide upper elevator card through slot", expect=("Elevator enabled",)),
+    Cmd("push down button", expect=("vertical movement",)),
+    WaitUntil(lambda gs: not gs.flags.get("ELEVATOR-IN-TRANSIT")),
+    Cmd("out", expect=("Elevator Lobby",)),
+    # Call, board, enable, and ride the lower car down to the waiting area.
+    Cmd("press red button", expect=("vibrating",)),
+    WaitUntil(lambda gs: _door_open("LOWER-ELEVATOR-DOOR"),
+              note="wait for the lower car to arrive"),
+    Cmd("south", expect=("Lower Elevator",)),
+    Cmd("slide lower elevator card through slot", expect=("Elevator enabled",),
+        check=lambda gs: gs.flags.get("LOWER-ELEVATOR-ON")),
+    Cmd("push down button", expect=("vertical movement",)),
+    WaitUntil(lambda gs: not gs.flags.get("ELEVATOR-IN-TRANSIT")),
+    Cmd("out", expect=("Waiting Area",), check=_floyd_with,
+        note="Floyd rides down with you"),
+]
+
 WALKTHROUGH: list = (list(ESCAPE_POD) + list(DESCEND_AND_FLOYD)
-                     + list(TOOLS_AND_CARDS) + list(UPPER_ELEVATOR))
+                     + list(TOOLS_AND_CARDS) + list(UPPER_ELEVATOR)
+                     + list(LOWER_ELEVATOR))
 
 
 def dev_run(steps=None, verbose=True):
