@@ -455,6 +455,54 @@ def handle_red_elevator_button(ctx: ObjAction) -> bool:
     return True
 
 
+_ELEVATOR_STARTS = ("The elevator door slides shut. After a moment, you feel a "
+                    "sensation of vertical movement.")
+
+
+def handle_elevator_button(ctx: ObjAction) -> bool:
+    """ELEVATOR-BUTTON-F (compone.zil:2607) — the inside Up/Down button.
+
+    Moves the car between levels: it must be the enabled car, in this elevator,
+    standing at the right end of the shaft, and not already mid-trip. Pushing
+    starts the trip (closes the door, queues I-*-ELEVATOR-TRIP), which arrives
+    a few turns later to re-open the door at the far level.
+    """
+    caller, v = ctx.caller, ctx.verb
+    if v == "V-PUSH":
+        caller.msg("You must specify whether you want to push the Up button or "
+                   "the Down button.")
+        return True
+    if v not in ("V-PUSH-UP", "V-PUSH-DOWN"):
+        return False
+
+    gs = _gs()
+    if gs is None:
+        return False
+    here = _here_zil(caller)
+    want_up = (v == "V-PUSH-UP")
+    in_transit = gs.flags.get("ELEVATOR-IN-TRANSIT")
+
+    def _start(door_id, maker, ticks):
+        door = _by_zil_id(door_id)
+        if door:
+            door.db.is_open = False
+        gs.flags["ELEVATOR-IN-TRANSIT"] = True
+        _queue(gs, maker, ticks)
+        caller.msg(_ELEVATOR_STARTS)
+
+    if (here == "LOWER-ELEVATOR" and gs.flags.get("LOWER-ELEVATOR-ON")
+            and not in_transit
+            and gs.flags.get("LOWER-ELEVATOR-UP") != want_up):
+        _start("LOWER-ELEVATOR-DOOR", "make_i_lower_elevator_trip", 100)
+    elif (here == "UPPER-ELEVATOR" and gs.flags.get("UPPER-ELEVATOR-ON")
+            and not in_transit
+            and gs.flags.get("UPPER-ELEVATOR-UP") != want_up):
+        _start("UPPER-ELEVATOR-DOOR", "make_i_upper_elevator_trip", 50)
+    else:
+        caller.msg("Nothing happens.")
+    return True
+
+
 def handle_blather(ctx: ObjAction) -> bool:
     """BLATHER-F (globals.zil:739) — Ensign Blather's verb responses."""
     v = ctx.verb
@@ -2166,6 +2214,7 @@ ROOM_HANDLERS.update({
 OBJ_HANDLERS.update({
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,
     "RED-ELEVATOR-BUTTON-F": handle_red_elevator_button,
+    "ELEVATOR-BUTTON-F": handle_elevator_button,
     "BLATHER-F": handle_blather,
     "AMBASSADOR-F": handle_ambassador,
     # Subsystem 10 scenery.

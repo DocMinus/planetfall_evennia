@@ -26,6 +26,8 @@ from world.interrupts import (
     make_i_fall_asleep,
     make_i_upper_elevator_arrive,
     make_i_lower_elevator_arrive,
+    make_i_upper_elevator_trip,
+    make_i_lower_elevator_trip,
     make_i_turnoff_upper_elevator,
     make_i_turnoff_lower_elevator,
     make_i_turnoff_teleportation,
@@ -58,6 +60,8 @@ _MAKER_BY_NAME = {
     # a press that hasn't yet "arrived" survives a reload.
     "i_upper_elevator_arrive": make_i_upper_elevator_arrive,
     "i_lower_elevator_arrive": make_i_lower_elevator_arrive,
+    "i_upper_elevator_trip": make_i_upper_elevator_trip,
+    "i_lower_elevator_trip": make_i_lower_elevator_trip,
     # Card-access turnoff / close demons (queued on demand by SLOT-F).
     "i_turnoff_upper_elevator": make_i_turnoff_upper_elevator,
     "i_turnoff_lower_elevator": make_i_turnoff_lower_elevator,
@@ -86,6 +90,8 @@ _DEFAULT_TICKS = {
     "i_fall_asleep": 16,
     "i_upper_elevator_arrive": 50,
     "i_lower_elevator_arrive": 100,
+    "i_upper_elevator_trip": 50,
+    "i_lower_elevator_trip": 100,
     "i_turnoff_upper_elevator": 180,
     "i_turnoff_lower_elevator": 200,
     "i_turnoff_teleportation": 30,

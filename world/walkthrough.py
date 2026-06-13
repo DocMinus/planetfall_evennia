@@ -271,6 +271,10 @@ TOOLS_AND_CARDS = [
     Cmd("north", expect=("Admin Corridor South",)),
     Cmd("search crevice", expect=("shiny steel key",)),
     Cmd("get key with magnet", expect=("magnet attracts the key",)),
+    # Drop the magnet here: a carried magnet scrambles any held access card
+    # (I-MAGNET), so it must not travel with the cards. Retrieved later for
+    # the relay speck.
+    Cmd("drop magnet"),
     # Back to the padlock; unlock, remove, open the storage door, get the ladder.
     Cmd("south", expect=("Corridor Junction",)),
     Cmd("west", expect=("Dorm Corridor",)),
@@ -301,7 +305,33 @@ TOOLS_AND_CARDS = [
         check=lambda gs: _carries(gs.player, "UPPER-ELEVATOR-CARD", "KITCHEN-CARD")),
 ]
 
-WALKTHROUGH: list = list(ESCAPE_POD) + list(DESCEND_AND_FLOYD) + list(TOOLS_AND_CARDS)
+# Milestone 4: ride the upper elevator from the lobby to the tower core.
+# Call the car (blue button) and wait for it to arrive, board it, enable it
+# with the upper card, push Up, ride to the tower, and step out to COMM-ROOM
+# (the first of the three reactor systems is up here).
+UPPER_ELEVATOR = [
+    Cmd("east", expect=("Admin Corridor North",), note="leave the office"),
+    Cmd("south", expect=("Admin Corridor",), note="recross the rift"),
+    Cmd("south", expect=("Admin Corridor South",)),
+    Cmd("south", expect=("Corridor Junction",)),
+    Cmd("east", expect=("Elevator Lobby",)),
+    Cmd("press blue button", expect=("whirring",), note="call the upper car"),
+    WaitUntil(lambda gs: _door_open("UPPER-ELEVATOR-DOOR"),
+              note="wait for the upper car to arrive"),
+    Cmd("north", expect=("Upper Elevator",), note="board the car"),
+    Cmd("slide upper elevator card through slot", expect=("Elevator enabled",),
+        check=lambda gs: gs.flags.get("UPPER-ELEVATOR-ON")),
+    Cmd("push up button", expect=("sensation of vertical movement",),
+        check=lambda gs: gs.flags.get("ELEVATOR-IN-TRANSIT")),
+    WaitUntil(lambda gs: not gs.flags.get("ELEVATOR-IN-TRANSIT"),
+              note="ride up to the tower core"),
+    Cmd("out", expect=("Tower Core",),
+        check=lambda gs: gs.flags.get("UPPER-ELEVATOR-UP")),
+    Cmd("northeast", expect=("Comm Room",), note="reach the first reactor system"),
+]
+
+WALKTHROUGH: list = (list(ESCAPE_POD) + list(DESCEND_AND_FLOYD)
+                     + list(TOOLS_AND_CARDS) + list(UPPER_ELEVATOR))
 
 
 def dev_run(steps=None, verbose=True):

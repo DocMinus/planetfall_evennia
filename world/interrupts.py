@@ -785,6 +785,42 @@ def make_i_turnoff_lower_elevator(gs: "GameState", state: dict | None = None):
                     "i_turnoff_lower_elevator", requeue_if_transit=True)
 
 
+def make_i_upper_elevator_trip(gs: "GameState", state: dict | None = None):
+    """I-UPPER-ELEVATOR-TRIP (compone.zil:2674) — the car finishes its run.
+
+    Toggles UPPER-ELEVATOR-UP, clears ELEVATOR-IN-TRANSIT, and re-opens the
+    door. Queued by the inside ELEVATOR-BUTTON when you push Up/Down.
+    """
+    def i_upper_elevator_trip() -> bool:
+        gs.flags["UPPER-ELEVATOR-UP"] = not gs.flags.get("UPPER-ELEVATOR-UP")
+        gs.flags["ELEVATOR-IN-TRANSIT"] = False
+        door = _by_zil_id("UPPER-ELEVATOR-DOOR")
+        if door:
+            door.db.is_open = True
+        if _here_id(gs) == "UPPER-ELEVATOR":
+            _send(gs, "\nThe elevator door slides open.")
+        return False
+    i_upper_elevator_trip.__name__ = "i_upper_elevator_trip"
+    i_upper_elevator_trip._state = {}
+    return i_upper_elevator_trip
+
+
+def make_i_lower_elevator_trip(gs: "GameState", state: dict | None = None):
+    """I-LOWER-ELEVATOR-TRIP (compone.zil:2689) — the car finishes its run."""
+    def i_lower_elevator_trip() -> bool:
+        gs.flags["LOWER-ELEVATOR-UP"] = not gs.flags.get("LOWER-ELEVATOR-UP")
+        gs.flags["ELEVATOR-IN-TRANSIT"] = False
+        door = _by_zil_id("LOWER-ELEVATOR-DOOR")
+        if door:
+            door.db.is_open = True
+        if _here_id(gs) == "LOWER-ELEVATOR":
+            _send(gs, "\nThe elevator door slides open.")
+        return False
+    i_lower_elevator_trip.__name__ = "i_lower_elevator_trip"
+    i_lower_elevator_trip._state = {}
+    return i_lower_elevator_trip
+
+
 def make_i_turnoff_teleportation(gs: "GameState", state: dict | None = None):
     def i_turnoff_teleportation() -> bool:
         gs.flags["TELEPORTATION-ON"] = False
