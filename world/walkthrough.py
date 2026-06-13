@@ -417,9 +417,36 @@ DAY2_DESCENT = [
         note="Floyd rides down with you"),
 ]
 
+# Milestone 6: drive the maglev shuttle across the gorge to Lawanda. Board
+# ALFIE, enter a control cabin, power it with the shuttle card, then run the
+# speed puzzle: accelerate to velocity 20, coast, and decelerate so the car
+# arrives at velocity 0 on counter 24 (vel<20 crashes the car, vel>=20 kills
+# you). Then climb out to the Fork, the deep-complex hub.
+SHUTTLE = [
+    EatIfHungry(),
+    Cmd("east", expect=("Kalamontee Platform",)),
+    Cmd("south", expect=("Shuttle Car Alfie",), note="board ALFIE"),
+    Cmd("east", expect=("Alfie Control East",), note="into the control cabin"),
+    Cmd("slide shuttle card through slot", expect=("activated",),
+        check=lambda gs: gs.flags.get("SHUTTLE-ON")),
+    Cmd("push up lever", expect=("upper position",), note="accelerate"),
+    Cmd("wait"), Cmd("wait"), Cmd("wait"),   # +5 velocity/turn -> 20
+    Cmd("pull down lever", expect=("central position",), note="coast at 20"),
+    WaitUntil(lambda gs: gs.flags.get("SHUTTLE-COUNTER", 0) >= 20,
+              note="coast until nearly there"),
+    Cmd("pull down lever", expect=("lower position",), note="decelerate"),
+    WaitUntil(lambda gs: not gs.flags.get("SHUTTLE-MOVING"),
+              note="glide to a stop"),
+    Cmd("west", expect=("Shuttle Car Alfie",),
+        check=lambda gs: not gs.flags.get("ALFIE-BROKEN"), note="clean arrival"),
+    Cmd("north", expect=("Lawanda Platform",), note="across the gorge"),
+    Cmd("up", expect=("Escalator",)),
+    Cmd("up", expect=("Fork",), check=_floyd_with, note="deep-complex hub"),
+]
+
 WALKTHROUGH: list = (list(ESCAPE_POD) + list(DESCEND_AND_FLOYD)
                      + list(TOOLS_AND_CARDS) + list(DAY1_SLEEP)
-                     + list(DAY2_DESCENT))
+                     + list(DAY2_DESCENT) + list(SHUTTLE))
 
 
 def dev_run(steps=None, verbose=True):

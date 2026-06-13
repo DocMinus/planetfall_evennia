@@ -960,7 +960,12 @@ def make_i_magnet(gs: "GameState", state: dict | None = None):
 
 def make_i_turnoff_shuttle(gs: "GameState", state: dict | None = None):
     def i_turnoff_shuttle() -> bool:
-        gs.flags["SHUTTLE-ON"] = False
+        # ZIL I-TURNOFF-SHUTTLE (globals.zil): never cut power mid-trip — defer
+        # while the car is moving, or the lever locks and you can't decelerate.
+        if gs.flags.get("SHUTTLE-MOVING"):
+            gs.scheduler.enable(gs.scheduler.queue(i_turnoff_shuttle, 80))
+        else:
+            gs.flags["SHUTTLE-ON"] = False
         return False
     i_turnoff_shuttle.__name__ = "i_turnoff_shuttle"
     i_turnoff_shuttle._state = {}
