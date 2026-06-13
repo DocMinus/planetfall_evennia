@@ -310,6 +310,10 @@ TOOLS_AND_CARDS = [
     Cmd("northeast", expect=("Mech Corridor South",)),
     Cmd("north", expect=("Mech Corridor",)),
     Cmd("north", expect=("Mech Corridor North",)),
+    # Detour into storage east for the good bedistor (the course-control spare).
+    Cmd("east", expect=("Storage East",)),
+    Cmd("take good bedistor", check=lambda gs: _carries(gs.player, "GOOD-BEDISTOR")),
+    Cmd("west", expect=("Mech Corridor North",)),
     Cmd("north", expect=("Corridor Junction",)),
     Cmd("north", expect=("Admin Corridor South",)),
     Cmd("search crevice", expect=("shiny steel key",)),
@@ -399,8 +403,11 @@ DAY2_DESCENT = [
     Cmd("take survival kit", note="food first — eating needs it back"),
     Cmd("take laser"),
     Cmd("take shuttle card"),
+    Cmd("take good bedistor"),
+    Cmd("take pliers"),
     Cmd("take lower elevator card",
-        check=lambda gs: _carries(gs.player, "LOWER-ELEVATOR-CARD", "SHUTTLE-CARD", "LASER", "FOOD-KIT")),
+        check=lambda gs: _carries(gs.player, "LOWER-ELEVATOR-CARD", "SHUTTLE-CARD",
+                                  "LASER", "FOOD-KIT", "GOOD-BEDISTOR", "PLIERS")),
     EatIfHungry(),
     Cmd("north", expect=("Dorm Corridor",)),
     Cmd("east", expect=("Corridor Junction",), note="long-hall transit"),
@@ -444,9 +451,25 @@ SHUTTLE = [
     Cmd("up", expect=("Fork",), check=_floyd_with, note="deep-complex hub"),
 ]
 
+# Milestone 7: repair planetary course control. In the course-control room,
+# open the cube, pull its fused bedistor with the pliers, and drop in the good
+# one — averting the orbital decay (+6). (Note "fused", not "bad": that's the
+# bedistor's actual adjective; "bad" would tie with the carried good one.)
+COURSE_CONTROL = [
+    EatIfHungry(),
+    Cmd("northeast", expect=("Systems Corridor West",)),
+    Cmd("east", expect=("Systems Corridor",)),
+    Cmd("east", expect=("Systems Corridor East",)),
+    Cmd("north", expect=("Course Control",)),
+    Cmd("open cube", expect=("swings open",)),
+    Cmd("remove fused bedistor with pliers", expect=("remove the fused bedistor",)),
+    Cmd("put good bedistor in cube", expect=("warning lights go out",),
+        check=lambda gs: gs.flags.get("COURSE-CONTROL-FIXED") and gs.score == 12),
+]
+
 WALKTHROUGH: list = (list(ESCAPE_POD) + list(DESCEND_AND_FLOYD)
                      + list(TOOLS_AND_CARDS) + list(DAY1_SLEEP)
-                     + list(DAY2_DESCENT) + list(SHUTTLE))
+                     + list(DAY2_DESCENT) + list(SHUTTLE) + list(COURSE_CONTROL))
 
 
 def dev_run(steps=None, verbose=True):
