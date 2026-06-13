@@ -248,7 +248,60 @@ DESCEND_AND_FLOYD = [
         check=lambda gs: gs.score == 2, note="Floyd activation awards +2"),
 ]
 
-WALKTHROUGH: list = list(ESCAPE_POD) + list(DESCEND_AND_FLOYD)
+def _carries(char, *zil_ids):
+    have = {o.db.zil_id for o in char.contents}
+    have |= {o.db.zil_id for c in char.contents for o in c.contents}  # one level in
+    return all(z in have for z in zil_ids)
+
+
+# Milestone 3: collect the workshop tools, then the brig/access puzzle —
+# fish the key out of the crevice with the magnet, unlock & remove the
+# padlock, fetch the ladder, span the rift, and cross to the offices to take
+# the upper-elevator and kitchen access cards.
+TOOLS_AND_CARDS = [
+    # Workshop tools (laser, magnet, pliers, flask) needed downstream.
+    Cmd("northwest", expect=("Mech Corridor South",)),
+    Cmd("southwest", expect=("Tool Room",)),
+    Cmd("take magnet"), Cmd("take pliers"), Cmd("take laser"), Cmd("take flask"),
+    # To the crevice and fish out the key with the magnet.
+    Cmd("northeast", expect=("Mech Corridor South",)),
+    Cmd("north", expect=("Mech Corridor",)),
+    Cmd("north", expect=("Mech Corridor North",)),
+    Cmd("north", expect=("Corridor Junction",)),
+    Cmd("north", expect=("Admin Corridor South",)),
+    Cmd("search crevice", expect=("shiny steel key",)),
+    Cmd("get key with magnet", expect=("magnet attracts the key",)),
+    # Back to the padlock; unlock, remove, open the storage door, get the ladder.
+    Cmd("south", expect=("Corridor Junction",)),
+    Cmd("west", expect=("Dorm Corridor",)),
+    Cmd("west", expect=("Mess Corridor",)),
+    Cmd("unlock padlock with key", expect=("padlock springs open",)),
+    Cmd("take padlock", check=lambda gs: gs.flags.get("PADLOCK-REMOVED")),
+    Cmd("open storage door", expect=("Opened",)),
+    Cmd("north", expect=("Storage West",)),
+    Cmd("take ladder"),
+    # Carry the ladder to the rift, extend it, span the gap, cross over.
+    Cmd("south", expect=("Mess Corridor",)),
+    Cmd("east", expect=("Dorm Corridor",)),
+    Cmd("east", expect=("Corridor Junction",)),
+    Cmd("north", expect=("Admin Corridor South",)),
+    Cmd("north", expect=("Admin Corridor",)),
+    Cmd("drop ladder"),
+    Cmd("open ladder", expect=("extends to a length",)),
+    Cmd("put ladder across rift", expect=("spanning the precipice",),
+        check=lambda gs: gs.flags.get("LADDER-FLAG")),
+    Cmd("north", expect=("Admin Corridor North",), note="cross the rift"),
+    # Offices: take the elevator + kitchen cards from the small desk.
+    Cmd("west", expect=("Small Office",)),
+    Cmd("open small desk", expect=("Opened",)),
+    # Space-separated, not "upper-elevator": a hyphenated token matches neither
+    # the UPPER nor ELEVATOR adjective, tying with the carried ID-CARD on "card".
+    Cmd("take upper elevator card", expect=("Taken",)),
+    Cmd("take kitchen card", expect=("Taken",),
+        check=lambda gs: _carries(gs.player, "UPPER-ELEVATOR-CARD", "KITCHEN-CARD")),
+]
+
+WALKTHROUGH: list = list(ESCAPE_POD) + list(DESCEND_AND_FLOYD) + list(TOOLS_AND_CARDS)
 
 
 def dev_run(steps=None, verbose=True):
