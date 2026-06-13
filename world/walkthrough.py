@@ -98,19 +98,7 @@ class Driver:
 
     def _emit(self, cmd_text):
         self._buf = []
-        before = self.char.location
         self.char.execute_cmd(cmd_text)
-        # The account-less tester never triggers Room.at_object_receive, so fire
-        # on_enter ourselves on a room change — this is what delivers M-ENTER
-        # room handlers (e.g. the Station 384 un-shrink) and the room-VALUE
-        # scoring a real puppeted player would get. Loop in case M-ENTER moves
-        # us again (the booth wrench).
-        for _ in range(5):
-            here = self.char.location
-            if here is before or here is None:
-                break
-            before = here
-            here.on_enter(self.char)
         out = "\n".join(self._buf)
         self.log.append(f"> {cmd_text}\n{out}")
         if self.verbose:
@@ -247,6 +235,7 @@ def fresh_game(char_key="WalkthroughTester", reload=True):
     for item in list(char.contents):
         item.delete()
     char.location = deck_nine
+    char.db.pf_walkthrough = True   # get player-style M-ENTER / room scoring
     char.db.starter_items_given = False
     char._give_starter_items()
     char.db.starter_items_given = True

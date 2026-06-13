@@ -36,7 +36,10 @@ class PlanetfallRoom(ObjectParent, DefaultRoom):
 
     def at_object_receive(self, moved_obj, source_location, move_type="move", **kwargs):
         super().at_object_receive(moved_obj, source_location, move_type=move_type, **kwargs)
-        if moved_obj.has_account:
+        # Fire M-ENTER (and room scoring) for the player. has_account is the
+        # normal "is the player" proxy; the account-less walkthrough tester sets
+        # db.pf_walkthrough so it gets the same in-move entry handling/timing.
+        if moved_obj.has_account or moved_obj.db.pf_walkthrough:
             self.on_enter(moved_obj)
 
 
