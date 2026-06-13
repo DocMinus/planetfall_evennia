@@ -467,9 +467,40 @@ COURSE_CONTROL = [
         check=lambda gs: gs.flags.get("COURSE-CONTROL-FIXED") and gs.score == 12),
 ]
 
+# Milestone 8: Floyd's bio-lock foray for the mini-booth card. Show Floyd the
+# broken computer (he frets, COMPUTER-FLAG), then take him to the bio-lock,
+# where he offers to brave the mutant lab for the card. Play the door dance —
+# open (he rushes in), close (growls), wait (he knocks), open (he stumbles out
+# with the card), close (he succumbs) — then take the mini-card he died for.
+BIO_FORAY = [
+    EatIfHungry(),
+    Cmd("south", expect=("Systems Corridor East",)),
+    Cmd("south", expect=("Library Lobby",)),
+    Cmd("south", expect=("Project Corridor East",)),
+    Cmd("south", expect=("Computer Room",)),
+    WaitUntil(lambda gs: gs.flags.get("COMPUTER-FLAG"),
+              note="Floyd recognises the broken computer"),
+    Cmd("northeast", expect=("Main Lab",)),
+    Cmd("open west door", expect=("Opened",)),
+    Cmd("southeast", expect=("Bio Lock West",)),
+    Cmd("east", expect=("Bio Lock East",)),
+    WaitUntil(lambda gs: gs.flags.get("FLOYD-WAITING"),
+              note="Floyd peers in and offers to fetch the card"),
+    Cmd("open door", expect=("plunges into the Bio Lab",),
+        check=lambda gs: gs.flags.get("FORAY-COUNTER") == 1),
+    Cmd("close door", check=lambda gs: gs.flags.get("FORAY-COUNTER") == 2),
+    Cmd("wait", check=lambda gs: gs.flags.get("FORAY-COUNTER") == 3, note="the knock"),
+    Cmd("open door", expect=("stumbles out",),
+        check=lambda gs: gs.flags.get("FORAY-COUNTER") == 4),
+    Cmd("close door", check=lambda gs: gs.score == 14, note="Floyd's sacrifice (+2)"),
+    Cmd("take mini card", expect=("Taken",),
+        check=lambda gs: _carries(gs.player, "MINI-CARD")),
+]
+
 WALKTHROUGH: list = (list(ESCAPE_POD) + list(DESCEND_AND_FLOYD)
                      + list(TOOLS_AND_CARDS) + list(DAY1_SLEEP)
-                     + list(DAY2_DESCENT) + list(SHUTTLE) + list(COURSE_CONTROL))
+                     + list(DAY2_DESCENT) + list(SHUTTLE) + list(COURSE_CONTROL)
+                     + list(BIO_FORAY))
 
 
 def dev_run(steps=None, verbose=True):
