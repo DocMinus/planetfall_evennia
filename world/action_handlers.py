@@ -1894,6 +1894,13 @@ def _eat_resets_hunger(gs, caller, obj, requeue_ticks: int, flavor: str) -> None
     caller.ndb.pf_elapsed = 15
     gs.flags["HUNGER-LEVEL"] = 0
     import world.interrupts as I
+    # ZIL DEQUEUE first (globals.zil): drop any pending hunger-warning timer —
+    # including the short-interval escalation ones — before re-arming, or the
+    # orphaned timer keeps firing and eating only stacks more warnings.
+    gs.scheduler._interrupts = [
+        i for i in gs.scheduler._interrupts
+        if getattr(i.routine, "__name__", None) != "i_hunger_warnings"
+    ]
     gs.scheduler.enable(gs.scheduler.queue(I.make_i_hunger_warnings(gs), requeue_ticks))
     caller.msg(flavor)
 
