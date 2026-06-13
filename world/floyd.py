@@ -47,6 +47,19 @@ FLOYDISMS = [
 # The ZIL id of the eastern Bio Lab door — gate for Floyd's foray resolution.
 _BIO_DOOR_ZIL_ID = "BIO-DOOR-EAST"
 
+# Tight rooms Floyd always squeezes into even when his normal follow check
+# fails (ZIL I-FLOYD absent branch, compone.zil:2206-2249). Without this he
+# can't ride the elevators or make the bio-lock card foray.
+_FLOYD_ALWAYS_FOLLOW = frozenset({
+    "BOOTH-1", "BOOTH-2", "BOOTH-3",
+    "BIO-LOCK-EAST", "BIO-LOCK-WEST",
+    "RADIATION-LOCK-EAST", "RADIATION-LOCK-WEST",
+    "ALFIE-CONTROL-EAST", "ALFIE-CONTROL-WEST",
+    "BETTY-CONTROL-EAST", "BETTY-CONTROL-WEST",
+    "UPPER-ELEVATOR", "LOWER-ELEVATOR", "REACTOR-ELEVATOR",
+    "MINI-BOOTH",
+})
+
 
 def _by_zil_id(zil_id: str):
     """Return the first Evennia object whose db.zil_id matches, or None."""
@@ -131,7 +144,9 @@ class FloydNPC:
         else:
             self._floyd_absent(player_room)
 
-        self.follow = (self.current_room == player_room)
+        # NB: self.follow is managed inside _floyd_present / _floyd_absent (ZIL
+        # FLOYD-FOLLOW). It must NOT be re-latched to presence here — doing so
+        # permanently strands Floyd after a single missed follow.
         return False
 
     def i_floyd_foray(self) -> bool:
@@ -198,13 +213,18 @@ class FloydNPC:
             self._print('A small robot with large, friendly eyes rolls up to you. "Hi! Floyd\'s name is Floyd!"')
             return
 
-        # 6% chance Floyd wanders off to explore
+        # 6% chance Floyd wanders off to explore (ZIL PROB 6 + FLOYDBIT room).
         if self.follow and self._room_is_floydbit(room) and random.random() < 0.06:
-            self._print("Floyd wanders off to explore on his own.")
+            self._print("Floyd says \"Floyd going exploring. See you later.\" "
+                        "He glides out of the room.")
+            self.follow = False
             new_room = self._pick_adjacent_room(room)
             self.current_room = new_room
             self._move_floyd_obj(new_room)
             return
+
+        # Present and staying: he's following you (ZIL SETG FLOYD-FOLLOW T).
+        self.follow = True
 
         # 40% chance of idle comment
         if not self.spoke and random.random() < 0.40:
@@ -212,25 +232,48 @@ class FloydNPC:
             self._print(f"Floyd {random.choice(FLOYDISMS)}")
 
     def _floyd_absent(self, player_room: str) -> None:
-        """Floyd is elsewhere but was recently with the player (compone.zil:2186-2249)."""
-        if not self.follow:
+        """Floyd is elsewhere but was recently with the player (compone.zil:2186-2249).
+
+        Faithful to I-FLOYD's "active but not present" branch: an 80% normal
+        follow; otherwise he still reliably squeezes into the tight special
+        rooms (elevators, booths, air-locks, control cabins) and otherwise has
+        a ~30% chance to catch up — so a single missed follow never strands him.
+        """
+        # Normal follow.
+        if self.follow and random.random() < 0.80:
+            self._follow_player(player_room)
             return
 
-        # 80% chance Floyd follows the player
-        if random.random() < 0.80:
+        # He lost the trail this turn (ZIL SETG FLOYD-FOLLOW <>), but...
+        self.follow = False
+        if player_room in _FLOYD_ALWAYS_FOLLOW:
+            # Bio-lock is refused once he's given up on the foray.
+            if player_room in ("BIO-LOCK-EAST", "BIO-LOCK-WEST") and self.gave_up:
+                return
+            self._follow_player(player_room)
+        elif random.random() < 0.30:
             self._follow_player(player_room)
 
     def _follow_player(self, player_room: str) -> None:
         """Move Floyd to player's room with appropriate description."""
         special_messages = {
-            "BOOTH-1": "Floyd scampers in after you.",
-            "BOOTH-2": "Floyd scampers in after you.",
-            "BOOTH-3": "Floyd scampers in after you.",
-            "BIO-LOCK-WEST": 'Floyd glides in. "Squash court?"',
-            "BIO-LOCK-EAST": 'Floyd glides in. "Squash court?"',
-            "MESS-HALL": '"Hey, wait for Floyd!" Floyd bounces in.',
-            "ELEVATOR":  '"Hey, wait for Floyd!" Floyd bounces in.',
-            "MINI-BOOTH": "Floyd squeezes in with a metallic groan.",
+            "BOOTH-1": '"Oooo, this is a tiny room," Floyd remarks, scampering in.',
+            "BOOTH-2": '"Oooo, this is a tiny room," Floyd remarks, scampering in.',
+            "BOOTH-3": '"Oooo, this is a tiny room," Floyd remarks, scampering in.',
+            "BIO-LOCK-WEST": 'Floyd glides after you. "Is this...is this a squash court?" he asks.',
+            "BIO-LOCK-EAST": 'Floyd glides after you. "Is this...is this a squash court?" he asks.',
+            "RADIATION-LOCK-WEST": 'Floyd glides after you. "Is this...is this a squash court?" he asks.',
+            "RADIATION-LOCK-EAST": 'Floyd glides after you. "Is this...is this a squash court?" he asks.',
+            "MESS-HALL": '"Hey, wait for Floyd!" Floyd bounces into the room, smiling broadly.',
+            "UPPER-ELEVATOR": '"Hey, wait for Floyd!" Floyd bounces into the elevator, smiling broadly.',
+            "LOWER-ELEVATOR": '"Hey, wait for Floyd!" Floyd bounces into the elevator, smiling broadly.',
+            "REACTOR-ELEVATOR": '"Hey, wait for Floyd!" Floyd bounces into the elevator, smiling broadly.',
+            "ALFIE-CONTROL-EAST": '"Hey, wait for Floyd!" Floyd bounces into the cabin, smiling broadly.',
+            "ALFIE-CONTROL-WEST": '"Hey, wait for Floyd!" Floyd bounces into the cabin, smiling broadly.',
+            "BETTY-CONTROL-EAST": '"Hey, wait for Floyd!" Floyd bounces into the cabin, smiling broadly.',
+            "BETTY-CONTROL-WEST": '"Hey, wait for Floyd!" Floyd bounces into the cabin, smiling broadly.',
+            "MINI-BOOTH": '"Hi," whispers Floyd, tiptoeing in. "Are we going to '
+                          'teleport into the computer like Achilles always used to do?"',
         }
         msg = special_messages.get(player_room, "Floyd follows you.")
         self._print(msg)
