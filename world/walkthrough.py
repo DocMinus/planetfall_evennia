@@ -405,6 +405,16 @@ DAY1_SLEEP = [
     Cmd("south", expect=("Admin Corridor South",)),
     Cmd("south", expect=("Corridor Junction",)),
     Cmd("west", expect=("Dorm Corridor",), note="long-hall transit"),
+    # Maximal-scoring detour: visit the Kitchen (+4 first-visit VALUE). The
+    # kitchen card is unscrambled (the magnet was dropped long before we took
+    # it), so the slot opens the door; step in to bank the points, then back.
+    Cmd("west", expect=("Mess Corridor",)),
+    Cmd("south", expect=("Mess Hall",)),
+    Cmd("slide kitchen card through slot", expect=("slides open",)),
+    Cmd("south", expect=("Kitchen",)),
+    Cmd("north", expect=("Mess Hall",)),
+    Cmd("north", expect=("Mess Corridor",)),
+    Cmd("east", expect=("Dorm Corridor",)),
     Cmd("south", expect=("Dorm C",)),
     # Take Floyd's lower-elevator card here: the magnet is long dropped (so the
     # card won't scramble) and Floyd reliably catches up in the dorm. Search the
@@ -492,14 +502,44 @@ COURSE_CONTROL = [
         check=lambda gs: gs.flags.get("COURSE-CONTROL-FIXED")),
 ]
 
+# Milestone 7b (maximal): repair planetary defense (+6). The good fromitz board
+# is walled up in the repair room's robot hole — too small for us, but Floyd
+# squeezes through and fetches it. Carry it to the defense room, open the access
+# panel, and seat the good board to silence the discrimination-circuit alarm.
+# (Floyd must be present in the repair room for the fetch; he follows us down.)
+DEFENSE = [
+    EatIfHungry(),
+    Cmd("south", expect=("Systems Corridor East",), note="leave course control"),
+    Cmd("west", expect=("Systems Corridor",)),
+    Cmd("west", expect=("Systems Corridor West",)),
+    Cmd("north", expect=("Repair Room",)),
+    WaitUntil(_floyd_with, max_waits=20, note="let Floyd catch up for the fetch"),
+    # "point at hole" (V-POINT) is the ported trigger for Floyd's foray through
+    # the robot hole; he returns with the shiny board (cleared INVISIBLE).
+    Cmd("point at hole", expect=("shiny fromitz board",),
+        check=lambda gs: gs.flags.get("HOLE-TRIP-FLAG")),
+    Cmd("take good board", check=lambda gs: _carries(gs.player, "GOOD-BOARD")),
+    Cmd("south", expect=("Systems Corridor West",)),
+    Cmd("east", expect=("Systems Corridor",)),
+    Cmd("north", expect=("Planetary Defense",)),
+    Cmd("open access panel", expect=("swings open",)),
+    # The panel starts full; the failed board (the only removable one — the
+    # others shock you) must come out first to free the socket.
+    Cmd("take second board", expect=("empty socket",)),
+    Cmd("put good board in panel", expect=("warning lights stop flashing",),
+        check=lambda gs: gs.flags.get("DEFENSE-FIXED")),
+    Cmd("south", expect=("Systems Corridor",)),
+    Cmd("east", expect=("Systems Corridor East",)),
+]
+
 # Milestone 8: Floyd's bio-lock foray for the mini-booth card. Show Floyd the
 # broken computer (he frets, COMPUTER-FLAG), then take him to the bio-lock,
 # where he offers to brave the mutant lab for the card. Play the door dance —
 # open (he rushes in), close (growls), wait (he knocks), open (he stumbles out
 # with the card), close (he succumbs) — then take the mini-card he died for.
+# (Enters from Systems Corridor East, where DEFENSE left us.)
 BIO_FORAY = [
     EatIfHungry(),
-    Cmd("south", expect=("Systems Corridor East",)),
     Cmd("south", expect=("Library Lobby",)),
     Cmd("south", expect=("Project Corridor East",)),
     Cmd("south", expect=("Computer Room",)),
@@ -585,7 +625,8 @@ ESCAPE_AND_CRYO = [
 WALKTHROUGH: list = (list(ESCAPE_POD) + list(DESCEND_AND_FLOYD)
                      + list(TOOLS_AND_CARDS) + list(DAY1_SLEEP)
                      + list(DAY2_DESCENT) + list(SHUTTLE) + list(COURSE_CONTROL)
-                     + list(BIO_FORAY) + list(COMPUTER_FIX) + list(ESCAPE_AND_CRYO))
+                     + list(DEFENSE) + list(BIO_FORAY) + list(COMPUTER_FIX)
+                     + list(ESCAPE_AND_CRYO))
 
 
 def dev_run(steps=None, verbose=True):

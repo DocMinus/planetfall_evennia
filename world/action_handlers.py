@@ -1311,6 +1311,46 @@ def handle_board(ctx: ObjAction) -> bool:
     return False
 
 
+def handle_good_board(ctx: ObjAction) -> bool:
+    """GOOD-BOARD-F (comptwo.zil:282) + the FLOYD-F take branch (compone.zil:1887).
+
+    The good board sits walled up in the robot hole with neither NDESCBIT cleared
+    nor TAKEBIT set, so the player cannot grab it directly. Once Floyd has scouted
+    the hole (HOLE-TRIP-FLAG / BOARD-REPORTED), asking for it while Floyd is here
+    has him squeeze back in and toss it to you. ZIL routes this through "floyd,
+    take board"; we accept the natural "take good board" with Floyd present.
+    """
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if v == "V-TAKE":
+        if obj.location is caller:
+            caller.msg("You already have it.")
+            return True
+        floyd = _floyd_obj_here(caller)
+        if floyd is None:
+            # No Floyd to fetch it, and it's too deep in the hole to reach.
+            caller.msg("You can't reach it.")
+            return True
+        if not (gs and gs.flags.get("HOLE-TRIP-FLAG")):
+            caller.msg("\"Huh?\" asks Floyd. \"What fromitz board?\"")
+            return True
+        _set_bit(obj, "NDESCBIT", False)
+        _set_bit(obj, "TAKEBIT", True)
+        obj.move_to(caller, quiet=True, move_type="get")
+        caller.ndb.pf_elapsed = 22
+        caller.msg("Floyd shrugs. \"If you say so.\" He vanishes for a few "
+                   "minutes, and returns holding the fromitz board. It seems to "
+                   "be in good shape. He tosses it toward you, and you just "
+                   "manage to catch it before it smashes.")
+        return True
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        caller.msg("Like most fromitz boards, it is a twisted maze of silicon "
+                   "circuits. It is square, approximately seventeen centimeters "
+                   "on each side. This one looks brand new.")
+        return True
+    return False
+
+
 def handle_cube(ctx: ObjAction) -> bool:
     """CUBE-F (comptwo.zil:545) — Course Control: swap in the good bedistor."""
     obj, caller, v = ctx.obj, ctx.caller, ctx.verb
@@ -2373,6 +2413,7 @@ OBJ_HANDLERS: dict = {
     "SHUTTLE-DOOR-F": handle_shuttle_door,
     "ACCESS-PANEL-F": handle_access_panel,
     "BOARD-F": handle_board,
+    "GOOD-BOARD-F": handle_good_board,
     "CUBE-F": handle_cube,
     "BAD-BEDISTOR-F": handle_bad_bedistor,
     "GOOD-BEDISTOR-F": handle_good_bedistor,
