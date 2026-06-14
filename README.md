@@ -5,24 +5,25 @@ An unofficial fan port of **Planetfall** (1983, Infocom) to
 The game world (105 rooms, 137 objects, 8 NPCs, 200+ verb patterns) is
 derived from the original ZIL source code via a custom extraction pipeline.
 
-> **Status:** Phases 0–14 essentially complete — the game is playable end to
-> end, from the Feinstein's destruction (escape-pod sequence) through the
-> planet-side puzzles to the winning cryo endgame. The clock/interrupt engine,
-> Floyd, scoring, AGAIN/SAVE-RESTORE, and all conditional/transport exits are
-> faithful, and the Phase 13 puzzle subsystems are in: a uniform death/JIGS-UP +
-> win path, the generic verbs, the brig escape, card-slot access, survival
-> (sleep/food/sickness), the shuttle driving sim, the reactor repair (Defense +
-> Course Control + Comm chemistry + laser/miniaturization), the cryo endgame,
-> teleport booths, the Floyd sacrifice, the lab mutant chase, and scenery
-> flavour.
+> **Status:** Phases 0–14 complete — the game is playable end to end, from the
+> Feinstein's destruction (escape-pod sequence) through the planet-side puzzles
+> to the winning cryo endgame. The clock/interrupt engine, Floyd, scoring,
+> AGAIN/SAVE-RESTORE, and all conditional/transport exits are faithful, and the
+> Phase 13 puzzle subsystems are in: a uniform death/JIGS-UP + win path, the
+> generic verbs, the brig escape, card-slot access, survival (sleep/food/
+> sickness), the shuttle driving sim, the reactor repair (Defense + Course
+> Control + Comm chemistry + laser/miniaturization + the strip microbe battle),
+> the cryo endgame, teleport booths, the Floyd sacrifice, the lab mutant chase,
+> and scenery flavour. Every verb in the syntax resolves to a faithful response.
 >
-> **Phase 14 (hardening/validation)** adds a committed end-to-end regression
-> suite: a scripted walkthrough plays the game with real typed commands from the
-> opening pod to a **perfect 80/80 victory** (Galactic Overlord, Floyd revived),
-> and `make test` replays it plus save/restore round-trips, hyphen-token
-> resolution, `take all`, and the timed flood drain. Remaining work is the
-> single-player front-end (Phase 15) and optional scenery flavour, tracked in
-> `EVENNIA_PLAN_4.md` / `EVENNIA_PLAN_5.md`.
+> **Phase 14 (hardening/validation/polish)** adds a committed end-to-end
+> regression suite: a scripted walkthrough plays the game with real typed
+> commands from the opening pod to a **perfect 80/80 victory** (Galactic
+> Overlord, Floyd revived), and `make test` (10 tests) replays it plus
+> save/restore round-trips, hyphen-token resolution, `take all`, the timed flood
+> drain, and the microbe battle. A one-command `make rebuild` recovers a wiped
+> dev DB from scratch. The only remaining work is the single-player front-end
+> (Phase 15), tracked in `EVENNIA_PLAN_5.md`.
 
 ---
 
@@ -136,10 +137,11 @@ The headline test (`WalkthroughRegressionTest`) replays the canonical
 `world/walkthrough.py` — a full DECK-NINE → victory playthrough driven by real
 typed commands — and asserts a **perfect 80/80 win**. It is the regression net
 for the entire critical path (parser → object resolution → verb dispatch →
-movement → clock/interrupt firing → scoring → endgame). The suite also covers
-SAVE/RESTORE round-trips (including a live timed demon mid-countdown),
-hyphen-token object resolution, `take all`, and the timed fungicide flood drain.
-Budget ~20s — the walkthrough drives several thousand internal moves.
+movement → clock/interrupt firing → scoring → endgame). The suite (10 tests)
+also covers SAVE/RESTORE round-trips (including a live timed demon mid-countdown),
+hyphen-token object resolution, `take all`, the timed fungicide flood drain, and
+the strip microbe battle. Budget ~35s — the walkthrough drives several thousand
+internal moves.
 
 ---
 
@@ -167,6 +169,10 @@ planetfall_evennia/
     exit_handlers.py      # PER transport routines (elevators, shuttle, pod, ladder…)
     walkthrough.py        # Scripted real-command playthrough → 80/80 victory
     tests.py              # Regression suite (replays the walkthrough; save/restore; …)
+    devtools.py           # Dev helpers behind `make reset-game` / `make rebuild`
+  scripts/
+    reset_game.py         # `make reset-game` entry point (reset to a pristine start)
+    rebuild_db.py         # `make rebuild` entry point (bootstrap a fresh DB)
   server/conf/
     settings.py           # Evennia settings
 ```
