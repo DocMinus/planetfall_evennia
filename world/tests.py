@@ -18,7 +18,28 @@ test — budget a minute or so. It is the single most valuable test in the suite
 """
 from evennia.utils.test_resources import EvenniaTestCase
 
-from world.walkthrough import WALKTHROUGH, Driver, fresh_game
+from world.walkthrough import (
+    WALKTHROUGH, Driver, fresh_game,
+    ESCAPE_POD, DESCEND_AND_FLOYD, TOOLS_AND_CARDS, COMM, DAY1_SLEEP,
+    DAY2_DESCENT, SHUTTLE, COURSE_CONTROL, DEFENSE, BIO_FORAY,
+    COMPUTER_FIX, ESCAPE_AND_CRYO,
+)
+
+
+def _interrupt_fingerprint(gs):
+    """Name -> (enabled, is_demon, ticks, state) for every queued interrupt.
+
+    Includes each closure's live ``_state`` dict so a restore is checked to
+    reproduce demon counters (blowup/trip/shuttle/chase), not just which
+    interrupts are queued.
+    """
+    fp = {}
+    for intr in gs.scheduler._interrupts:
+        name = getattr(intr.routine, "__name__", None)
+        if name:
+            state = dict(getattr(intr.routine, "_state", {}))
+            fp[name] = (intr.enabled, intr.is_demon, intr.ticks_remaining, state)
+    return fp
 
 
 class WalkthroughRegressionTest(EvenniaTestCase):
@@ -47,3 +68,122 @@ class WalkthroughRegressionTest(EvenniaTestCase):
         self.assertEqual(
             gs.score, 80, f"victory reached but score regressed to {gs.score}/80"
         )
+
+
+class SaveRestoreRoundTripTest(EvenniaTestCase):
+    """Phase 14a.3 — SAVE/RESTORE survives a live mid-game state and continues.
+
+    Play into the deep complex (Floyd's demon running, ~all puzzle flags set,
+    the survival clocks ticking), ``save``, mutate the live game (walk away and
+    let several turns tick), then ``restore`` and assert the snapshot came back
+    intact: room, score, day, clock, every flag, and the full interrupt set.
+    Finally, replay the rest of the walkthrough from the restored state and
+    confirm it still reaches the 80/80 victory — proving the restore produced a
+    genuinely playable game, not just matching scalars.
+    """
+
+    def test_save_restore_midgame_then_finish(self):
+        from world.scheduler_script import get_game_state_script
+
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        drv = Driver(char, gs, verbose=False)
+
+        prefix = (list(ESCAPE_POD) + list(DESCEND_AND_FLOYD) + list(TOOLS_AND_CARDS)
+                  + list(COMM) + list(DAY1_SLEEP) + list(DAY2_DESCENT)
+                  + list(SHUTTLE) + list(COURSE_CONTROL))
+        suffix = (list(DEFENSE) + list(BIO_FORAY) + list(COMPUTER_FIX)
+                  + list(ESCAPE_AND_CRYO))
+        drv.run(prefix)
+
+        # Snapshot of what a faithful restore must reproduce.
+        want = dict(
+            room=char.location.db.zil_id,
+            score=gs.score, day=gs.day, moves=gs.internal_moves,
+            flags=dict(gs.flags),
+            interrupts=_interrupt_fingerprint(gs),
+            inventory={o.db.zil_id for o in char.contents},
+        )
+        self.assertGreater(want["score"], 0)
+        self.assertIn("i_floyd", want["interrupts"], "Floyd's demon should be live here")
+
+        drv._emit("save")
+
+        # Mutate the live game: leave the room and let the clocks/interrupts tick.
+        drv._emit("south")                       # -> Systems Corridor East (already scored)
+        for _ in range(5):
+            drv._emit("wait")
+        self.assertNotEqual(char.location.db.zil_id, want["room"],
+                            "mutation should have moved us away from the save room")
+
+        drv._emit("restore")
+
+        # The live GameState is rebuilt on restore — re-fetch it and re-link the
+        # player (mirrors at_post_puppet wiring a real session would do).
+        gs = get_game_state_script().get_gs()
+        gs.player = char
+        drv.gs = gs
+
+        self.assertEqual(char.location.db.zil_id, want["room"], "room not restored")
+        self.assertEqual(gs.score, want["score"], "score not restored")
+        self.assertEqual(gs.day, want["day"], "day not restored")
+        self.assertEqual(gs.internal_moves, want["moves"], "clock not restored")
+        self.assertEqual(dict(gs.flags), want["flags"], "flags not restored")
+        self.assertEqual(_interrupt_fingerprint(gs), want["interrupts"],
+                         "interrupt set not restored")
+        self.assertEqual({o.db.zil_id for o in char.contents}, want["inventory"],
+                         "inventory not restored")
+
+        # The restored game must still be winnable end to end.
+        drv.run(suffix)
+        self.assertTrue(gs.dead and gs.death_reason is None, "no victory after restore")
+        self.assertEqual(gs.score, 80, f"restored game finished at {gs.score}/80")
+
+    def test_save_restore_mid_blowup(self):
+        """Round-trip a live timed demon mid-sequence (the Feinstein blowup).
+
+        Unlike the deep-complex save (a quiet room boundary), this saves while
+        ``i_blowup_feinstein`` is mid-count inside the escape pod — a demon whose
+        progress lives in its closure ``_state``/the BLOWUP-COUNTER flag. Restore
+        must roll the countdown back, and the pod must still eject and land.
+        """
+        from world.scheduler_script import get_game_state_script
+
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        drv = Driver(char, gs, verbose=False)
+
+        # Into the pod and strapped in: look, wait for the door, west, sit.
+        drv.run(list(ESCAPE_POD[:4]))
+        # Let the blowup count a couple of ticks, but stop well before ejection.
+        while gs.flags.get("BLOWUP-COUNTER", 0) < 2:
+            drv._emit("wait")
+        self.assertLess(gs.flags.get("BLOWUP-COUNTER"), 5, "pod already ejected")
+
+        want_counter = gs.flags.get("BLOWUP-COUNTER")
+        want_interrupts = _interrupt_fingerprint(gs)
+        want_room = char.location.db.zil_id
+        self.assertIn("i_blowup_feinstein", want_interrupts, "blowup demon should be live")
+
+        drv._emit("save")
+        for _ in range(2):                       # advance the countdown
+            drv._emit("wait")
+        self.assertGreater(gs.flags.get("BLOWUP-COUNTER"), want_counter)
+
+        drv._emit("restore")
+        gs = get_game_state_script().get_gs()
+        gs.player = char
+        drv.gs = gs
+
+        self.assertEqual(char.location.db.zil_id, want_room)
+        self.assertEqual(gs.flags.get("BLOWUP-COUNTER"), want_counter,
+                         "blowup countdown not rolled back on restore")
+        self.assertEqual(_interrupt_fingerprint(gs), want_interrupts,
+                         "blowup/trip demon state not restored")
+
+        # The restored pod must still complete its ejection and ride down.
+        drv.run([
+            ESCAPE_POD[4],   # WaitUntil BLOWUP-COUNTER >= 5 (ejection)
+            ESCAPE_POD[5],   # WaitUntil TRIP-COUNTER > 14 (it lands)
+        ])
+        self.assertGreaterEqual(gs.flags.get("BLOWUP-COUNTER"), 5)
+        self.assertGreater(gs.flags.get("TRIP-COUNTER"), 14)
+        self.assertFalse(gs.dead, "pod sequence killed us after restore")
