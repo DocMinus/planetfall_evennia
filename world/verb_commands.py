@@ -54,6 +54,27 @@ def _strip_articles(noun: str) -> str:
     return " ".join(w for w in noun.lower().split() if w not in _ARTICLES)
 
 
+def _vocab_tokens(*groups) -> set:
+    """Lower-cased token set over one or more word lists, splitting hyphens.
+
+    ZIL keeps multi-word adjectives like ``WIDE-NOSED`` / ``PROTEIN-RICH`` and
+    compound card names as single hyphenated tokens, but a player naturally
+    types them spaced ("wide nosed pliers") or hyphenated either way. Splitting
+    on hyphens on both the input and the object vocabulary lets all spellings
+    match (e.g. "upper-elevator card" == "upper elevator card", "high protein"
+    matching the PROTEIN-RICH liquid). Accepts several iterables so callers can
+    pass Evennia ``_SaverList`` attributes without concatenating them.
+    """
+    out = set()
+    for group in groups:
+        for s in group:
+            for tok in str(s).lower().split():
+                out.add(tok)
+                if "-" in tok:
+                    out.update(p for p in tok.split("-") if p)
+    return out
+
+
 def _article(obj) -> str:
     return "an" if "VOWELBIT" in (obj.db.obj_flags or []) else "a"
 
@@ -93,8 +114,7 @@ def resolve_obj(caller, noun: str):
         it = getattr(caller.ndb, "last_it", None)
         return it if (it and _accessible(caller, it)) else None
 
-    words = set(noun.split())
-
+    words = _vocab_tokens([noun])
     candidates: list = list(caller.contents)
     if caller.location:
         for obj in caller.location.contents:
@@ -126,10 +146,9 @@ def resolve_obj(caller, noun: str):
         # revealed (e.g. the key hidden in the crevice).
         if "INVISIBLE" in (obj.db.obj_flags or []):
             continue
-        syns = {s.lower() for s in (obj.db.synonyms or [])}
-        adjs = {a.lower() for a in (obj.db.adjectives or [])}
-        name_words = set(obj.key.lower().split())
-        score = len(words & (syns | adjs | name_words))
+        vocab = _vocab_tokens(obj.db.synonyms or [], obj.db.adjectives or [],
+                              obj.key.split())
+        score = len(words & vocab)
         if score > best_score:
             best = obj
             best_score = score
@@ -298,13 +317,12 @@ def _h_take(caller, nouns):
 
 def _h_drop(caller, nouns):
     noun = _strip_articles(nouns[0])
-    words = set(noun.split())
+    words = _vocab_tokens([noun])
     obj = None
     for item in caller.contents:
-        syns = {s.lower() for s in (item.db.synonyms or [])}
-        adjs = {a.lower() for a in (item.db.adjectives or [])}
-        name_words = set(item.key.lower().split())
-        if words & (syns | adjs | name_words):
+        vocab = _vocab_tokens(item.db.synonyms or [], item.db.adjectives or [],
+                              item.key.split())
+        if words & vocab:
             obj = item
             break
     if not obj:

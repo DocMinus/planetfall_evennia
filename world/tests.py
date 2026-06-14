@@ -70,6 +70,38 @@ class WalkthroughRegressionTest(EvenniaTestCase):
         )
 
 
+class HyphenTokenResolutionTest(EvenniaTestCase):
+    """Phase 14b — hyphenated compound nouns resolve spaced, hyphenated, or split.
+
+    ZIL stores multi-word adjectives (WIDE-NOSED, PROTEIN-RICH) and compound card
+    names as single hyphenated tokens; resolution now splits hyphens on both
+    sides so every natural spelling matches.
+    """
+
+    def test_hyphenated_nouns_resolve_every_spelling(self):
+        from world.walkthrough import _by_zil
+        from world.verb_commands import resolve_obj
+
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+
+        # The wide-nosed pliers: bring them into the tester's room and resolve.
+        pliers = _by_zil("PLIERS")
+        pliers.move_to(char, quiet=True, move_type="get")
+        for spelling in ("wide-nosed pliers", "wide nosed pliers", "pliers"):
+            self.assertIs(resolve_obj(char, spelling), pliers,
+                          f"pliers should resolve from {spelling!r}")
+
+        # The protein-rich liquid: "high protein" must reach it via PROTEIN-RICH.
+        hp = _by_zil("HIGH-PROTEIN")
+        canteen = _by_zil("CANTEEN")
+        canteen.move_to(char, quiet=True, move_type="get")
+        canteen.db.is_open = True
+        hp.move_to(canteen, quiet=True, move_type="move")
+        for spelling in ("protein-rich liquid", "high protein", "brown liquid"):
+            self.assertIs(resolve_obj(char, spelling), hp,
+                          f"high-protein should resolve from {spelling!r}")
+
+
 class SaveRestoreRoundTripTest(EvenniaTestCase):
     """Phase 14a.3 — SAVE/RESTORE survives a live mid-game state and continues.
 
