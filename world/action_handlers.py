@@ -2147,6 +2147,58 @@ def handle_high_protein(ctx: ObjAction) -> bool:
     return False
 
 
+def handle_kitchen_dispenser(ctx: ObjAction) -> bool:
+    """DISPENSER-F (compone.zil:815) — the kitchen's high-protein dispenser.
+
+    Seat the (open) canteen in the niche, then push the button to fill it. The
+    canteen of high-protein liquid is the only food beyond the three goos, so
+    it is what makes the extra Comm-puzzle legwork survivable.
+    """
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    if v in ("V-PUT", "V-INSERT", "V-PUT-UNDER", "V-PUT-ON"):
+        item = resolve_obj_local(caller, ctx.nouns[0]) if ctx.nouns else None
+        if item and item.db.zil_id == "CANTEEN":
+            item.move_to(obj, quiet=True, move_type="move")
+            caller.msg("The canteen fits snugly into the octagonal niche, its "
+                       "mouth resting just below the spout of the machine.")
+        else:
+            caller.msg("It doesn't fit in the niche.")
+        return True
+    if v in ("V-EXAMINE", "V-LOOK-CRETIN"):
+        caller.msg("This wall-mounted unit contains an octagonal niche beneath "
+                   "a spout. Above the spout is a button. The machine is "
+                   "labelled \"Hii Prooteen Likwid Dispensur.\"")
+        return True
+    return False
+
+
+def handle_kitchen_button(ctx: ObjAction) -> bool:
+    """BUTTON-PSEUDO (globals.zil:2580) — fill the seated canteen with protein."""
+    caller, v = ctx.caller, ctx.verb
+    if v != "V-PUSH":
+        return False
+    disp = _by_zil_id("DISPENSER")
+    canteen = _by_zil_id("CANTEEN")
+    hp = _by_zil_id("HIGH-PROTEIN")
+    if disp is None or canteen is None or canteen.location is not disp:
+        caller.msg("A thick, brownish liquid pours from the spout and splashes "
+                   "to the floor, where it quickly evaporates.")
+        return True
+    if not canteen.db.is_open:
+        caller.msg("A thick, brown liquid spills over the closed canteen, "
+                   "dribbles down the side of the machine, and forms a puddle "
+                   "on the floor which quickly dries up.")
+        return True
+    if hp and hp.location is canteen:
+        caller.msg("The brown liquid splashes over the mouth of the "
+                   "already-filled canteen, creating a mess.")
+        return True
+    if hp:
+        hp.move_to(canteen, quiet=True, move_type="move")
+    caller.msg("The canteen fills almost to the brim with a brown liquid.")
+    return True
+
+
 def handle_medicine(ctx: ObjAction) -> bool:
     """MEDICINE-F (comptwo.zil:169) — bitter medicine slows the sickness."""
     caller, v = ctx.caller, ctx.verb
@@ -2408,6 +2460,8 @@ OBJ_HANDLERS: dict = {
     "CONFERENCE-DOOR-F": handle_conference_door,
     "GOO-F": handle_goo,
     "HIGH-PROTEIN-F": handle_high_protein,
+    "DISPENSER-F": handle_kitchen_dispenser,
+    "BUTTON-PSEUDO": handle_kitchen_button,
     "MEDICINE-F": handle_medicine,
     "LEVER-F": handle_lever,
     "SHUTTLE-DOOR-F": handle_shuttle_door,

@@ -71,6 +71,19 @@ class RepeatUntil:
 
 
 @dataclass
+class Call:
+    """Run an arbitrary ``fn(driver)`` as a step (for adaptive puzzle loops).
+
+    Used where the command sequence depends on randomised, only-readable-at-
+    runtime state — e.g. the Comm chemistry, whose colour sequence (2 or 3
+    steps) is fixed only once play reaches the enunciator panel. ``fn`` issues
+    real commands via ``driver._emit`` and may raise :class:`StepError`.
+    """
+    fn: Callable
+    note: str = ""
+
+
+@dataclass
 class EatIfHungry:
     """Eat a survival-kit goo when hunger has risen (a no-op otherwise).
 
@@ -133,6 +146,9 @@ class Driver:
             self._emit(f"eat {goo.key}")
 
     def run_step(self, step):
+        if isinstance(step, Call):
+            step.fn(self)
+            return
         if isinstance(step, RepeatUntil):
             n = 0
             while not step.predicate(self.gs) and n < step.max_n:
@@ -391,30 +407,172 @@ def _floyd_with(gs):
     return bool(floyd and gs.player and floyd.location is gs.player.location)
 
 
-# From here the hunger clock (first warning ~2000 ticks) bites; EatIfHungry is
-# a no-op until then, and the WaitUntil loops also eat as needed.
+def _room_id(drv):
+    loc = drv.char.location
+    return loc and loc.db.zil_id
 
-# Milestone 4: end day 1 with a dorm sleep. The whole deep complex (shuttle +
-# reactor + computer + cryo) lies past the shuttle where there is no safe bed,
-# so we reset the sleep clock here to get a full fresh budget for day 2. Recross
-# the rift back to the near side and bed down in a dorm until morning.
-DAY1_SLEEP = [
+
+def _assert_room(drv, zil_id):
+    cur = _room_id(drv)
+    if cur != zil_id:
+        raise StepError(f"comm: expected room {zil_id}, but at {cur}")
+
+
+def _wait_until(drv, pred, n=40):
+    k = 0
+    while not pred() and k < n:
+        drv._emit("wait")
+        k += 1
+    return pred()
+
+
+def _elev_up(drv):
+    """Elevator Lobby -> Tower Core via the upper car (banks TOWER-CORE +4)."""
+    drv._emit("press blue button")
+    _wait_until(drv, lambda: _door_open("UPPER-ELEVATOR-DOOR"))
+    drv._emit("north")
+    if not drv.gs.flags.get("UPPER-ELEVATOR-ON"):
+        drv._emit("slide upper elevator card through slot")
+    drv._emit("push up button")
+    _wait_until(drv, lambda: not drv.gs.flags.get("ELEVATOR-IN-TRANSIT"))
+    drv._emit("out")
+    _assert_room(drv, "TOWER-CORE")
+
+
+def _elev_down(drv):
+    """Tower Core -> Elevator Lobby via the upper car."""
+    drv._emit("north")
+    drv._emit("push down button")
+    _wait_until(drv, lambda: not drv.gs.flags.get("ELEVATOR-IN-TRANSIT"))
+    drv._emit("out")
+    _assert_room(drv, "ELEVATOR-LOBBY")
+
+
+def _comm_feed(drv):
+    """Stave off hunger during the Comm legwork without burning the goo budget.
+
+    Drink the canteen's high-protein (+3600) while it lasts; only then fall back
+    to a survival-kit goo. Always called with the flask empty, so "brown liquid"
+    is unambiguous (it outscores any milky chemical fluid anyway).
+    """
+    gs = drv.gs
+    if gs.flags.get("HUNGER-LEVEL", 0) < 1:
+        return
+    hp = _by_zil("HIGH-PROTEIN")
+    canteen = _by_zil("CANTEEN")
+    if hp is not None and canteen is not None and hp.location is canteen:
+        drv._emit("eat brown liquid")
+    else:
+        drv._eat_if_hungry()
+
+
+_COMM_COLOR = {1: "red", 2: "blue", 3: "green", 4: "yellow",
+               5: "gray", 6: "brown", 7: "black"}
+
+
+def _run_comm(drv):
+    """Solve the Comm coolant chemistry (COMM-FIXED, +6).
+
+    Enters from the Elevator Lobby. Rides the tower up to the Comm Room, reads
+    the flashing enunciator colour (gs CHEMICAL-REQUIRED, set by the room's
+    per-turn M-END), then runs the 2-3 step mix-and-pour loop: each colour means
+    a round trip down to the Machine Shop dispenser to fill the flask and back up
+    to pour it into the funnel hole. A wrong colour trips COMM-SHUTDOWN, so the
+    panel is re-read every loop. Ends walked back to the Dorm Corridor.
+    """
+    gs = drv.gs
+    _comm_feed(drv)                     # drink high-protein now (covers the loop)
+    _elev_up(drv)                       # Lobby -> Tower Core (+4)
+    drv._emit("northeast")              # Tower Core -> Comm Room
+    _assert_room(drv, "COMM-ROOM")
+    drv._emit("look")                   # let the enunciator M-END set the colour
+    _comm_feed(drv)
+    guard = 0
+    while not gs.flags.get("COMM-FIXED"):
+        guard += 1
+        if guard > 5:
+            raise StepError("comm: exceeded 5 rounds without COMM-FIXED")
+        if gs.flags.get("COMM-SHUTDOWN"):
+            raise StepError("comm: enunciator shut the system down (wrong pour)")
+        _comm_feed(drv)                 # flask is empty here — safe to drink
+        col = _COMM_COLOR.get(gs.flags.get("CHEMICAL-REQUIRED"))
+        if col is None:
+            raise StepError(f"comm: no colour flashing (req={gs.flags.get('CHEMICAL-REQUIRED')})")
+        # Down to the machine shop, fill the flask with the wanted colour.
+        drv._emit("southwest")          # Comm Room -> Tower Core
+        _elev_down(drv)                 # -> Elevator Lobby
+        for c in ("west", "south", "south", "south", "south"):
+            drv._emit(c)                # -> Machine Shop
+        _assert_room(drv, "MACHINE-SHOP")
+        _comm_feed(drv)
+        drv._emit("put flask under dispenser")
+        out = drv._emit(f"push {col} button")
+        if "fills with" not in out.lower():
+            raise StepError(f"comm: dispenser did not fill ({col}): {out}")
+        drv._emit("take flask")
+        # Back up to the comm room and pour.
+        for c in ("north", "north", "north", "north", "east"):
+            drv._emit(c)                # -> Elevator Lobby
+        _elev_up(drv)                   # -> Tower Core
+        drv._emit("northeast")          # -> Comm Room
+        drv._emit("pour chemical in funnel hole")
+    # Fixed. Descend and walk to the dorm corridor for the night.
+    drv._emit("southwest")              # Comm Room -> Tower Core
+    _elev_down(drv)                     # -> Elevator Lobby
+    drv._emit("west")                   # -> Corridor Junction
+    drv._emit("west")                   # -> Dorm Corridor
+    _assert_room(drv, "DORM-CORRIDOR")
+
+
+# Milestone 3b (maximal): repair the planetary comm coolant system (+6) and bank
+# the Kitchen (+4) and Tower Core (+4) first-visit values. Recross the rift, stop
+# at the kitchen to fill the canteen with high-protein liquid (the extra food the
+# tower round-trips demand), then ride the upper elevator to the comm room and
+# run the colour-sequence chemistry. All upper-complex work — it must happen
+# before we descend past the shuttle, where there is no way back up.
+COMM = [
     EatIfHungry(),
     Cmd("east", expect=("Admin Corridor North",), note="leave the office"),
     Cmd("south", expect=("Admin Corridor",), note="recross the rift"),
     Cmd("south", expect=("Admin Corridor South",)),
     Cmd("south", expect=("Corridor Junction",)),
     Cmd("west", expect=("Dorm Corridor",), note="long-hall transit"),
-    # Maximal-scoring detour: visit the Kitchen (+4 first-visit VALUE). The
-    # kitchen card is unscrambled (the magnet was dropped long before we took
-    # it), so the slot opens the door; step in to bank the points, then back.
     Cmd("west", expect=("Mess Corridor",)),
     Cmd("south", expect=("Mess Hall",)),
+    Cmd("take canteen"),
+    Cmd("open canteen"),
     Cmd("slide kitchen card through slot", expect=("slides open",)),
-    Cmd("south", expect=("Kitchen",)),
+    Cmd("south", expect=("Kitchen",), note="+4 first-visit VALUE"),
+    Cmd("put canteen in dispenser", expect=("octagonal niche",)),
+    Cmd("push button", expect=("fills almost to the brim",),
+        check=lambda gs: _carries_in_canteen("HIGH-PROTEIN")),
+    Cmd("take canteen"),
     Cmd("north", expect=("Mess Hall",)),
     Cmd("north", expect=("Mess Corridor",)),
     Cmd("east", expect=("Dorm Corridor",)),
+    Cmd("east", expect=("Corridor Junction",)),
+    Cmd("east", expect=("Elevator Lobby",)),
+    Call(_run_comm, note="ride the tower and solve the coolant chemistry (+6)"),
+    Cmd("look", check=lambda gs: gs.flags.get("COMM-FIXED"),
+        note="comm system repaired"),
+]
+
+
+def _carries_in_canteen(zil_id):
+    obj = _by_zil(zil_id)
+    canteen = _by_zil("CANTEEN")
+    return bool(obj and canteen and obj.location is canteen)
+
+
+# From here the hunger clock (first warning ~2000 ticks) bites; EatIfHungry is
+# a no-op until then, and the WaitUntil loops also eat as needed.
+
+# Milestone 4: end day 1 with a dorm sleep. The whole deep complex (shuttle +
+# reactor + computer + cryo) lies past the shuttle where there is no safe bed,
+# so we reset the sleep clock here to get a full fresh budget for day 2. COMM has
+# already recrossed the rift and left us in the Dorm Corridor; bed down nearby.
+DAY1_SLEEP = [
+    EatIfHungry(),
     Cmd("south", expect=("Dorm C",)),
     # Take Floyd's lower-elevator card here: the magnet is long dropped (so the
     # card won't scramble) and Floyd reliably catches up in the dorm. Search the
@@ -623,7 +781,7 @@ ESCAPE_AND_CRYO = [
 ]
 
 WALKTHROUGH: list = (list(ESCAPE_POD) + list(DESCEND_AND_FLOYD)
-                     + list(TOOLS_AND_CARDS) + list(DAY1_SLEEP)
+                     + list(TOOLS_AND_CARDS) + list(COMM) + list(DAY1_SLEEP)
                      + list(DAY2_DESCENT) + list(SHUTTLE) + list(COURSE_CONTROL)
                      + list(DEFENSE) + list(BIO_FORAY) + list(COMPUTER_FIX)
                      + list(ESCAPE_AND_CRYO))

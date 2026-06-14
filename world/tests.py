@@ -41,7 +41,9 @@ class WalkthroughRegressionTest(EvenniaTestCase):
             gs.death_reason,
             f"game ended in death, not victory: {gs.death_reason!r}",
         )
-        # Minimal-victory invariant: the stranded ending scores 60/80.
-        self.assertGreaterEqual(
-            gs.score, 60, f"victory reached but score regressed to {gs.score}"
+        # Maximal-victory invariant: the full run repairs every subsystem
+        # (course control, defense, comm, computer) for a perfect 80/80 — the
+        # Galactic Overlord ending in which Floyd is revived.
+        self.assertEqual(
+            gs.score, 80, f"victory reached but score regressed to {gs.score}/80"
         )
