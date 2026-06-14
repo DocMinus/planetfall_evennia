@@ -3,7 +3,7 @@
 VENV_BIN := $(CURDIR)/.venv/bin
 EVENNIA := PATH="$(VENV_BIN):$$PATH" $(VENV_BIN)/evennia
 
-.PHONY: start stop restart shell migrate load superuser test test-walkthrough
+.PHONY: start stop restart shell migrate load superuser test test-walkthrough reset-game
 
 start:
 	$(EVENNIA) start
@@ -25,6 +25,14 @@ load:
 
 superuser:
 	$(EVENNIA) createsuperuser
+
+# Dev helper: reset the persistent game to a pristine Deck Nine start.
+# Stops the server (so it doesn't hold stale cached objects), wipes+reloads the
+# world and game-state, re-places the superuser character, then restarts.
+reset-game:
+	-$(EVENNIA) stop
+	$(EVENNIA) shell < scripts/reset_game.py
+	$(EVENNIA) start
 
 # Full test suite (creates a throwaway test DB, loads the world from JSON).
 test:
