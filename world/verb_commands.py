@@ -1500,6 +1500,229 @@ def _h_stub(caller, nouns):
 
 
 # ---------------------------------------------------------------------------
+# Trivial / flavour verbs (Phase 14b item 3) — faithful ZIL defaults so a
+# player who types these gets the real response, not "isn't implemented yet".
+# ---------------------------------------------------------------------------
+
+def _here_actor(caller):
+    """First ACTORBIT (NPC) in the player's room, ZIL <FIND-IN HERE ACTORBIT>."""
+    loc = caller.location
+    if not loc:
+        return None
+    return next((o for o in loc.contents
+                 if "ACTORBIT" in (o.db.obj_flags or [])), None)
+
+
+def _h_look_down(caller, nouns):
+    """V-LOOK-DOWN (verbs.zil:1054) — examine the ground."""
+    _h_examine(caller, ["ground"])
+
+
+def _h_say(caller, nouns):
+    """V-SAY (verbs.zil:1400) — you must address an NPC directly, else talk to self."""
+    actor = _here_actor(caller)
+    if actor:
+        caller.msg(f"You must address the {actor.key} directly.")
+    else:
+        caller.msg("Talking to yourself is a sign of impending mental collapse.")
+
+
+def _h_stand_on(caller, nouns):
+    """V-STAND-ON (verbs.zil:1571)."""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    name = obj.key if obj else "that"
+    caller.msg(f"Standing on the {name} seems like a waste of time.")
+
+
+def _h_play_with(caller, nouns):
+    """V-PLAY-WITH (verbs.zil:1819)."""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    if obj and "ACTORBIT" in (obj.db.obj_flags or []):
+        caller.msg(f"The {obj.key} doesn't seem interested in playing games.")
+    else:
+        caller.msg("I sometimes wonder about your mental health.")
+
+
+def _h_swim(caller, nouns):
+    """V-SWIM / V-SWIM-DIR / V-SWIM-UP (verbs.zil:1236) — no water to swim in."""
+    caller.msg("You can't swim here!")
+
+
+def _h_find(caller, nouns):
+    """V-FIND (verbs.zil:1337) — where is the object?"""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    if obj is None:
+        caller.msg("Beats me.")
+        return
+    loc = obj.location
+    if obj.location is caller:
+        caller.msg("You have it.")
+    elif loc is caller.location:
+        caller.msg("It's right here.")
+    elif loc and "ACTORBIT" in (loc.db.obj_flags or []):
+        caller.msg(f"The {loc.key} has it.")
+    elif loc and loc is not caller and loc is not caller.location:
+        caller.msg(f"It's in the {loc.key}.")
+    else:
+        caller.msg("Beats me.")
+
+
+def _h_reach_for(caller, nouns):
+    """V-REACH-FOR (verbs.zil:1583) — take it if you can, else it's out of reach."""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    if obj and "TAKEBIT" in (obj.db.obj_flags or []):
+        _h_take(caller, nouns)
+    elif obj and obj.location is caller.location:
+        caller.msg("It's here! Now what?")
+    else:
+        caller.msg("It is out of reach.")
+
+
+def _h_shake(caller, nouns):
+    """V-SHAKE (verbs.zil:1169) — held check, container rattles/spills, else Shaken."""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    if obj is None:
+        caller.msg("Shaken.")
+        return
+    if obj.location is not caller and obj.db.zil_id != "HANDS":
+        caller.msg("You aren't holding it.")
+        return
+    contents = list(obj.contents)
+    if obj.db.is_open and contents:
+        for item in contents:
+            item.move_to(caller.location, quiet=True, move_type="drop")
+        caller.msg(f"The contents of the {obj.key} spill onto the floor.")
+    elif contents:
+        caller.msg(f"It sounds as if there is something inside the {obj.key}.")
+    else:
+        caller.msg("Shaken.")
+
+
+def _h_shake_with(caller, nouns):
+    """V-SHAKE-WITH (verbs.zil:1215) — shaking hands and such."""
+    target = resolve_obj(caller, nouns[1]) if len(nouns) > 1 else None
+    if target and "ACTORBIT" in (target.db.obj_flags or []):
+        caller.msg(f"The {target.key} doesn't appear interested in shaking hands.")
+    else:
+        caller.msg("Huh?")
+
+
+def _h_empty(caller, nouns):
+    """V-EMPTY (verbs.zil:1706)."""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    if obj is None:
+        caller.msg("You can't empty that.")
+        return
+    if not obj.db.is_open:
+        caller.msg("You can't empty it when it's closed!")
+        return
+    contents = list(obj.contents)
+    if contents:
+        for item in contents:
+            item.move_to(caller.location, quiet=True, move_type="drop")
+        caller.msg(f"The {obj.key} is now empty.")
+    else:
+        caller.msg(f"There's nothing in the {obj.key}.")
+
+
+def _h_script(caller, nouns):
+    """V-SCRIPT (verbs.zil:781) — transcripting is a no-op in this port."""
+    caller.msg("Here begins a transcript of interaction with Planetfall.")
+
+
+def _h_unscript(caller, nouns):
+    """V-UNSCRIPT (verbs.zil:791)."""
+    caller.msg("Here ends a transcript of interaction with Planetfall.")
+
+
+def _h_verify(caller, nouns):
+    """V-$VERIFY (verbs.zil:1536) — the game-file integrity check."""
+    caller.msg("Verifying...\nGame correct. (YAY!)")
+
+
+def _h_debug_noop(caller, nouns):
+    """V-$COMMAND/$RANDOM/$RECORD/$UNRECORD — developer internals; harmless here."""
+    caller.msg("Nothing happens.")
+
+
+def _h_throw(caller, nouns):
+    """V-THROW (verbs.zil:660) — a bare throw just drops the object."""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    if obj and obj.location is caller:
+        obj.move_to(caller.location, quiet=True, move_type="drop")
+        caller.msg("Thrown.")
+    else:
+        caller.msg("You're not holding it.")
+
+
+def _h_leap(caller, nouns):
+    """V-LEAP (verbs.zil:942) — generic jump fallback."""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    if obj is None:
+        _h_skip(caller, nouns)
+    elif obj.location is caller.location:
+        if "ACTORBIT" in (obj.db.obj_flags or []):
+            caller.msg(f"The {obj.key} is too big to jump over.")
+        else:
+            _h_skip(caller, nouns)
+    else:
+        caller.msg("That would be a good trick.")
+
+
+def _h_escape(caller, nouns):
+    """V-ZESCAPE (verbs.zil:1798)."""
+    here = caller.location.db.zil_id if caller.location else None
+    if here == "BRIG":
+        caller.msg("Houdini himself would be stumped by this cell.")
+    else:
+        caller.msg("There is no escape. We control the horizontal. We control "
+                   "the vertical. We control the disk drives...")
+
+
+def _h_eat_from(caller, nouns):
+    """V-EAT-FROM (verbs.zil:920) — eat the lone item in an open container."""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    if obj is None:
+        caller.msg("You can't eat from that.")
+        return
+    if not obj.db.is_open:
+        caller.msg("It's closed.")
+        return
+    contents = list(obj.contents)
+    if len(contents) > 1:
+        caller.msg(f"There's more than one thing in the {obj.key}.")
+    elif contents:
+        _h_eat(caller, [contents[0].key])
+    else:
+        caller.msg("It's empty!")
+
+
+def _h_quit(caller, nouns):
+    """V-QUIT (verbs.zil:288) — show the score, point at the real exit."""
+    _h_score(caller, nouns)
+    caller.msg("\nTo leave the game, use your client's disconnect (or type SAVE "
+               "first to keep your progress).")
+
+
+def _h_restart(caller, nouns):
+    """V-RESTART (verbs.zil:395) — not offered as an in-game verb in this port."""
+    caller.msg("You can't restart from here. RESTORE a saved game to pick up "
+               "where you left off.")
+
+
+def _h_attract(caller, nouns):
+    """V-ATTRACT / V-ZATTRACT (verbs.zil:1615) — generic (no magnet) fallback."""
+    caller.msg("Nothing interesting happens.")
+
+
+def _h_through(caller, nouns):
+    """V-THROUGH (globals.zil:375) — generic fallback for a solid object."""
+    obj = resolve_obj(caller, nouns[0]) if nouns else None
+    name = obj.key if obj else "that"
+    caller.msg(f"You hit your head against the {name} as you attempt this feat.")
+
+
+# ---------------------------------------------------------------------------
 # Handler registry
 # ---------------------------------------------------------------------------
 
@@ -1615,6 +1838,37 @@ HANDLERS: dict = {
     "V-TYPE":        _h_type,
     "V-ZAP":         _h_zap,
     "V-SZAP":        _h_zap,
+    # Phase 14b item 3 — trivial flavour / debug verbs.
+    "V-SAY":         _h_say,
+    "V-SHAKE":       _h_shake,
+    "V-SHAKE-WITH":  _h_shake_with,
+    "V-EMPTY":       _h_empty,
+    "V-FIND":        _h_find,
+    "V-PLAY-WITH":   _h_play_with,
+    "V-SWIM":        _h_swim,
+    "V-SWIM-DIR":    _h_swim,
+    "V-SWIM-UP":     _h_swim,
+    "V-LOOK-DOWN":   _h_look_down,
+    "V-REACH-FOR":   _h_reach_for,
+    "V-STAND-ON":    _h_stand_on,
+    "V-SCRIPT":      _h_script,
+    "V-UNSCRIPT":    _h_unscript,
+    "V-$VERIFY":     _h_verify,
+    "V-$COMMAND":    _h_debug_noop,
+    "V-$RANDOM":     _h_debug_noop,
+    "V-$RECORD":     _h_debug_noop,
+    "V-$UNRECORD":   _h_debug_noop,
+    "V-THROW":       _h_throw,
+    "V-LEAP":        _h_leap,
+    "V-ZESCAPE":     _h_escape,
+    "V-EAT-FROM":    _h_eat_from,
+    "V-SGIVE":       _h_give,
+    "V-QUIT":        _h_quit,
+    "V-RESTART":     _h_restart,
+    "V-ATTRACT":     _h_attract,
+    "V-ZATTRACT":    _h_attract,
+    "V-THROUGH":     _h_through,
+    "V-CLIMB-FOO":   _h_climb_up,
 }
 
 

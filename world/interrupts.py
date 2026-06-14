@@ -1046,6 +1046,75 @@ def make_i_chase_scene(gs: "GameState", state: dict | None = None):
     return i_chase_scene
 
 
+# ---------------------------------------------------------------------------
+# I-MICROBE  (comptwo.zil:2925)
+# The strip microbe's every-turn attack. Each turn it isn't struck by the laser
+# it creeps closer; on the second creep it eats you. Firing at it keeps you
+# alive but heats the laser — once hot enough you can lure it off the strip.
+# ---------------------------------------------------------------------------
+
+_WINNER_ATTACKED = (
+    "A pseudopod extends toward you. You jump back just in time to avoid being "
+    "engulfed.",
+    "A slimy pseudopod brushes against your shoulder. You twist away in the nick "
+    "of time.",
+    "A pseudopod shoots out toward your head! Ducking quickly, you save your "
+    "life.",
+    "Two protoplasm-filled blobs sneak toward you from the left. You jump to the "
+    "side and almost fall off the strip into the void below!",
+)
+
+_MONSTER_CLOSES = (
+    "The microbe slithers closer. The cilia around its gullet glisten with "
+    "mucus, giving the impression that the microbe is salivating.",
+    "The microbe flows toward you. It towers above you, its cilia waving madly "
+    "in your face.",
+    "The monster wriggles nearer. It is now so close that you can make out "
+    "details in the protoplasm beneath its translucent skin.",
+)
+
+
+def make_i_microbe(gs: "GameState", state: dict | None = None):
+    """I-MICROBE (comptwo.zil:2925) — the microbe presses its attack each turn."""
+    def i_microbe() -> bool:
+        import random
+        f = gs.flags
+        laser = _by_zil_id("LASER")
+        holding = bool(laser and gs.player and laser.location is gs.player)
+        if f.get("MICROBE-HIT"):
+            # Struck this turn: it lashes out but you dodge.
+            msg = "\n" + random.choice(_WINNER_ATTACKED)
+            if f.get("WARMTH-FLAG", 0) > 13 and holding:
+                f["MICROBE-HIT"] = False
+                return gs.die(
+                    msg + " The microbe, whipped into a rabid frenzy by the waves "
+                    "of heat from the pulsing laser, literally lunges at it. You "
+                    "jump back and, losing your balance, fall over the edge of the "
+                    "strip. The microbe, writhing madly, hurls itself after its "
+                    "prey. You and the microbe both plunge into the void below.")
+            if f.get("WARMTH-FLAG", 0) > 7 and holding:
+                msg += (" Another pseudopod, perhaps attracted by the warmth of "
+                        "the laser, tries to envelop the weapon. You snatch it "
+                        "away from the monster's grasp.")
+            _send(gs, msg)
+            f["MICROBE-HIT"] = False
+            return False
+        # Not struck this turn: it closes in, and on the second creep it feeds.
+        if f.get("MICROBE-COUNTER", 0) == 2:
+            return gs.die(
+                "\nThe microbe wraps several pseudopods around you and shoves you "
+                "into its mucus-covered gullet. Digestive juices begin their "
+                "work. The experience is not pleasant.")
+        f["MICROBE-COUNTER"] = f.get("MICROBE-COUNTER", 0) + 1
+        _send(gs, "\n" + random.choice(_MONSTER_CLOSES))
+        f["MICROBE-HIT"] = False
+        return False
+
+    i_microbe.__name__ = "i_microbe"
+    i_microbe._state = state if state is not None else {}
+    return i_microbe
+
+
 def make_i_unflood(gs: "GameState", state: dict | None = None):
     """I-UNFLOOD (comptwo.zil:2358) — the fungicide mist drains after ~50 turns.
 

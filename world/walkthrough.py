@@ -745,15 +745,29 @@ COMPUTER_FIX = [
     RepeatUntil("shoot speck with laser",
                 lambda gs: gs.flags.get("COMPUTER-FIXED"), max_n=40,
                 note="two precise hits fix the computer"),
+    Cmd("set dial to 2", expect=("set to 2",),
+        note="red is too fine for the microbe; widen the beam before heading back"),
 ]
 
-# Milestone 10: the cryo endgame. Un-shrink (re-enter Station 384 → auxiliary
-# booth), gear up in the lab office (gas mask) and flood the bio-lab, dash
-# across it to the cryo elevator, slam the button on the pursuing mutants
-# (CRYO-SCORE-FLAG, +5), descend, and step into the anteroom — where the cure
-# is found and the game is won.
+# Milestone 10: the cryo endgame. Heading back down the strip, a giant microbe
+# drops in and blocks the way (comptwo.zil MIDDLE-OF-STRIP-F). Keep it at bay by
+# lasering it each turn — which also heats the laser — then once the laser is hot
+# enough hurl it off the strip; the hungry microbe dives after it into the void.
+# Then un-shrink (re-enter Station 384 -> auxiliary booth), gear up in the lab
+# office (gas mask) and flood the bio-lab, dash across it to the cryo elevator,
+# slam the button on the pursuing mutants (CRYO-SCORE-FLAG, +5), descend, and
+# step into the anteroom — where the cure is found and the game is won.
 ESCAPE_AND_CRYO = [
-    Cmd("south", expect=("Middle of Strip",)),
+    Cmd("south", expect=("Middle of Strip", "microbe"),
+        check=lambda gs: not gs.flags.get("NO-MICROBE"),
+        note="the microbe drops in, blocking the strip"),
+    RepeatUntil("shoot microbe with laser",
+                lambda gs: gs.flags.get("WARMTH-FLAG", 0) > 7, max_n=15,
+                note="heat the laser while fending the microbe off"),
+    Cmd("throw laser off strip", expect=("Whew",),
+        check=lambda gs: gs.flags.get("MICROBE-DISPATCHED")
+        and gs.flags.get("NO-MICROBE"),
+        note="the microbe dives after the hot laser into the void"),
     Cmd("south", expect=("Strip Near Station",)),
     Cmd("west", expect=("Auxiliary Booth",), note="re-grow via the aux booth"),
     Cmd("north", expect=("Lab Office",)),

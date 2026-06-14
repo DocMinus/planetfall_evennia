@@ -180,6 +180,10 @@ class GameState:
             "LAB-LIGHTS-ON": False,
             "LAB-FLOODED": False,            # bio-lab flooded with fungicide mist
             "UNIFORM-OPENED": False,         # lab uniform pocket searched
+            # Strip microbe battle (comptwo.zil:2477-3035) — Subsystem 5 endgame.
+            "MICROBE-DISPATCHED": False,     # the microbe has been beaten (once)
+            "MICROBE-HIT": False,            # laser struck it this turn (survives I-MICROBE)
+            "MICROBE-COUNTER": 0,            # turns it has closed in (2 == death)
             # Conference-room combination safe (compone.zil) — Subsystem 6.
             "NUMBER-NEEDED": __import__("random").randint(1, 1000),  # misc.zil:112
             "DIAL-NUMBER": 0,

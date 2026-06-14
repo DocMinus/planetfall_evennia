@@ -1755,11 +1755,26 @@ def handle_laser(ctx: ObjAction) -> bool:
             gs.scheduler.enable(gs.scheduler.queue(I.make_i_warmth(gs), -1))
         if target == "SPECK":
             _shoot_speck(gs, caller)
+        elif target == "MICROBE":
+            _shoot_microbe(gs, caller)
         elif target in ("ME", "HANDS", "ADVENTURER"):
             caller.msg("Ouch! You managed to burn yourself nicely.")
         else:
             caller.msg("A thin beam shoots from the laser.")
         return True
+    if v == "V-DROP":
+        # ZIL LASER-F: dropping the laser stops it warming; if a hot laser is
+        # dropped beside the microbe, the monster pounces on it.
+        _disable_interrupt(gs, "i_warmth")
+        microbe = _by_zil_id("MICROBE")
+        if (microbe and microbe.location is caller.location
+                and gs.flags.get("WARMTH-FLAG", 0) > 7):
+            obj.location = None
+            caller.msg("The microbe rushes to envelop the laser. You hear a faint "
+                       "burp as the monster begins to look around for other "
+                       "morsels...")
+            return True
+        return False   # otherwise a normal drop
     return False
 
 
@@ -1807,6 +1822,174 @@ def _shoot_speck(gs, caller) -> None:
     else:
         gs.flags["MARKSMANSHIP-COUNTER"] = gs.flags.get("MARKSMANSHIP-COUNTER", 0) + 12
         caller.msg(random.choice(_BEAM_MISSES))
+
+
+# ---------------------------------------------------------------------------
+# The strip microbe battle (comptwo.zil:2477-3035)
+# ---------------------------------------------------------------------------
+
+_MICROBE_SPAWN = (
+    "Suddenly, with a loud plop, a giant elephant-sized monster lands on the "
+    "strip just in front of you. It is amorphously shaped, its skin a slimy "
+    "translucent red membrane. While most of your brain screams with panic "
+    "about the disgusting monster that now blocks your exit, some small section "
+    "in the back of your mind calmly realizes that this is merely some tiny "
+    "microbe which has somehow violated the sterile environment of the computer "
+    "interior.\n\nAs you stand frozen with fear, the microbe slithers toward "
+    "you, extending slimy pseudopods thick with waving cilia. It looks pretty "
+    "hungry, and seems intent on having you for lunch."
+)
+
+_MICROBE_STRIKES = (
+    "The microbe's outer membrane sizzles a bit, and some protoplasm oozes out. "
+    "The microbe recoils momentarily, but quickly recovers.",
+    "The beam slices through the microbe's skin! A tremendous shudder passes "
+    "through the microbe, but the wound quickly seals itself.",
+    "The monster rears back for a moment, but almost as soon as the beam goes "
+    "off, it advances again.",
+)
+
+
+def _shoot_microbe(gs, caller) -> None:
+    """SHOOT-MICROBE (comptwo.zil:2980) — laser vs. the microbe.
+
+    The red setting (1) is too fine to harm it; any other setting registers a
+    hit (MICROBE-HIT), which keeps I-MICROBE from advancing its grab counter
+    this turn while the laser warms toward the lure-it-off-the-strip threshold.
+    """
+    import random
+    if gs.flags.get("LASER-SETTING") == 1:
+        caller.msg("The laser beam strikes the microbe, but passes harmlessly "
+                   "through its red skin.")
+        return
+    gs.flags["MICROBE-HIT"] = True
+    caller.msg("The laser beam strikes the microbe. "
+               + random.choice(_MICROBE_STRIKES))
+
+
+def handle_middle_of_strip(room, character, rarg):
+    """MIDDLE-OF-STRIP-F (comptwo.zil:2477) — the microbe drops in.
+
+    Once the computer is fixed, returning here spawns the microbe (once), which
+    blocks the way back to the station until it is dispatched.
+    """
+    gs = _gs()
+    if (rarg == M_ENTER and gs and gs.flags.get("COMPUTER-FIXED")
+            and gs.flags.get("NO-MICROBE")
+            and not gs.flags.get("MICROBE-DISPATCHED")):
+        microbe = _by_zil_id("MICROBE")
+        if microbe:
+            microbe.move_to(room, quiet=True, move_type="move")
+        gs.flags["NO-MICROBE"] = False
+        if not any(getattr(i.routine, "__name__", None) == "i_microbe"
+                   for i in gs.scheduler._interrupts):
+            import world.interrupts as I
+            gs.scheduler.enable(gs.scheduler.queue(I.make_i_microbe(gs), -1))
+        character.msg(_MICROBE_SPAWN)
+        return True
+    return False
+
+
+def handle_strip_near_relay(room, character, rarg):
+    """STRIP-NEAR-RELAY-F (comptwo.zil:2505) — relay desc + the microbe follows."""
+    gs = _gs()
+    if rarg == M_LOOK:
+        text = ("North of here, the filament ends at a huge featureless wall, "
+                "presumably the side of some micro-component. ")
+        relay = _by_zil_id("RELAY")
+        if relay and relay.location is room:
+            text += ("To the east is a vacuu-sealed micro-relay, sealed in "
+                     "transparent red plastic. You could probably see into the "
+                     "micro-relay.")
+        else:
+            text += ("To the east are the shattered remains of some large "
+                     "object.")
+        return text
+    if rarg == M_ENTER and gs and not gs.flags.get("NO-MICROBE"):
+        microbe = _by_zil_id("MICROBE")
+        if microbe:
+            microbe.move_to(room, quiet=True, move_type="move")
+        gs.flags["MICROBE-COUNTER"] = 0
+        character.msg("The microbe, writhing angrily, follows you northward.")
+        return True
+    return False
+
+
+def _dispatch_microbe(gs) -> None:
+    """The microbe is lured off the strip: clean up the fight state."""
+    _disable_interrupt(gs, "i_warmth")
+    _disable_interrupt(gs, "i_microbe")
+    microbe = _by_zil_id("MICROBE")
+    if microbe:
+        microbe.location = None
+    gs.flags["NO-MICROBE"] = True
+    gs.flags["MICROBE-DISPATCHED"] = True
+
+
+def handle_microbe(ctx: ObjAction) -> bool:
+    """MICROBE-F (comptwo.zil:2905) — the strip microbe's verb responses."""
+    v, caller = ctx.verb, ctx.caller
+    gs = _gs()
+    if v in ("V-HELLO", "V-TALK"):
+        caller.msg("You don't seem to have bridged the vast communication gulf "
+                   "between yourself and the microbe.")
+        return True
+    if v in ("V-THROW", "V-GIVE"):
+        prso = resolve_obj_local(caller, ctx.nouns[0]) if ctx.nouns else None
+        warmth = gs.flags.get("WARMTH-FLAG", 0) if gs else 0
+        if prso and prso.db.zil_id == "LASER" and warmth > 7:
+            prso.location = None
+            _disable_interrupt(gs, "i_warmth")
+            if warmth > 10:
+                _disable_interrupt(gs, "i_microbe")
+                microbe = _by_zil_id("MICROBE")
+                if microbe:
+                    microbe.location = None
+                gs.flags["NO-MICROBE"] = True
+                gs.flags["MICROBE-DISPATCHED"] = True
+                caller.msg("The microbe gobbles up the laser and turns toward "
+                           "you. A moment later, it begins writhing in pain. "
+                           "Apparently, eating the hot laser was a bit too much "
+                           "for it. With a bellow of agony, it rolls off the edge "
+                           "of the strip. (Whew!)")
+            else:
+                caller.msg("The microbe greedily devours the laser, and turns "
+                           "toward you.")
+            return True
+        name = prso.key if prso else (ctx.nouns[0] if ctx.nouns else "object")
+        caller.msg(f"The microbe ignores the {name}, but does attempt to digest "
+                   "your arm.")
+        return True
+    return False
+
+
+def handle_strip(ctx: ObjAction) -> bool:
+    """STRIP-F (comptwo.zil:3017) — throw the hot laser off the strip.
+
+    The hungry microbe lunges after the warm laser and follows it into the void.
+    """
+    v, caller = ctx.verb, ctx.caller
+    if v != "V-THROW-OFF":
+        return False
+    gs = _gs()
+    prso = resolve_obj_local(caller, ctx.nouns[0]) if ctx.nouns else None
+    warmth = gs.flags.get("WARMTH-FLAG", 0) if gs else 0
+    if prso and prso.db.zil_id == "LASER" and warmth > 7:
+        prso.location = None
+        _dispatch_microbe(gs)
+        caller.msg("As the laser flies over the edge of the strip, the hungry "
+                   "microbe lunges after it. Both the laser and the microbe "
+                   "plummet into the void. (Whew!)")
+        return True
+    if prso:
+        if prso.db.zil_id == "LASER":
+            _disable_interrupt(gs, "i_warmth")
+        name = prso.key
+        prso.location = None
+        caller.msg(f"The {name} flies over the edge of the strip and disappears "
+                   "into the void.")
+        return True
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -2508,9 +2691,13 @@ ROOM_HANDLERS.update({
     "CRYO-ELEVATOR-F": handle_cryo_elevator,
     "COMM-ROOM-F": handle_comm_room,
     "STATION-384-F": handle_station_384,
+    "MIDDLE-OF-STRIP-F": handle_middle_of_strip,
+    "STRIP-NEAR-RELAY-F": handle_strip_near_relay,
 })
 OBJ_HANDLERS.update({
     "BIO-DOOR-EAST-F": handle_bio_door_east,
+    "MICROBE-F": handle_microbe,
+    "STRIP-F": handle_strip,
     "CRYO-BUTTON-PSEUDO": handle_cryo_button,
     "FUNGICIDE-BUTTON-F": handle_fungicide_button,
     "BLUE-ELEVATOR-BUTTON-F": handle_blue_elevator_button,

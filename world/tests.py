@@ -139,6 +139,83 @@ class TakeAllTest(EvenniaTestCase):
             self.assertIn(zil, held, f"take all missed {zil}")
 
 
+class MicrobeBattleTest(EvenniaTestCase):
+    """Phase 14b — the strip microbe (comptwo.zil) blocks the way back.
+
+    The walkthrough test already drives the happy path end to end; these pin the
+    individual mechanics: the spawn-and-block, the laser-setting gate, the eaten
+    death, and the throw-it-off-the-strip dispatch.
+    """
+
+    def _at_strip(self):
+        from world.walkthrough import _by_zil
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        gs.player = char
+        char.location = _by_zil("MIDDLE-OF-STRIP")
+        gs.flags["COMPUTER-FIXED"] = True
+        return char, gs
+
+    def test_microbe_spawns_and_blocks_the_strip(self):
+        from world.action_handlers import dispatch_room, M_ENTER
+        from world.walkthrough import _by_zil
+
+        char, gs = self._at_strip()
+        self.assertTrue(gs.flags["NO-MICROBE"], "strip starts clear")
+        dispatch_room(char.location, char, M_ENTER)
+        self.assertIs(_by_zil("MICROBE").location, char.location,
+                      "the microbe should drop onto the strip")
+        self.assertFalse(gs.flags["NO-MICROBE"], "the south exit is now blocked")
+        self.assertTrue(
+            any(getattr(i.routine, "__name__", None) == "i_microbe" and i.enabled
+                for i in gs.scheduler._interrupts),
+            "I-MICROBE should be running once the microbe appears")
+
+    def test_red_setting_is_too_fine_to_hit(self):
+        from world.action_handlers import _shoot_microbe
+
+        char, gs = self._at_strip()
+        gs.flags["LASER-SETTING"] = 1
+        _shoot_microbe(gs, char)
+        self.assertFalse(gs.flags["MICROBE-HIT"], "red passes harmlessly through")
+        gs.flags["LASER-SETTING"] = 2
+        _shoot_microbe(gs, char)
+        self.assertTrue(gs.flags["MICROBE-HIT"], "a wider beam registers a hit")
+
+    def test_unlasered_microbe_eats_you(self):
+        import world.interrupts as I
+
+        char, gs = self._at_strip()
+        i_microbe = I.make_i_microbe(gs)
+        gs.flags["MICROBE-COUNTER"] = 2     # it has already closed in twice
+        gs.flags["MICROBE-HIT"] = False
+        i_microbe()
+        self.assertTrue(gs.dead, "the microbe should feed if not held off")
+        self.assertIsNotNone(gs.death_reason, "death, not victory")
+
+    def test_throwing_the_hot_laser_off_the_strip_dispatches_it(self):
+        from world.action_handlers import (
+            dispatch_room, handle_strip, ObjAction, M_ENTER,
+        )
+        from world.walkthrough import _by_zil
+
+        char, gs = self._at_strip()
+        dispatch_room(char.location, char, M_ENTER)     # spawn it
+        _by_zil("LASER").move_to(char, quiet=True, move_type="get")
+        gs.flags["WARMTH-FLAG"] = 8                      # hot enough to lure it
+        consumed = handle_strip(ObjAction(
+            obj=_by_zil("STRIP"), caller=char,
+            verb="V-THROW-OFF", nouns=["laser", "strip"]))
+        self.assertTrue(consumed, "STRIP-F should consume the throw")
+        self.assertTrue(gs.flags["MICROBE-DISPATCHED"])
+        self.assertTrue(gs.flags["NO-MICROBE"], "the way back is clear again")
+        self.assertIsNone(_by_zil("MICROBE").location,
+                          "the microbe followed the laser into the void")
+        self.assertFalse(
+            any(getattr(i.routine, "__name__", None) == "i_microbe" and i.enabled
+                for i in gs.scheduler._interrupts),
+            "I-MICROBE should be disabled after the dispatch")
+
+
 class SaveRestoreRoundTripTest(EvenniaTestCase):
     """Phase 14a.3 — SAVE/RESTORE survives a live mid-game state and continues.
 
