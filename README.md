@@ -108,9 +108,18 @@ make shell      # Drop into an interactive Django shell
 make migrate    # Apply database migrations
 make load       # Load world data manually (auto-runs on first server start)
 make superuser  # Create an additional admin account
+make reset-game # Reset the running game to a pristine Deck Nine start
+make rebuild    # Rebuild a fresh/wiped DB end to end (migrate + superuser + world)
 make test       # Run the full regression suite (world/tests.py)
 make test-walkthrough  # Run only the end-to-end walkthrough regression
 ```
+
+`make reset-game` wipes the world + GameState and re-places your character at a
+clean start (use it between playthroughs). `make rebuild` goes further: starting
+from no database at all, it migrates, non-interactively creates superuser #1
+(from the `DEV_USER`/`DEV_PASSWORD` make vars), runs Evennia's initial setup, and
+loads the world — recovering a corrupt or deleted dev DB in one command. It backs
+up any existing `server/evennia.db3` to `evennia.db3.bak` first.
 
 ---
 

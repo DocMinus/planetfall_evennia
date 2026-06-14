@@ -13,7 +13,12 @@ from dataclasses import dataclass, field
 from typing import Callable
 
 
-@dataclass
+# eq=False: identity equality, not value equality. Scheduler.tick() drops a
+# fired interrupt with list.remove(intr); a self-requeuing demon adds a second
+# interrupt with the *same* routine object, so value-equality could match (and
+# remove) the wrong slot. Two interrupts are "the same" only if they are the
+# same object.
+@dataclass(eq=False)
 class Interrupt:
     routine: Callable[[], bool]
     ticks_remaining: int   # -1 = fire every turn (ZIL convention)
@@ -309,7 +314,6 @@ class GameState:
         self.c_elapsed = cost or self.DEFAULT_MOVE
 
     def _update_display(self) -> None:
-        if self.chronometer_present and not self.chronometer_munged:
-            self.moves_display = self.internal_moves
-        else:
-            self.moves_display = self.internal_moves
+        # The chronometer reading is computed on demand by V-TIME (verb_commands
+        # _h_time) straight from internal_moves; moves_display is just a mirror.
+        self.moves_display = self.internal_moves
