@@ -34,6 +34,9 @@ from evennia.settings_default import *
 # This is the name of your game. Make it catchy!
 SERVERNAME = "planetfall_evennia"
 
+# Local timezone for log/chronometer display (Evennia defaults to UTC).
+TIME_ZONE = "Europe/Stockholm"
+
 
 ######################################################################
 # Settings given in secret_settings.py override those in this file.

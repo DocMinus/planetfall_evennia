@@ -1,4 +1,7 @@
-EVENNIA := .venv/bin/evennia
+# Put the venv's bin on PATH so the Portal can find `twistd` when it forks
+# (`make start`/`restart` fail with "No such file or directory: 'twistd'" otherwise).
+VENV_BIN := $(CURDIR)/.venv/bin
+EVENNIA := PATH="$(VENV_BIN):$$PATH" $(VENV_BIN)/evennia
 
 .PHONY: start stop restart shell migrate load superuser test test-walkthrough
 
