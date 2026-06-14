@@ -2304,6 +2304,11 @@ def handle_robot_hole(ctx: ObjAction) -> bool:
         return True
     if v in ("V-POINT", "V-THROUGH"):
         return _floyd_through_hole(caller)
+    # ZIL FLOYD-F (compone.zil:2027): "show hole to floyd" sends him scouting.
+    if v == "V-SHOW":
+        prsi = resolve_obj_local(caller, ctx.nouns[1]) if len(ctx.nouns) > 1 else None
+        if prsi is not None and prsi.db.zil_id == "FLOYD":
+            return _floyd_through_hole(caller)
     return False
 
 

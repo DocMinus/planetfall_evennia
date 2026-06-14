@@ -672,9 +672,9 @@ DEFENSE = [
     Cmd("west", expect=("Systems Corridor West",)),
     Cmd("north", expect=("Repair Room",)),
     WaitUntil(_floyd_with, max_waits=20, note="let Floyd catch up for the fetch"),
-    # "point at hole" (V-POINT) is the ported trigger for Floyd's foray through
-    # the robot hole; he returns with the shiny board (cleared INVISIBLE).
-    Cmd("point at hole", expect=("shiny fromitz board",),
+    # Show Floyd the robot hole and he squeezes in to scout it (FLOYD-THROUGH-
+    # HOLE), returning to report the shiny board (cleared INVISIBLE).
+    Cmd("show hole to floyd", expect=("shiny fromitz board",),
         check=lambda gs: gs.flags.get("HOLE-TRIP-FLAG")),
     Cmd("take good board", check=lambda gs: _carries(gs.player, "GOOD-BOARD")),
     Cmd("south", expect=("Systems Corridor West",)),
