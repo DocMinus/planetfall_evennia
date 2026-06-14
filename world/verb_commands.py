@@ -23,7 +23,7 @@ _SKIP_TOKENS = frozenset({"RANDOM", "COMMAND", "RECORD", "UNRECORD"})
 # at_post_cmd advances the clock — counting AGAIN too would double-tick.
 _TIMELESS_VERBS = frozenset({
     "INVENTORY", "SCORE", "SAVE", "RESTOR", "VERSION", "DIAGNOSE",
-    "VERBOSE", "BRIEF", "SUPER", "AGAIN",
+    "VERBOSE", "BRIEF", "SUPER", "AGAIN", "TIME",
 })
 
 # ZIL truncations → full English words for the Evennia key
@@ -204,25 +204,42 @@ def _match_pattern(args: str, pattern: list) -> list | None:
 # Handlers — each receives (caller, nouns: list[str])
 # ---------------------------------------------------------------------------
 
-def build_look(caller, loc) -> str:
+def build_look(caller, loc, brief_ok=False) -> str:
     """Render a room the ZIL way as a single string.
 
     Used by the V-LOOK command, by movement, and by connect (via
     Character.at_look), so every room view is consistent: the room name, its
     ACTION-routine description (or static desc), visible objects (NDESCBIT
     objects like the ADVENTURER are hidden), then the obvious exits.
+
+    ``brief_ok`` is set for the automatic look on movement, which honours the
+    ZIL verbosity mode (BRIEF default: full description only on a room's first
+    visit; VERBOSE: always; SUPER-BRIEF: never). The explicit LOOK command
+    always shows the full description regardless of mode.
     """
     from evennia.objects.objects import DefaultExit
     from world.action_handlers import dispatch_room_look
     if not loc:
         return "You are in a void."
 
+    first_visit = loc.db.first_visit
+    show_desc = True
+    if brief_ok:
+        gs = _gs()
+        if gs and gs.flags.get("SUPER-BRIEF"):
+            show_desc = False
+        elif gs and gs.flags.get("VERBOSE"):
+            show_desc = True
+        else:                       # BRIEF (the ZIL default): full only once
+            show_desc = bool(first_visit)
+
     lines = [f"\n{loc.key}"]
-    desc = dispatch_room_look(loc, caller)
-    if desc is None:
-        desc = loc.db.desc or None
-    if desc:
-        lines.append(desc)
+    if show_desc:
+        desc = dispatch_room_look(loc, caller)
+        if desc is None:
+            desc = loc.db.desc or None
+        if desc:
+            lines.append(desc)
     loc.db.first_visit = False
 
     visible = [
@@ -449,6 +466,57 @@ def _h_score(caller, nouns):
     from world.state import GameState
     line += f"\nThis score gives you the rank of {GameState.rank_for(score)}."
     caller.msg(line)
+
+
+def _h_version(caller, nouns):
+    """V-VERSION (verbs.zil:?) — the game's copyright/release banner."""
+    caller.msg(
+        "PLANETFALL\n"
+        "Infocom interactive fiction - a science fiction story\n"
+        "Copyright (c) 1983 by Infocom, Inc. All rights reserved.\n"
+        "PLANETFALL is a registered trademark of Infocom, Inc.\n"
+        "Release 37 / Serial number 851003"
+    )
+
+
+def _h_time(caller, nouns):
+    """V-TIME (verbs.zil) — the chronometer reading, if you're wearing it."""
+    gs = _gs()
+    chrono = next((o for o in caller.contents if o.db.zil_id == "CHRONOMETER"), None)
+    if chrono is None:
+        caller.msg("It's hard to say, since you've removed your chronometer.")
+        return
+    moves = (gs.chronometer_munged and getattr(gs, "munged_time", 0)) \
+        if gs else 0
+    if gs and not gs.chronometer_munged:
+        moves = gs.internal_moves
+    caller.msg(f"According to the chronometer, the current time is {moves}.")
+
+
+def _h_verbosity(caller, nouns, *, verbose, super_brief, message):
+    """V-BRIEF / V-VERBOSE / V-SUPER-BRIEF — set room-description verbosity."""
+    gs = _gs()
+    if gs:
+        gs.flags["VERBOSE"] = verbose
+        gs.flags["SUPER-BRIEF"] = super_brief
+    caller.msg(message)
+    if verbose:                     # ZIL V-VERBOSE re-looks at the room
+        caller.msg(build_look(caller, caller.location))
+
+
+def _h_brief(caller, nouns):
+    _h_verbosity(caller, nouns, verbose=False, super_brief=False,
+                 message="Brief descriptions.")
+
+
+def _h_verbose(caller, nouns):
+    _h_verbosity(caller, nouns, verbose=True, super_brief=False,
+                 message="Maximum verbosity.")
+
+
+def _h_super_brief(caller, nouns):
+    _h_verbosity(caller, nouns, verbose=False, super_brief=True,
+                 message="Super-brief descriptions.")
 
 
 # ---------------------------------------------------------------------------
@@ -1423,6 +1491,11 @@ HANDLERS: dict = {
     "V-READ":        _h_read,
     "V-DIAGNOSE":    _h_diagnose_full,
     "V-SCORE":       _h_score,
+    "V-VERSION":     _h_version,
+    "V-TIME":        _h_time,
+    "V-BRIEF":       _h_brief,
+    "V-VERBOSE":     _h_verbose,
+    "V-SUPER-BRIEF": _h_super_brief,
     "V-PUT":         _h_put,
     "V-PUT-ON":      _h_put,
     "V-INSERT":      _h_put,

@@ -22,7 +22,9 @@ class PlanetfallNPC(ObjectParent, DefaultCharacter):
         from typeclasses.rooms import PlanetfallRoom
         if isinstance(target, PlanetfallRoom):
             from world.verb_commands import build_look
-            return build_look(self, target)
+            # The automatic look on movement/connect honours the BRIEF/VERBOSE
+            # mode; the explicit LOOK command calls build_look directly (full).
+            return build_look(self, target, brief_ok=True)
         return super().at_look(target, **kwargs)
 
     def at_object_creation(self):
