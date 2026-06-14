@@ -83,10 +83,32 @@ def _article(obj) -> str:
 _PRONOUNS = frozenset({"it", "them", "him", "her", "that"})
 
 
+def _global_object_ids():
+    """ZIL GLOBAL-OBJECTS — zil_ids of objects in scope from *every* room.
+
+    The loader flags each GLOBAL-OBJECTS member (floor, hands, doorway, …) with
+    a "GLOBAL-OBJECT" obj_flag. Membership is static game data, so cache the
+    small set (~6) once; the zil_ids stay valid across world reloads.
+    """
+    global _GLOBAL_OBJECT_IDS
+    if _GLOBAL_OBJECT_IDS is None:
+        from typeclasses.objects import PlanetfallObject
+        _GLOBAL_OBJECT_IDS = {
+            o.db.zil_id for o in PlanetfallObject.objects.all()
+            if o.db.zil_id and "GLOBAL-OBJECT" in (o.db.obj_flags or [])
+        }
+    return _GLOBAL_OBJECT_IDS
+
+
+_GLOBAL_OBJECT_IDS = None
+
+
 def _accessible(caller, obj) -> bool:
-    """ZIL ACCESSIBLE? — is obj in inventory, the room, or its local-globals?"""
+    """ZIL ACCESSIBLE? — inventory, the room, its local-globals, or a global-object."""
     if obj.location is caller:
         return True
+    if "GLOBAL-OBJECT" in (obj.db.obj_flags or []):
+        return True   # floor/hands/doorway/… are in scope everywhere
     loc = caller.location
     if not loc:
         return False
@@ -124,6 +146,11 @@ def resolve_obj(caller, noun: str):
             obj = _by_zil_id(zil_id)
             if obj and obj not in candidates:
                 candidates.append(obj)
+    # ZIL GLOBAL-OBJECTS: floor/hands/doorway/… are referable from every room.
+    for zil_id in _global_object_ids():
+        obj = _by_zil_id(zil_id)
+        if obj and obj not in candidates:
+            candidates.append(obj)
 
     # ZIL ACCESSIBLE?: you can also refer to things inside a visible container —
     # one that is open or transparent (the dial in the laser, the speck in the
