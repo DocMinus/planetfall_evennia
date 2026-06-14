@@ -1046,6 +1046,30 @@ def make_i_chase_scene(gs: "GameState", state: dict | None = None):
     return i_chase_scene
 
 
+def make_i_unflood(gs: "GameState", state: dict | None = None):
+    """I-UNFLOOD (comptwo.zil:2358) — the fungicide mist drains after ~50 turns.
+
+    A one-shot queued when the bio-lab is flooded: clears LAB-FLOODED so the
+    chase (i_chase_scene) turns lethal again. The crossing to the cryo elevator
+    takes only a handful of moves, so a masked player who keeps moving is gone
+    long before this fires — dawdling in the lab is what gets you eaten.
+    """
+    def i_unflood() -> bool:
+        gs.flags["LAB-FLOODED"] = False
+        here = _here_id(gs)
+        if here == "BIO-LAB":
+            _send(gs, "\nThe last traces of mist in the air vanish. The mutants, "
+                  "recovering quickly, notice you and begin salivating.")
+        elif here == "LAB-OFFICE" and _door_is_open("OFFICE-DOOR"):
+            _send(gs, "\nThe mist in the Bio Lab clears. The mutants recover and "
+                  "rush toward the door!")
+        return False   # one-shot
+
+    i_unflood.__name__ = "i_unflood"
+    i_unflood._state = state if state is not None else {}
+    return i_unflood
+
+
 def make_i_magnet(gs: "GameState", state: dict | None = None):
     """I-MAGNET (compone.zil:1601) — a carried magnet scrambles held cards."""
     def i_magnet() -> bool:

@@ -2034,8 +2034,12 @@ def handle_fungicide_button(ctx: ObjAction) -> bool:
     gs = _gs()
     if gs:
         gs.flags["LAB-FLOODED"] = True
-        # NB: ZIL queues I-UNFLOOD (50) to make this a timed dash; we leave the
-        # flood durable for now so the escape is survivable (faithfulness TODO).
+        # ZIL I-UNFLOOD: the mist drains after ~50 turns, after which the chase
+        # turns lethal again — making the masked crossing a genuine timed dash.
+        if not any(getattr(i.routine, "__name__", None) == "i_unflood"
+                   for i in gs.scheduler._interrupts):
+            import world.interrupts as I
+            gs.scheduler.enable(gs.scheduler.queue(I.make_i_unflood(gs), 1000))
     caller.msg("You hear a hissing from beyond the door to the west.")
     return True
 

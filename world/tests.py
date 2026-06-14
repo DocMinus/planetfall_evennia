@@ -102,6 +102,26 @@ class HyphenTokenResolutionTest(EvenniaTestCase):
                           f"high-protein should resolve from {spelling!r}")
 
 
+class UnfloodTimerTest(EvenniaTestCase):
+    """Phase 14b — the fungicide flood drains on a timer (I-UNFLOOD)."""
+
+    def test_flood_drains_and_chase_turns_lethal(self):
+        import world.interrupts as I
+
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        gs.flags["LAB-FLOODED"] = True
+        intr = gs.scheduler.queue(I.make_i_unflood(gs), 1000)
+        gs.scheduler.enable(intr)
+
+        # Not yet: a few moves' worth of ticks leaves the mist (and safety) up.
+        gs.scheduler.tick(200)
+        self.assertTrue(gs.flags["LAB-FLOODED"], "flood drained far too early")
+
+        # Past the window: the mist clears, so the chase (i_chase_scene) is lethal.
+        gs.scheduler.tick(1000)
+        self.assertFalse(gs.flags["LAB-FLOODED"], "flood never drained — no timed dash")
+
+
 class TakeAllTest(EvenniaTestCase):
     """Phase 14b — "take all" grabs every takeable item on the ground."""
 
