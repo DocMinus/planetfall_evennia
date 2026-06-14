@@ -5,19 +5,24 @@ An unofficial fan port of **Planetfall** (1983, Infocom) to
 The game world (105 rooms, 137 objects, 8 NPCs, 200+ verb patterns) is
 derived from the original ZIL source code via a custom extraction pipeline.
 
-> **Status:** Phases 0–13 complete — the game is playable end to end, from the
-> Feinstein's destruction (escape-pod sequence) through the planet-side puzzles
-> to the winning cryo endgame. The clock/interrupt engine, Floyd, scoring,
-> AGAIN/SAVE-RESTORE, and all conditional/transport exits are faithful, and the
-> Phase 13 puzzle subsystems are in: a uniform death/JIGS-UP + win path, the
-> generic verbs, the brig escape, card-slot access, survival (sleep/food/
-> sickness), the shuttle driving sim, the reactor repair (Defense + Course
-> Control + Comm chemistry + laser/miniaturization), the cryo endgame, teleport
-> booths, the Floyd sacrifice, the lab mutant chase, and scenery flavour.
-> **The game is winnable end to end** — fix the three reactor systems, repair
-> the computer (shrink into the relay and laser the speck), and the cryo
-> sequence delivers the victory. Remaining polish (some verbatim scenery, a
-> Floyd dialogue branch) is tracked in `EVENNIA_PLAN_3.md`.
+> **Status:** Phases 0–14 essentially complete — the game is playable end to
+> end, from the Feinstein's destruction (escape-pod sequence) through the
+> planet-side puzzles to the winning cryo endgame. The clock/interrupt engine,
+> Floyd, scoring, AGAIN/SAVE-RESTORE, and all conditional/transport exits are
+> faithful, and the Phase 13 puzzle subsystems are in: a uniform death/JIGS-UP +
+> win path, the generic verbs, the brig escape, card-slot access, survival
+> (sleep/food/sickness), the shuttle driving sim, the reactor repair (Defense +
+> Course Control + Comm chemistry + laser/miniaturization), the cryo endgame,
+> teleport booths, the Floyd sacrifice, the lab mutant chase, and scenery
+> flavour.
+>
+> **Phase 14 (hardening/validation)** adds a committed end-to-end regression
+> suite: a scripted walkthrough plays the game with real typed commands from the
+> opening pod to a **perfect 80/80 victory** (Galactic Overlord, Floyd revived),
+> and `make test` replays it plus save/restore round-trips, hyphen-token
+> resolution, `take all`, and the timed flood drain. Remaining work is the
+> single-player front-end (Phase 15) and optional scenery flavour, tracked in
+> `EVENNIA_PLAN_4.md` / `EVENNIA_PLAN_5.md`.
 
 ---
 
@@ -54,7 +59,9 @@ The server starts two listeners:
 ## Starting a Game
 
 1. Connect to `localhost:4001` in your browser (or a MUD client at port 4000).
-2. Log in with the superuser account you created.
+2. Log in with the superuser account you created. The current development DB
+   ships with a superuser **`superuser`** / password **`planetfall123`** —
+   change it (`@password`) or create your own; this is a throwaway dev credential.
 3. Teleport to the starting room:
    ```
    @tel/quiet DECK-NINE
@@ -101,7 +108,29 @@ make shell      # Drop into an interactive Django shell
 make migrate    # Apply database migrations
 make load       # Load world data manually (auto-runs on first server start)
 make superuser  # Create an additional admin account
+make test       # Run the full regression suite (world/tests.py)
+make test-walkthrough  # Run only the end-to-end walkthrough regression
 ```
+
+---
+
+## Tests
+
+The regression suite lives in `world/tests.py` and runs against a fresh,
+JSON-loaded world inside an in-memory test database:
+
+```bash
+make test
+```
+
+The headline test (`WalkthroughRegressionTest`) replays the canonical
+`world/walkthrough.py` — a full DECK-NINE → victory playthrough driven by real
+typed commands — and asserts a **perfect 80/80 win**. It is the regression net
+for the entire critical path (parser → object resolution → verb dispatch →
+movement → clock/interrupt firing → scoring → endgame). The suite also covers
+SAVE/RESTORE round-trips (including a live timed demon mid-countdown),
+hyphen-token object resolution, `take all`, and the timed fungicide flood drain.
+Budget ~20s — the walkthrough drives several thousand internal moves.
 
 ---
 
@@ -125,6 +154,10 @@ planetfall_evennia/
     floyd.py              # FloydNPC — autonomous robot companion logic
     scheduler_script.py   # Evennia Script wrapping GameState; survives server reloads
     verb_commands.py      # 99 Command classes generated from syntax.json; verb handlers
+    action_handlers.py    # ROOM/OBJ action dispatch (puzzle logic per ZIL ACTION routines)
+    exit_handlers.py      # PER transport routines (elevators, shuttle, pod, ladder…)
+    walkthrough.py        # Scripted real-command playthrough → 80/80 victory
+    tests.py              # Regression suite (replays the walkthrough; save/restore; …)
   server/conf/
     settings.py           # Evennia settings
 ```
