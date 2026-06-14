@@ -102,6 +102,23 @@ class HyphenTokenResolutionTest(EvenniaTestCase):
                           f"high-protein should resolve from {spelling!r}")
 
 
+class TakeAllTest(EvenniaTestCase):
+    """Phase 14b — "take all" grabs every takeable item on the ground."""
+
+    def test_take_all(self):
+        from world.walkthrough import _by_zil
+
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        char.location = _by_zil("TOOL-ROOM")   # holds magnet, pliers, laser, flask
+        drv = Driver(char, gs, verbose=False)
+        out = drv._emit("take all")
+
+        self.assertIn("Taken.", out)
+        held = {o.db.zil_id for o in char.contents}
+        for zil in ("MAGNET", "PLIERS", "LASER", "FLASK"):
+            self.assertIn(zil, held, f"take all missed {zil}")
+
+
 class SaveRestoreRoundTripTest(EvenniaTestCase):
     """Phase 14a.3 — SAVE/RESTORE survives a live mid-game state and continues.
 

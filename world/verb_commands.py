@@ -297,7 +297,14 @@ def _h_inventory(caller, nouns):
         caller.msg(f"  {_article(obj)} {obj.key}{worn}")
 
 
+_ALL_WORDS = frozenset({"all", "everything", "both"})
+
+
 def _h_take(caller, nouns):
+    # ZIL (MANY) take scope: "take all" grabs every takeable item on the ground.
+    if nouns and _strip_articles(nouns[0]).strip() in _ALL_WORDS:
+        _take_all(caller)
+        return
     obj = resolve_obj(caller, nouns[0])
     if not obj:
         caller.msg(f"You see no {nouns[0]} here.")
@@ -313,6 +320,30 @@ def _h_take(caller, nouns):
     if gs:
         gs.score_object(obj)   # ZIL SCORE-OBJ: valuable items score on first take
     caller.msg("Taken.")
+
+
+def _take_all(caller):
+    """ZIL ITAKE over the ON-GROUND/MANY scope — every takeable thing here."""
+    from evennia.objects.objects import DefaultExit
+    room = caller.location
+    if room is None:
+        caller.msg("There is nothing here to take.")
+        return
+    gs = _gs()
+    took = False
+    for obj in list(room.contents):
+        if obj is caller or isinstance(obj, DefaultExit):
+            continue
+        flags = obj.db.obj_flags or []
+        if "TAKEBIT" not in flags or "INVISIBLE" in flags:
+            continue
+        obj.move_to(caller, quiet=True, move_type="get")
+        if gs:
+            gs.score_object(obj)
+        caller.msg(f"{obj.key}: Taken.")
+        took = True
+    if not took:
+        caller.msg("There is nothing here to take.")
 
 
 def _h_drop(caller, nouns):
