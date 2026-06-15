@@ -12,7 +12,16 @@ DEV_EMAIL ?= admin@example.com
 DEV_PASSWORD ?= planetfall123
 SU_ENV := EVENNIA_SUPERUSER_USERNAME="$(DEV_USER)" EVENNIA_SUPERUSER_EMAIL="$(DEV_EMAIL)" EVENNIA_SUPERUSER_PASSWORD="$(DEV_PASSWORD)"
 
-.PHONY: start stop restart shell migrate load superuser test test-walkthrough reset-game rebuild
+.PHONY: start stop restart shell migrate load superuser test test-walkthrough reset-game rebuild play
+
+# One-command single-player launch: boot the server (Portal + Server), wait for
+# the web client to come online, then open it in the browser — straight onto the
+# Planetfall title screen, no login. The SU env lets a first-ever boot create
+# Account #1 non-interactively (see `rebuild`). `-` ignores the "already running"
+# exit code so `make play` also just (re)opens the browser on a live server.
+play:
+	-$(SU_ENV) $(EVENNIA) start
+	$(VENV_BIN)/python scripts/play.py
 
 start:
 	$(EVENNIA) start

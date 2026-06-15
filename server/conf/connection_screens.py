@@ -20,21 +20,18 @@ of the screen is done by the unlogged-in "look" command.
 
 """
 
-from django.conf import settings
-
 from evennia import utils
 
+# Single-player front-end (Phase 15): with auto-login the player normally never
+# sees this screen. It is kept minimal and on-theme as a fallback for a manual
+# `connect` (e.g. from a raw telnet/MUD client).
 CONNECTION_SCREEN = """
-|b==============================================================|n
- Welcome to |g{}|n, version {}!
+|y==============================================================|n
+ |yP L A N E T F A L L|n  — an interactive fiction in the Infocom tradition
 
- If you have an existing account, connect to it by typing:
-      |wconnect <username> <password>|n
- If you need to create an account, type (without the <>'s):
-      |wcreate <username> <password>|n
+ An unofficial fan port to Evennia.  Version {}.
 
- If you have spaces in your username, enclose it in quotes.
- Enter |whelp|n for more info. |wlook|n will re-show this screen.
-|b==============================================================|n""".format(
-    settings.SERVERNAME, utils.get_evennia_version("short")
+ To begin, type:  |wconnect <username> <password>|n
+|y==============================================================|n""".format(
+    utils.get_evennia_version("short")
 )

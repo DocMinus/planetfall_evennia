@@ -1,0 +1,135 @@
+/*
+ * Planetfall single-player front-end (Phase 15) — amber-phosphor terminal.
+ *
+ * Loaded after webclient.css / goldenlayout.css, so these rules win. The goal
+ * is a single, full-window amber-on-black monospace pane that reads like an
+ * early-80s terminal: no multi-pane chrome, no tab bar, no settings gear, just
+ * the game text and a prompt. No CRT scanline overlay (chosen for readability).
+ */
+
+/* ---- palette ---------------------------------------------------------- */
+:root {
+  --pf-amber: #ffb000;        /* phosphor amber */
+  --pf-amber-dim: #c98600;    /* dimmer amber for secondary text */
+  --pf-bg: #0a0a0a;           /* near-black */
+}
+
+/* ---- base canvas ------------------------------------------------------ */
+html, body {
+  background: var(--pf-bg) !important;
+  color: var(--pf-amber) !important;
+  font-family: "DejaVu Sans Mono", "Courier New", monospace !important;
+}
+
+#clientwrapper,
+.lm_goldenlayout,
+.lm_content,
+.lm_item_container {
+  background: var(--pf-bg) !important;
+}
+
+/* ---- strip the multi-pane chrome (single-pane look) ------------------- */
+#toolbar { display: none !important; }
+.lm_header { display: none !important; }      /* GoldenLayout tab bar */
+.lm_controls { display: none !important; }    /* pane min/max/close controls */
+.lm_splitter { display: none !important; }    /* drag handles between panes */
+.lm_dragProxy, .lm_dropTargetIndicator { display: none !important; }
+
+/* ---- output window ---------------------------------------------------- */
+#messagewindow,
+.content {
+  background: var(--pf-bg) !important;
+  color: var(--pf-amber) !important;
+  font-family: "DejaVu Sans Mono", "Courier New", monospace !important;
+  font-size: 16px !important;
+  line-height: 1.45 !important;
+  max-width: 80ch;
+  margin: 0 auto;
+  padding: 1.2em 1.4em;
+}
+
+#messagewindow a { color: var(--pf-amber); text-decoration: underline; }
+
+/* ---- input line ------------------------------------------------------- */
+#input, #inputform, #inputcontrol, .inputfieldwrapper {
+  background: var(--pf-bg) !important;
+  border: none !important;
+}
+
+.inputfield,
+#inputfield,
+textarea.inputfield {
+  background: var(--pf-bg) !important;
+  color: var(--pf-amber) !important;
+  caret-color: var(--pf-amber) !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-family: "DejaVu Sans Mono", "Courier New", monospace !important;
+  font-size: 16px !important;
+  max-width: 80ch;
+  margin: 0 auto;
+}
+
+.inputfield:focus, #inputfield:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#prompt, .prompt { color: var(--pf-amber-dim) !important; }
+
+/* classic IF send button: amber/outline rather than bootstrap blue */
+#inputsend {
+  color: var(--pf-amber) !important;
+  border-color: var(--pf-amber-dim) !important;
+  background: transparent !important;
+}
+
+/* ---- scrollbars ------------------------------------------------------- */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--pf-bg); }
+::-webkit-scrollbar-thumb { background: var(--pf-amber-dim); border-radius: 5px; }
+
+/* ---- title splash ----------------------------------------------------- */
+#pf-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--pf-bg);
+  color: var(--pf-amber);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: "DejaVu Sans Mono", "Courier New", monospace;
+  opacity: 1;
+  transition: opacity 0.55s ease;
+  cursor: pointer;
+}
+
+#pf-splash.pf-splash-hide { opacity: 0; }
+
+#pf-splash-banner {
+  margin: 0 0 1.4em 0;
+  font-size: clamp(7px, 1.6vw, 15px);
+  line-height: 1.05;
+  white-space: pre;
+  text-shadow: 0 0 6px rgba(255, 176, 0, 0.45);
+}
+
+#pf-splash-sub {
+  color: var(--pf-amber-dim);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  margin-bottom: 2.4em;
+}
+
+#pf-splash-prompt {
+  font-size: 15px;
+  animation: pf-blink 1.1s steps(1) infinite;
+}
+
+@keyframes pf-blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}

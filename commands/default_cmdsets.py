@@ -18,6 +18,26 @@ from evennia import default_cmds
 from world.verb_commands import ALL_COMMANDS
 
 
+def _strip_default_evennia_commands(cmdset):
+    """Remove every stock Evennia command from a player-facing cmdset.
+
+    Single-player front-end (Phase 15): Planetfall should expose ONLY its own
+    verbs (movement, look, take, SAVE/RESTORE/RESTART/QUIT, …), not Evennia's
+    multiplayer/admin chrome — channels, `who`, `page`, OOC, and the whole
+    `@`-building/system suite all break the interactive-fiction illusion.
+
+    Game verbs that share a key with a default (e.g. `look`, `get`, `drop`,
+    `quit`) were added on top and have already replaced their default
+    counterparts, so this only removes the genuinely non-game commands.
+
+    The admin path for development is intentionally *not* in-game: use the
+    Django admin site (`/admin/`) or `make shell`, both of which are unaffected.
+    """
+    for cmd in list(cmdset.commands):
+        if type(cmd).__module__.startswith("evennia.commands.default"):
+            cmdset.remove(cmd)
+
+
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
     """
     The `CharacterCmdSet` contains general in-game commands like `look`,
@@ -31,6 +51,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         super().at_cmdset_creation()
         for cmd_cls in ALL_COMMANDS:
             self.add(cmd_cls())
+        _strip_default_evennia_commands(self)
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):
@@ -48,9 +69,11 @@ class AccountCmdSet(default_cmds.AccountCmdSet):
         Populates the cmdset
         """
         super().at_cmdset_creation()
-        #
-        # any commands you add below will overload the default ones.
-        #
+        # Strip account-level multiplayer/OOC commands (channels, who, page,
+        # ic/ooc, charcreate, …). With auto-puppet the player is always in-world
+        # via the CharacterCmdSet's Planetfall verbs, so none of these are needed
+        # and they'd otherwise leak into the in-game prompt and break immersion.
+        _strip_default_evennia_commands(self)
 
 
 class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
@@ -88,6 +111,6 @@ class SessionCmdSet(default_cmds.SessionCmdSet):
         It prints some info.
         """
         super().at_cmdset_creation()
-        #
-        # any commands you add below will overload the default ones.
-        #
+        # Strip the session-level `sessions` command (multi-session management);
+        # single-player has exactly one session.
+        _strip_default_evennia_commands(self)

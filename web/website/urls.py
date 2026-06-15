@@ -9,11 +9,13 @@ so it can reroute to all website pages.
 from django.urls import path
 
 from evennia.web.website.urls import urlpatterns as evennia_website_urlpatterns
+from evennia.web.webclient.views import webclient as webclient_view
 
-# add patterns here
+# Single-player front-end (Phase 15): serve the game client at the site root so
+# opening the URL drops straight into Planetfall — no website landing page in
+# between. Listed first, so it wins over Evennia's default website index.
 urlpatterns = [
-    # path("url-pattern", imported_python_view),
-    # path("url-pattern", imported_python_view),
+    path("", webclient_view, name="index"),
 ]
 
 # read by Django

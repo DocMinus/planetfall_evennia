@@ -32,10 +32,45 @@ from evennia.settings_default import *
 ######################################################################
 
 # This is the name of your game. Make it catchy!
-SERVERNAME = "planetfall_evennia"
+# Used for the browser tab title, MSSP, and the connect banner.
+SERVERNAME = "Planetfall"
 
 # Local timezone for log/chronometer display (Evennia defaults to UTC).
 TIME_ZONE = "Europe/Stockholm"
+
+
+######################################################################
+# Single-player front-end (Phase 15)
+######################################################################
+# Planetfall is a single-player game served locally: exactly one player
+# inhabits the single shared game world. These values are Evennia's own
+# defaults, but we set them explicitly so the single-player contract is
+# stated in one place and cannot drift with upstream changes.
+
+# One session == one character; no character-select menu.
+MULTISESSION_MODE = 0
+# A new account immediately owns one auto-created character...
+AUTO_CREATE_CHARACTER_WITH_ACCOUNT = True
+# ...which is auto-puppeted on login, dropping the player straight in-world.
+AUTO_PUPPET_ON_LOGIN = True
+# Never more than the one protagonist.
+MAX_NR_CHARACTERS = 1
+# No throwaway guest logins: the fixed player character must persist so that
+# in-game SAVE/RESTORE and live world state survive across browser sessions.
+GUEST_ENABLED = False
+
+# Auto-authenticate the browser session as the single player so the served page
+# opens straight in-world (no login screen). Must run *before* Evennia's
+# SharedLoginMiddleware, which propagates the authenticated session to the
+# webclient. LOCAL SINGLE-PLAYER ONLY — never on a public deployment.
+MIDDLEWARE = list(MIDDLEWARE)
+_pf_autologin = "web.utils.middleware.SinglePlayerAutoLoginMiddleware"
+_pf_sharedlogin = "evennia.web.utils.middleware.SharedLoginMiddleware"
+if _pf_autologin not in MIDDLEWARE:
+    if _pf_sharedlogin in MIDDLEWARE:
+        MIDDLEWARE.insert(MIDDLEWARE.index(_pf_sharedlogin), _pf_autologin)
+    else:
+        MIDDLEWARE.append(_pf_autologin)
 
 
 ######################################################################

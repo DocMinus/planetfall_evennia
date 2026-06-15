@@ -1,0 +1,87 @@
+{% extends "webclient/base.html" %}
+
+{% comment %}
+Planetfall single-player front-end (Phase 15).
+
+This overrides Evennia's default webclient.html. The `client` block reproduces
+the stock GoldenLayout panes verbatim (the layout plugin relocates
+#messagewindow and builds its own input field, so these elements must exist).
+The `scripts` block injects an amber-on-black PLANETFALL title splash as a body
+overlay — it sits above the live client, which is already auto-connecting
+behind it, and is dismissed on the first RETURN/click to reveal the game.
+{% endcomment %}
+
+{% block client %}
+
+<!-- Basic toolbar -->
+<div id="toolbar"></div>
+
+<!-- "Main" Content -->
+<div id="main"  class="split split-vertical" data-role-default>
+  <div id="main-sub" class="split-sub">
+    <div id="messagewindow"></div>
+  </div>
+</div>
+<!-- "Input" Pane -->
+<div id="input" class="split split-vertical" data-role-input data-update-append>
+  <div id="inputform" class="wrapper">
+    <div id="prompt" class="prompt">
+    </div>
+    <div id="inputcontrol" class="input-group">
+      <textarea id="inputfield" type="text" class="form-control"></textarea>
+      <span class="input-group-btn">
+        <button class="btn btn-large btn-outline-primary" id="inputsend" type="button" value="">&gt;</button>
+      </span>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script language="javascript" type="text/javascript">
+  $(document).ready(function () {
+    var banner =
+      " ____  _        _    _   _ _____ _____ _____ _    _     _     \n" +
+      "|  _ \\| |      / \\  | \\ | | ____|_   _|  ___/ \\  | |   | |    \n" +
+      "| |_) | |     / _ \\ |  \\| |  _|   | | | |_ / _ \\ | |   | |    \n" +
+      "|  __/| |___ / ___ \\| |\\  | |___  | | |  _/ ___ \\| |___| |___ \n" +
+      "|_|   |_____/_/   \\_\\_| \\_|_____| |_| |_|/_/   \\_\\_____|_____|";
+
+    var $splash = $(
+      '<div id="pf-splash">' +
+        '<pre id="pf-splash-banner"></pre>' +
+        '<div id="pf-splash-sub">An interactive fiction in the Infocom tradition</div>' +
+        '<div id="pf-splash-prompt">Press RETURN to begin</div>' +
+      "</div>"
+    );
+    $splash.find("#pf-splash-banner").text(banner);
+    $("body").append($splash);
+
+    var dismissed = false;
+    function dismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      $splash.addClass("pf-splash-hide");
+      // focus the live GoldenLayout input once the splash fades out
+      setTimeout(function () {
+        $splash.remove();
+        $(".inputfield").last().focus();
+      }, 600);
+    }
+
+    // First RETURN (or any click) starts the game; swallow that keypress so it
+    // doesn't reach the input as an empty command.
+    $(document).on("keydown.pfsplash", function (evnt) {
+      if (dismissed) {
+        $(document).off("keydown.pfsplash");
+        return;
+      }
+      evnt.preventDefault();
+      evnt.stopPropagation();
+      dismiss();
+    });
+    $splash.on("click", dismiss);
+  });
+</script>
+{% endblock %}

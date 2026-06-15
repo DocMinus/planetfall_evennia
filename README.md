@@ -5,7 +5,7 @@ An unofficial fan port of **Planetfall** (1983, Infocom) to
 The game world (105 rooms, 137 objects, 8 NPCs, 200+ verb patterns) is
 derived from the original ZIL source code via a custom extraction pipeline.
 
-> **Status:** Phases 0–14 complete — the game is playable end to end, from the
+> **Status:** Phases 0–15 complete — the game is playable end to end, from the
 > Feinstein's destruction (escape-pod sequence) through the planet-side puzzles
 > to the winning cryo endgame. The clock/interrupt engine, Floyd, scoring,
 > AGAIN/SAVE-RESTORE, and all conditional/transport exits are faithful, and the
@@ -22,8 +22,18 @@ derived from the original ZIL source code via a custom extraction pipeline.
 > Overlord, Floyd revived), and `make test` (10 tests) replays it plus
 > save/restore round-trips, hyphen-token resolution, `take all`, the timed flood
 > drain, and the microbe battle. A one-command `make rebuild` recovers a wiped
-> dev DB from scratch. The only remaining work is the single-player front-end
-> (Phase 15), tracked in `EVENNIA_PLAN_5.md`.
+> dev DB from scratch.
+>
+> **Phase 15 (single-player front-end)** reshapes the multiplayer MUD shell into
+> a single-player interactive-fiction experience: `make play` boots the server
+> and opens the browser straight onto an amber-phosphor terminal with a
+> PLANETFALL title splash — no login screen, no website page, no multi-pane
+> chrome. The browser session auto-authenticates as the one persistent player
+> and drops into Deck Nine; only Planetfall verbs (plus SAVE/RESTORE/RESTART/
+> QUIT) are accepted. State persists across sessions, so closing and reopening
+> resumes where you left off. (This is a local single-player configuration — see
+> `EVENNIA_PLAN_5.md`; it deliberately does **not** support concurrent public
+> multiplayer, which Evennia's single shared world would require re-architecting.)
 
 ---
 
@@ -40,34 +50,37 @@ derived from the original ZIL source code via a custom extraction pipeline.
 # 1. Create the virtual environment and install dependencies
 uv sync
 
-# 2. Apply database migrations (creates the SQLite DB and schema)
-make migrate
+# 2. Build a fresh game database (migrate + initial setup + load the world)
+make rebuild
 
-# 3. Start the server.
-#    On first run: prompts to create an admin account, then loads the game world.
-make start
+# 3. Play: boots the server and opens the game in your browser.
+make play
 ```
 
-To stop the server: `make stop`. To resume later: `make start` again.
-Note: `make restart` is currently unreliable — use `make stop` then `make start`.
+`make play` starts the server, waits for it to come online, and opens
+`http://localhost:4001/` — you land directly on the PLANETFALL title screen.
+Press **RETURN** to begin. To stop the server: `make stop`.
 
-The server starts two listeners:
-- **MUD client** — `localhost:4000` (telnet / any MUD client)
-- **Web client** — `http://localhost:4001` (browser, no client needed)
+The server also accepts raw MUD clients at `localhost:4000` (telnet), though the
+single-player front-end (auto-login, splash, amber theme) is the web client.
 
 ---
 
 ## Starting a Game
 
-1. Connect to `localhost:4001` in your browser (or a MUD client at port 4000).
-2. Log in with the superuser account you created. The current development DB
-   ships with a superuser **`superuser`** / password **`planetfall123`** —
-   change it (`@password`) or create your own; this is a throwaway dev credential.
-3. Teleport to the starting room:
-   ```
-   @tel/quiet DECK-NINE
-   ```
-4. Type `look` to see where you are.
+Just run `make play`. The browser opens on an amber-phosphor terminal showing the
+PLANETFALL title splash; press **RETURN** and you're in Deck Nine at the game's
+opening. There is no login screen — the session auto-connects as the single
+persistent player, and your progress persists across sessions (close the tab and
+`make play` again to resume exactly where you left off).
+
+Type `look` to re-show the room. Type `save` / `restore` / `restart` as in the
+original Infocom game. The only commands accepted are Planetfall's own verbs.
+
+> **Dev/admin note.** The underlying account is the superuser
+> **`superuser`** / **`planetfall123`** (a throwaway dev credential). Admin
+> access is intentionally kept *out* of the game prompt; use the Django admin
+> site at `http://localhost:4001/admin/` or `make shell` instead.
 
 ---
 
@@ -102,6 +115,7 @@ Synonyms from the original game are wired in — `get` works for `take`,
 ## Makefile Targets
 
 ```bash
+make play       # Single-player launch: boot server, wait, open the game in a browser
 make start      # Start the Evennia server
 make stop       # Stop the server
 make restart    # Restart (currently unreliable — prefer stop + start)
@@ -151,7 +165,7 @@ internal moves.
 planetfall_evennia/
   commands/
     command.py            # PlanetfallCommand base class; clock advance hook
-    default_cmdsets.py    # CharacterCmdSet; registers all 99 verb commands
+    default_cmdsets.py    # registers the Planetfall verbs; strips Evennia's non-game cmds
   typeclasses/
     rooms.py              # PlanetfallRoom — ZIL room fields (flags, pseudo, action)
     objects.py            # PlanetfallObject — ZIL object fields (TAKEBIT, CONTBIT, …)
@@ -173,8 +187,15 @@ planetfall_evennia/
   scripts/
     reset_game.py         # `make reset-game` entry point (reset to a pristine start)
     rebuild_db.py         # `make rebuild` entry point (bootstrap a fresh DB)
+    play.py               # `make play` helper: wait for the web server, open the browser
+  web/                    # single-player front-end (Phase 15)
+    utils/middleware.py   # auto-authenticate the browser session as the one player
+    website/urls.py       # route `/` straight to the game client (no website page)
+    templates/webclient/webclient.html  # PLANETFALL title splash + panes
   server/conf/
-    settings.py           # Evennia settings
+    settings.py           # Evennia settings (single-player session config, auto-login)
+    connection_screens.py # Planetfall connect banner (fallback for manual connect)
+  server/.static/webclient/css/custom.css  # amber-phosphor terminal theme
 ```
 
 ---
