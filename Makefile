@@ -66,7 +66,7 @@ rebuild:
 	$(SU_ENV) $(EVENNIA) migrate
 	$(SU_ENV) $(EVENNIA) shell < scripts/rebuild_db.py
 	$(EVENNIA) start
-	@echo "Rebuild complete. Log in as '$(DEV_USER)' (password '$(DEV_PASSWORD)') and 'ic' to begin at Deck Nine."
+	@echo "Rebuild complete. Run 'make play' to open the game (auto-logs in at Deck Nine)."
 
 # Full test suite (creates a throwaway test DB, loads the world from JSON).
 test:
