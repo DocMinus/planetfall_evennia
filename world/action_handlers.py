@@ -306,7 +306,29 @@ def handle_lab_desk(ctx: ObjAction) -> bool:
 
 
 def handle_lab_office(room, character, rarg):
-    """LAB-OFFICE-F (comptwo.zil:2224) — M-LOOK passthrough (static desc)."""
+    """LAB-OFFICE-F (comptwo.zil:2224) — description + mutants through the door."""
+    office_open = _ddesc("OFFICE-DOOR") == "open"
+    if rarg == M_LOOK:
+        return ("This is the office for storing files on Bio Lab experiments. A "
+                "large and messy desk is surrounded by locked files. A small "
+                f"booth lies to the south. {'An open' if office_open else 'A closed'}"
+                " door to the west is labelled \"Biioo Lab.\" You realize with "
+                "shock and horror that the only way out is through the "
+                "mutant-infested Bio Lab.\n\nOn the wall are three buttons: a "
+                "white button labelled \"Lab Liits On\", a black button labelled "
+                "\"Lab Liits Of\", and a red button labelled \"Eemurjensee "
+                "Sistum.\"")
+    if rarg == M_END and office_open:
+        gs = _gs()
+        if gs and gs.flags.get("LAB-FLOODED"):
+            character.msg("Through the open doorway you can see the Bio Lab. It "
+                          "seems to be filled with a light mist. Horrifying "
+                          "biological nightmares stagger about making choking "
+                          "noises.")
+        elif gs:
+            gs.die("Mutated monsters from the Bio Lab pour into the office. You "
+                   "are devoured.")
+        return True
     return False
 
 
@@ -2712,6 +2734,362 @@ OBJ_HANDLERS.update({
     "CLIFF-F": handle_cliff,
     "OCEAN-F": handle_ocean,
     "TABLES-F": handle_tables,
+})
+
+
+# ---------------------------------------------------------------------------
+# Remaining room descriptions & per-room demons (compone/comptwo/globals.zil).
+# Most of these rooms have no LDESC, so without them they rendered as a bare
+# name + exits.
+# ---------------------------------------------------------------------------
+
+def _floyd_npc():
+    from world.scheduler_script import get_game_state_script
+    script = get_game_state_script()
+    return script.get_floyd() if script else None
+
+
+def handle_underwater(room, character, rarg):
+    """UNDERWATER-F (compone.zil:28) — three turns to surface, then drown."""
+    gs = _gs()
+    if rarg == M_END and gs:
+        gs.flags["DROWN"] = gs.flags.get("DROWN", 0) + 1
+        if gs.flags["DROWN"] > 2:
+            gs.die("A mighty undertow drags you across some underwater "
+                   "obstructions.")
+        return True
+    return False
+
+
+def handle_crag(room, character, rarg):
+    """CRAG-F (compone.zil:57) — once ashore, going back under is fatal."""
+    gs = _gs()
+    if rarg == M_ENTER and gs:
+        gs.flags["DROWN"] = 3
+    return False
+
+
+def handle_balcony(room, character, rarg):
+    """BALCONY-F (compone.zil:75) — the view shows the rising water."""
+    if rarg != M_LOOK:
+        return False
+    gs = _gs()
+    day = gs.day if gs else 1
+    text = ("This is an octagonal room, half carved into and half built out "
+            "from the cliff wall. Through the shattered windows which ring the "
+            "outer wall you can see ocean to the horizon. A weathered metal "
+            "plaque with barely readable lettering rests below the windows. The "
+            "language seems to be a corrupt form of Galalingua. A steep "
+            "stairway, roughly cut into the face of the cliff, leads upward. ")
+    text += {
+        1: "A rocky crag can be seen about eight meters below.",
+        2: "The ocean waters swirl below. The crag where you landed yesterday "
+           "is now underwater!",
+        3: "Ocean waters are lapping at the base of the balcony.",
+    }.get(day, "")
+    return text.rstrip()
+
+
+def handle_winding_stair(room, character, rarg):
+    """WINDING-STAIR-F (compone.zil:108)."""
+    if rarg != M_LOOK:
+        return False
+    gs = _gs()
+    day = gs.day if gs else 1
+    text = "The middle of a long, steep stairway carved into the face of a cliff."
+    text += {
+        4: " You hear the lapping of water from below.",
+        5: " You can see ocean water splashing against the steps below you.",
+    }.get(day, "")
+    return text
+
+
+def handle_courtyard(room, character, rarg):
+    """COURTYARD-F (compone.zil:136)."""
+    if rarg != M_LOOK:
+        return False
+    gs = _gs()
+    day = gs.day if gs else 1
+    text = ("You are in the courtyard of an ancient stone edifice, vaguely "
+            "reminiscent of the castles you saw during your leave on Ramos "
+            "Two. It has decayed to the point where it can probably be termed "
+            "a ruin. Openings lead north and west, and a stairway downward is "
+            "visible to the south. ")
+    if day in (6, 7):
+        text += "From the direction of the stairway comes the sound of ocean surf."
+    elif day == 8:
+        text += "Ocean water washes against the top few steps."
+    return text.rstrip()
+
+
+def handle_rec_area(room, character, rarg):
+    """REC-AREA-F (compone.zil:214) — the conference door's dial setting."""
+    if rarg != M_LOOK:
+        return False
+    text = ("This is a recreational facility of some sort. Games and tapes are "
+            "scattered about the room. Hallways head off to the east and south, "
+            "and to the north is a door which is ")
+    if _ddesc("CONFERENCE-DOOR") == "open":
+        text += "open"
+    else:
+        gs = _gs()
+        dial = gs.flags.get("DIAL-NUMBER", 0) if gs else 0
+        text += f"closed and locked. A dial on the door is currently set to {dial}"
+    return text + "."
+
+
+def handle_conference_room(room, character, rarg):
+    """CONFERENCE-ROOM-F (compone.zil:244)."""
+    if rarg != M_LOOK:
+        return False
+    return ("This is a fairly square room, almost filled by a round conference "
+            "table. To the south is a door which is "
+            f"{_ddesc('CONFERENCE-DOOR')}. To the north is a small room about "
+            "the size of a phone booth.")
+
+
+def handle_mess_corridor(room, character, rarg):
+    """MESS-CORRIDOR-F (compone.zil:496) — storage door + padlock state."""
+    if rarg != M_LOOK:
+        return False
+    gs = _gs()
+    text = ("This is a wide, east-west hallway with a large portal to the "
+            "south. A small door to the north is "
+            f"{_ddesc('STORAGE-WEST-DOOR')}")
+    if not (gs and gs.flags.get("PADLOCK-REMOVED")):
+        text += " and hooked with a simple steel padlock"
+        padlock = _by_zil_id("PADLOCK")
+        if padlock and padlock.db.is_open:
+            text += " which hangs unlocked"
+        else:
+            text += " which is also closed"
+    return text + "."
+
+
+def handle_mess_hall(room, character, rarg):
+    """MESS-HALL-F (compone.zil:756)."""
+    if rarg != M_LOOK:
+        return False
+    return ("This is a large hall lined with tables and benches. An opening to "
+            "the north leads back to the corridor. A door to the south is "
+            f"{_ddesc('KITCHEN-DOOR')}. Next to the door is a small slot.")
+
+
+def handle_machine_shop(room, character, rarg):
+    """MACHINE-SHOP-F (compone.zil:1637) — dispenser panel; Floyd plays with it."""
+    gs = _gs()
+    placed = gs.flags.get("SPOUT-PLACED") if gs else None
+    if placed == "GROUND":
+        placed = None
+    if rarg == M_LOOK:
+        text = ("This room is probably some sort of machine shop filled with a "
+                "variety of unusual machines. Doorways lead north, east, and "
+                "west.\n\nStanding against the rear wall is a large dispensing "
+                "machine with a spout. ")
+        vessel = _by_zil_id(placed) if placed else None
+        if vessel:
+            article = "an" if _bit(vessel, "VOWELBIT") else "a"
+            text += f"Sitting under the spout is {article} {vessel.key}. "
+        text += ("The dispenser is lined with brightly-colored buttons. The "
+                 "first four buttons, labelled \"KUULINTS 1 - 4\", are colored "
+                 "red, blue, green, and yellow. The next three buttons, "
+                 "labelled \"KATALISTS 1 - 3\", are colored gray, brown, and "
+                 "black. The last two buttons are both white. One of these is "
+                 "square and says \"BAAS.\" The other white button is round and "
+                 "says \"ASID.\"")
+        return text
+    if rarg == M_END and gs and not placed and _floyd_obj_here(character):
+        import world.interrupts as I
+        if I._prob(15):
+            fnpc = _floyd_npc()
+            if fnpc:
+                fnpc.spoke = True
+            character.msg("Floyd pushes one of the dispenser buttons. Fluid "
+                          "pours from the spout and splashes across the floor. "
+                          "Floyd jumps up and down, giggling.")
+            return True
+    return False
+
+
+def handle_elevator_lobby(room, character, rarg):
+    """ELEVATOR-LOBBY-F (compone.zil:2361) — both elevator doors' states."""
+    if rarg != M_LOOK:
+        return False
+    gs = _gs()
+    flags = gs.flags if gs else {}
+    blue_open = (_ddesc("UPPER-ELEVATOR-DOOR") == "open"
+                 and not flags.get("UPPER-ELEVATOR-UP"))
+    red_open = (_ddesc("LOWER-ELEVATOR-DOOR") == "open"
+                and flags.get("LOWER-ELEVATOR-UP"))
+    text = ("This is a wide, brightly lit lobby. A blue metal door to the north "
+            f"is {'open' if blue_open else 'closed'} and a larger red metal "
+            "door to the south is ")
+    if red_open:
+        text += "also open" if blue_open else "open"
+    else:
+        text += "closed" if blue_open else "also closed"
+    return text + (". Beside the blue door is a blue button, and beside the red "
+                   "door is a red button. A corridor leads west. To the east is "
+                   "a small room about the size of a telephone booth.")
+
+
+def handle_upper_elevator(room, character, rarg):
+    """UPPER-ELEVATOR-F (compone.zil:2403) — plus the intercom muzak."""
+    if rarg == M_LOOK:
+        return ("You have entered a tiny room with a sliding door to the south "
+                f"which is {_ddesc('UPPER-ELEVATOR-DOOR')}. A control panel "
+                "contains an Up button, a Down button, and a narrow slot.")
+    if rarg == M_END and _ddesc("UPPER-ELEVATOR-DOOR") == "closed":
+        import world.interrupts as I
+        if I._prob(10):
+            character.msg("Some innocuous Hawaiian music oozes from the "
+                          "elevator's intercom.")
+            return True
+    return False
+
+
+def handle_lower_elevator(room, character, rarg):
+    """LOWER-ELEVATOR-F (compone.zil:2432)."""
+    if rarg != M_LOOK:
+        return False
+    return ("This is a medium-sized room with a door to the north which is "
+            f"{_ddesc('LOWER-ELEVATOR-DOOR')}. A control panel contains an Up "
+            "button, a Down button, and a narrow slot.")
+
+
+def handle_kalamontee_platform(room, character, rarg):
+    """KALAMONTEE-PLATFORM-F (compone.zil:3193) — which shuttles are docked."""
+    if rarg != M_LOOK:
+        return False
+    gs = _gs()
+    flags = gs.flags if gs else {}
+    alfie, betty = flags.get("ALFIE-AT-KALAMONTEE"), flags.get("BETTY-AT-KALAMONTEE")
+    text = "This is a wide, flat strip of concrete which continues westward. "
+    if alfie and betty:
+        text += "Open shuttle cars lie on the north and south sides of the platform. "
+    elif betty:
+        text += "An open shuttle car lies to the north. "
+    elif alfie:
+        text += ("A large transport of some sort lies to the south, its open "
+                 "door beckoning you to enter. ")
+    return text + ("A faded sign on the wall reads \"Shutul Platform -- "
+                   "Kalamontee Staashun.\"")
+
+
+def handle_lawanda_platform(room, character, rarg):
+    """LAWANDA-PLATFORM-F (comptwo.zil:23) — arriving starts the sickness clock."""
+    gs = _gs()
+    if gs and not gs.flags.get("LAWANDA-PLATFORM-FLAG"):
+        gs.flags["LAWANDA-PLATFORM-FLAG"] = True
+        gs.flags["SICKNESS-WARNING-FLAG"] = True
+    if rarg != M_LOOK:
+        return False
+    flags = gs.flags if gs else {}
+    alfie, betty = flags.get("ALFIE-AT-KALAMONTEE"), flags.get("BETTY-AT-KALAMONTEE")
+    text = "This is a wide, flat strip of concrete. "
+    if not alfie and not betty:
+        text += "Open shuttle cars lie to the north and south."
+    elif not alfie or not betty:
+        text += f"An open shuttle car lies to the {'north' if alfie else 'south'}."
+    return text + (" A wide escalator, not currently operating, beckons upward "
+                   "at the east end of the platform. A faded sign reads "
+                   "\"Shutul Platform -- Lawanda Staashun.\"")
+
+
+def handle_shuttle_car(room, character, rarg):
+    """SHUTTLE-CAR-F (globals.zil:1631) — Alfie and Betty share this routine."""
+    if rarg != M_LOOK:
+        return False
+    side = "north" if room.db.zil_id == "SHUTTLE-CAR-ALFIE" else "south"
+    return ("This is the cabin of a large transport, with seating for around 20 "
+            "people plus space for freight. There are open doors at the eastern "
+            "and western ends of the cabin, and a doorway leads out to a wide "
+            f"platform to the {side}.")
+
+
+def handle_escape_pod(room, character, rarg):
+    """ESCAPE-POD-F (globals.zil:1084)."""
+    if rarg != M_LOOK:
+        return False
+    return ("This is one of the Feinstein's primary escape pods, for use in "
+            "extreme emergencies. A mass of safety webbing, large enough to "
+            "hold several dozen people, fills half the pod. The controls are "
+            "entirely automated. The bulkhead leading out is "
+            f"{_ddesc('POD-DOOR')}.")
+
+
+def handle_gangway(room, character, rarg):
+    """GANGWAY-F (globals.zil:651) — Blather bellowing in the distance."""
+    gs = _gs()
+    if rarg == M_END and gs and gs.flags.get("BLOWUP-COUNTER", 0) == 0:
+        import world.interrupts as I
+        if I._prob(15):
+            character.msg("You hear a distant bellowing ... something about an "
+                          "Ensign Seventh Class whose life is in danger.")
+            return True
+    return False
+
+
+def handle_infirmary(room, character, rarg):
+    """INFIRMARY-F (comptwo.zil:105) — Floyd finds Lazarus's breastplate."""
+    gs = _gs()
+    if (rarg != M_END or gs is None or gs.flags.get("LAZARUS-FLAG")
+            or not _floyd_obj_here(character)):
+        return False
+    import world.interrupts as I
+    if not I._prob(30):
+        return False
+    gs.flags["LAZARUS-FLAG"] = True
+    part = _by_zil_id("LAZARUS-PART")
+    if part:
+        part.move_to(room, quiet=True, move_type="move")
+    fnpc = _floyd_npc()
+    if fnpc:
+        fnpc._move_floyd_obj("FORK")
+        fnpc.current_room = "FORK"
+        fnpc.follow = False
+        fnpc.spoke = True
+    character.msg(
+        "Floyd, rummaging in a corner, finds something and carries it to the "
+        "center of the room to examine it in the brighter light. It seems to be "
+        "the breast plate of a robot, along with some connected inner "
+        "circuitry. The entire piece is bent and rusting. Floyd stares at it in "
+        "complete silence. A moment later, he begins sobbing quietly, awkwardly "
+        "excuses himself, and runs out of the room. You look at the breast "
+        "plate, and notice the name \"Lazarus\" engraved on it.")
+    return True
+
+
+def handle_radiation_lab(room, character, rarg):
+    """RADIATION-LAB-F (comptwo.zil:2148) — the first visit is a slow death."""
+    gs = _gs()
+    if rarg == M_ENTER and gs and room.db.first_visit:
+        _queue(gs, "make_i_nuked_blue", 50)
+    return False
+
+
+ROOM_HANDLERS.update({
+    "UNDERWATER-F": handle_underwater,
+    "CRAG-F": handle_crag,
+    "BALCONY-F": handle_balcony,
+    "WINDING-STAIR-F": handle_winding_stair,
+    "COURTYARD-F": handle_courtyard,
+    "REC-AREA-F": handle_rec_area,
+    "CONFERENCE-ROOM-F": handle_conference_room,
+    "MESS-CORRIDOR-F": handle_mess_corridor,
+    "MESS-HALL-F": handle_mess_hall,
+    "MACHINE-SHOP-F": handle_machine_shop,
+    "ELEVATOR-LOBBY-F": handle_elevator_lobby,
+    "UPPER-ELEVATOR-F": handle_upper_elevator,
+    "LOWER-ELEVATOR-F": handle_lower_elevator,
+    "KALAMONTEE-PLATFORM-F": handle_kalamontee_platform,
+    "LAWANDA-PLATFORM-F": handle_lawanda_platform,
+    "SHUTTLE-CAR-F": handle_shuttle_car,
+    "ESCAPE-POD-F": handle_escape_pod,
+    "GANGWAY-F": handle_gangway,
+    "INFIRMARY-F": handle_infirmary,
+    "RADIATION-LAB-F": handle_radiation_lab,
+    "LAB-OFFICE-F": handle_lab_office,
 })
 
 

@@ -179,7 +179,8 @@ class Driver:
             while not step.predicate(self.gs) and n < step.max_waits:
                 self._eat_if_hungry()   # a waiting player still eats when hungry
                 if self.gs.dead:
-                    raise StepError(f"died while waiting: {step.note}")
+                    raise StepError(f"died while waiting: {step.note} "
+                                    f"(cause: {self.gs.death_reason!r})")
                 self._emit("wait")
                 n += 1
             if not step.predicate(self.gs):
@@ -481,6 +482,10 @@ def _run_comm(drv):
     panel is re-read every loop. Ends walked back to the Dorm Corridor.
     """
     gs = drv.gs
+    # The colour sequence is rolled on arrival. Reseed so it doesn't depend on
+    # how many random rolls earlier rooms happened to make: the day-1 budget
+    # only fits a 2-colour sequence before the player collapses short of a bed.
+    random.seed(f"{SEED}:comm2")
     _comm_feed(drv)                     # drink high-protein now (covers the loop)
     _elev_up(drv)                       # Lobby -> Tower Core (+4)
     drv._emit("northeast")              # Tower Core -> Comm Room
@@ -571,21 +576,55 @@ def _carries_in_canteen(zil_id):
 # reactor + computer + cryo) lies past the shuttle where there is no safe bed,
 # so we reset the sleep clock here to get a full fresh budget for day 2. COMM has
 # already recrossed the rift and left us in the Dorm Corridor; bed down nearby.
+def _steal_floyd_card(drv):
+    """Wait for Floyd, switch him off, lift his lower-elevator card, switch on.
+
+    Stops waiting early (returns False) if drowsiness sets in first, so the
+    caller can bed down before the sleep clock kills us.
+    """
+    gs = drv.gs
+    for _ in range(40):
+        if _floyd_with(gs):
+            break
+        if gs.flags.get("SLEEPY-LEVEL", 0) > 0:
+            return False
+        drv._eat_if_hungry()
+        drv._emit("wait")
+        if gs.dead:
+            raise StepError(f"died waiting for Floyd (cause: {gs.death_reason!r})")
+    else:
+        raise StepError("Floyd never caught up in the dorm")
+    drv.run_step(Cmd("turn off floyd", expect=("betrayal",)))
+    drv.run_step(Cmd("search floyd", expect=("Loowur Elavaatur",),
+                     check=lambda gs: gs.flags.get("CARD-STOLEN")))
+    drv.run_step(Cmd("turn on robot", note="reactivate Floyd"))
+    return True
+
+
+def _day1_sleep(drv):
+    """Take Floyd's card and sleep through to day 2, in whichever order fits.
+
+    The card is taken here because the magnet is long dropped (so it won't
+    scramble) and Floyd reliably turns up in the dorm. How long he takes is
+    random, so if we get drowsy first we sleep and steal the card on waking.
+    """
+    stolen = _steal_floyd_card(drv)
+    if stolen:
+        drv.run_step(WaitUntil(lambda gs: gs.flags.get("SLEEPY-LEVEL", 0) > 0,
+                               max_waits=320,
+                               note="stay up (eating as needed) until drowsy"))
+    drv.run_step(Cmd("get in bed", expect=("soft and comfortable",)))
+    drv.run_step(WaitUntil(lambda gs: gs.day >= 2, note="sleep through to day 2"))
+    if not stolen:
+        drv.run_step(Cmd("get out of bed"))
+        if not _steal_floyd_card(drv):
+            raise StepError("drowsy again before Floyd caught up on day 2")
+
+
 DAY1_SLEEP = [
     EatIfHungry(),
     Cmd("south", expect=("Dorm C",)),
-    # Take Floyd's lower-elevator card here: the magnet is long dropped (so the
-    # card won't scramble) and Floyd reliably catches up in the dorm. Search the
-    # de-activated robot for it (CARD-STOLEN, +1), then switch him back on.
-    WaitUntil(_floyd_with, max_waits=20, note="let Floyd catch up"),
-    Cmd("turn off floyd", expect=("betrayal",)),
-    Cmd("search floyd", expect=("Loowur Elavaatur",),
-        check=lambda gs: gs.flags.get("CARD-STOLEN")),
-    Cmd("turn on robot", note="reactivate Floyd"),
-    WaitUntil(lambda gs: gs.flags.get("SLEEPY-LEVEL", 0) > 0, max_waits=320,
-              note="stay up (eating as needed) until drowsy"),
-    Cmd("get in bed", expect=("soft and comfortable",)),
-    WaitUntil(lambda gs: gs.day >= 2, note="sleep through to day 2"),
+    Call(_day1_sleep),
 ]
 
 # Milestone 5: day 2 — descend to the deep complex. Sleeping drops all non-worn

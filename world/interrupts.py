@@ -1139,6 +1139,32 @@ def make_i_unflood(gs: "GameState", state: dict | None = None):
     return i_unflood
 
 
+def make_i_nuked_blue(gs: "GameState", state: dict | None = None):
+    """I-NUKED-BLUE (comptwo.zil:2155) — radiation sickness, fatal on turn 3."""
+    def i_nuked_blue() -> bool:
+        n = gs.flags["NUKED-COUNTER"] = gs.flags.get("NUKED-COUNTER", 0) + 1
+        if n == 1:
+            # The timed first firing is removed after it runs; from here on it
+            # fires every turn (ZIL <QUEUE I-NUKED-BLUE -1>).
+            gs.scheduler.enable(gs.scheduler.queue(i_nuked_blue, -1))
+            _send(gs, "\nYou suddenly feel sick and dizzy.")
+        elif n == 2:
+            msg = ("\nYou feel incredibly nauseous and begin vomiting. Also, all "
+                   "your hair has fallen out.")
+            if _in_room("FLOYD", _here_id(gs)):
+                msg += (" Floyd points at you and laughs hysterically. \"You "
+                        "look funny with no hair,\" he gasps.")
+            _send(gs, msg)
+        elif n >= 3:
+            return gs.die("\nIt seems you have picked up a bad case of "
+                          "radiation poisoning.")
+        return False
+
+    i_nuked_blue.__name__ = "i_nuked_blue"
+    i_nuked_blue._state = state if state is not None else {}
+    return i_nuked_blue
+
+
 def make_i_magnet(gs: "GameState", state: dict | None = None):
     """I-MAGNET (compone.zil:1601) — a carried magnet scrambles held cards."""
     def i_magnet() -> bool:

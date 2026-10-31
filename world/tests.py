@@ -122,6 +122,49 @@ class UnfloodTimerTest(EvenniaTestCase):
         self.assertFalse(gs.flags["LAB-FLOODED"], "flood never drained — no timed dash")
 
 
+class RoomDescriptionTest(EvenniaTestCase):
+    """Every room has a description: a static LDESC or an M-LOOK routine.
+
+    33 rooms have no LDESC in the ZIL; their text lives in the room's ACTION
+    routine. An unported routine leaves the room rendering as a bare name.
+    """
+
+    def test_every_room_describes_itself(self):
+        from typeclasses.rooms import PlanetfallRoom
+        from world.action_handlers import dispatch_room_look
+
+        char, _gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        blank = [room.db.zil_id for room in PlanetfallRoom.objects.all()
+                 if not (room.db.desc or dispatch_room_look(room, char))]
+        self.assertEqual(blank, [], "rooms with no description")
+
+
+class RoomDeathTrapTest(EvenniaTestCase):
+    """Room demons ported from ZIL: drowning underwater, radiation poisoning."""
+
+    def test_underwater_drowns_on_third_turn(self):
+        from world.action_handlers import dispatch_room, M_END
+        from world.walkthrough import _by_zil
+
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        water = _by_zil("UNDERWATER")
+        for _ in range(2):
+            dispatch_room(water, char, M_END)
+        self.assertFalse(gs.dead, "drowned too soon")
+        dispatch_room(water, char, M_END)
+        self.assertTrue(gs.dead, "never drowned")
+
+    def test_radiation_lab_is_fatal(self):
+        import world.interrupts as I
+
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        gs.scheduler.enable(gs.scheduler.queue(I.make_i_nuked_blue(gs), 50))
+        self.assertFalse(gs.scheduler.tick(50))     # sick and dizzy
+        self.assertFalse(gs.scheduler.tick(7))      # hair falls out
+        self.assertTrue(gs.scheduler.tick(7), "radiation never killed")
+        self.assertTrue(gs.dead)
+
+
 class TakeAllTest(EvenniaTestCase):
     """Phase 14b — "take all" grabs every takeable item on the ground."""
 
