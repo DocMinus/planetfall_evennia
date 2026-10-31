@@ -206,6 +206,47 @@ class TakeAllTest(EvenniaTestCase):
         for zil in ("MAGNET", "PLIERS", "LASER", "FLASK"):
             self.assertIn(zil, held, f"take all missed {zil}")
 
+    def test_all_except_and_lists(self):
+        """ZIL MANY: "drop all except X", "drop X and Y"; worn things stay on."""
+        from world.walkthrough import _by_zil
+
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        char.location = _by_zil("TOOL-ROOM")
+        drv = Driver(char, gs, verbose=False)
+        drv._emit("take all")
+        drv._emit("drop all except laser")
+        held = {o.db.zil_id for o in char.contents}
+        self.assertIn("LASER", held)
+        self.assertIn("PATROL-UNIFORM", held, "a worn uniform can't be dropped")
+        self.assertNotIn("PLIERS", held)
+        drv._emit("take pliers and flask")
+        held = {o.db.zil_id for o in char.contents}
+        self.assertTrue({"PLIERS", "FLASK"} <= held)
+
+
+class ClockFidelityTest(EvenniaTestCase):
+    """ZIL time costs and one-slot-per-routine QUEUE semantics."""
+
+    def test_wait_costs_forty_ticks(self):
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        drv = Driver(char, gs, verbose=False)
+        before = gs.internal_moves
+        drv._emit("wait")
+        self.assertEqual(gs.internal_moves - before, 40)   # verbs.zil V-WAIT
+
+    def test_requeue_resets_existing_slot(self):
+        from world.state import Scheduler
+
+        def i_demo():
+            return False
+
+        sched = Scheduler()
+        sched.queue(i_demo, 5)
+        sched.tick(4)
+        sched.queue(i_demo, 180)   # re-slide the card: restart, don't duplicate
+        self.assertEqual(len(sched._interrupts), 1)
+        self.assertEqual(sched._interrupts[0].ticks_remaining, 180)
+
 
 class MicrobeBattleTest(EvenniaTestCase):
     """Phase 14b — the strip microbe (comptwo.zil) blocks the way back.

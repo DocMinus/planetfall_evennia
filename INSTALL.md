@@ -88,7 +88,8 @@ movement → clock/interrupt firing → scoring → endgame). The suite
 also covers SAVE/RESTORE round-trips (including a live timed demon mid-countdown),
 hyphen-token object resolution, `take all`, the timed fungicide flood drain, and
 the strip microbe battle. `WalkthroughDocTest` (`world/test_walkthrough_doc.py`)
-types in the player-facing [WALKTHROUGH.txt](WALKTHROUGH.txt) verbatim and
+types in the player-facing
+[WALKTHROUGH_this_port.txt](planetfall_resources/WALKTHROUGH_this_port.txt) verbatim and
 requires it to win. Budget ~2–3 minutes — each walkthrough drives several
 thousand internal moves.
 
@@ -113,11 +114,12 @@ planetfall_evennia/
     interrupts.py         # Interrupt closures: sleep/hunger warnings, blather, etc.
     floyd.py              # FloydNPC — autonomous robot companion logic
     scheduler_script.py   # Evennia Script wrapping GameState; survives server reloads
-    verb_commands.py      # 99 Command classes generated from syntax.json; verb handlers
+    verb_commands.py      # Command classes generated from syntax.json; verb handlers
     action_handlers.py    # ROOM/OBJ action dispatch (puzzle logic per ZIL ACTION routines)
     exit_handlers.py      # PER transport routines (elevators, shuttle, pod, ladder…)
     walkthrough.py        # Scripted real-command playthrough → 80/80 victory
     tests.py              # Regression suite (replays the walkthrough; save/restore; …)
+    test_walkthrough_doc.py  # Types in planetfall_resources/WALKTHROUGH_this_port.txt verbatim
     devtools.py           # Dev helpers behind `make reset-game` / `make rebuild`
   scripts/
     reset_game.py         # `make reset-game` entry point (reset to a pristine start)
@@ -131,6 +133,10 @@ planetfall_evennia/
     settings.py           # Evennia settings (single-player session config, auto-login)
     connection_screens.py # Planetfall connect banner (fallback for manual connect)
   server/.static/webclient/css/custom.css  # amber-phosphor terminal theme
+  planetfall_resources/   # maps + walkthroughs (see its README.md)
+    WALKTHROUGH_this_port.txt  # compact walkthrough verified against this port
+  README.md               # overview, quick start, commands
+  INSTALL.md              # this file: setup, Makefile, tests, structure
 ```
 
 ---

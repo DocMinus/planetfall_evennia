@@ -558,26 +558,52 @@ def _dream_and_wake(gs) -> bool:
     return _waking_up(gs)
 
 
+# RESET-TIME (globals.zil:2257): the morning clock (base + RANDOM 80), the
+# next night's sleep delay, and which cliff room's first-visit text returns
+# (the tide has moved).
+_RESET_TIME = {2: (1600, 5800, "BALCONY"), 3: (1750, 5550, "BALCONY"),
+               4: (1950, 5200, "WINDING-STAIR"), 5: (2150, 4800, "WINDING-STAIR"),
+               6: (2450, 4300, "COURTYARD"), 7: (2800, 3700, "COURTYARD"),
+               8: (3200, 3000, None)}
+
+
 def _waking_up(gs) -> bool:
     """WAKING-UP (globals.zil:2197) — a new day dawns; reset fatigue, drop kit."""
+    import random
     gs.day += 1
     gs.flags["SICKNESS-WARNING-FLAG"] = True
     gs.flags["SLEEPY-LEVEL"] = 0
     in_bed = gs.flags.get("IN-BED")
 
-    # Day 9 with no end in sight: you don't survive the night (RESET-TIME).
+    # RESET-TIME. Day 9 with no end in sight: you don't survive the night.
     if gs.day >= 9:
         return gs.die("Unfortunately, you don't seem to have survived the "
                       "night.")
+    base, sleep_delay, room_id = _RESET_TIME[gs.day]
+    if room_id:
+        room = _by_zil_id(room_id)
+        if room:
+            room.db.first_visit = True
+    gs.internal_moves = base + random.randint(1, 80)
+    gs.scheduler.enable(gs.scheduler.queue(make_i_sleep_warnings(gs), sleep_delay))
 
-    # Non-worn inventory ends up on the floor (ZIL drops it to HERE).
+    # Non-worn inventory ends up on the floor; an open canteen's protein liquid
+    # spills and the flask's chemical evaporates overnight.
     player = gs.player
     if player and player.location:
         for item in list(player.contents):
             if "WORNBIT" not in (item.db.obj_flags or []):
                 item.move_to(player.location, quiet=True, move_type="drop")
+            if item.db.zil_id == "CANTEEN" and item.db.is_open:
+                liquid = _by_zil_id("HIGH-PROTEIN")
+                if liquid and liquid.location is item:
+                    liquid.location = None
+            if item.db.zil_id == "FLASK":
+                fluid = _by_zil_id("CHEMICAL-FLUID")
+                if fluid and fluid.location is item:
+                    fluid.location = None
 
-    banner = f"\n***** SEPTEM {gs.day + 4}, 11344 *****\n"
+    banner = f"\n***** SEPTEM {gs.day + 5}, 11344 *****\n"
     sick = gs.flags.get("SICKNESS-LEVEL", 0)
     if not in_bed:
         banner += ("You wake and slowly stand up, feeling stiff from your "
@@ -591,7 +617,6 @@ def _waking_up(gs) -> bool:
     else:
         banner += ("You wake feeling weak and worn-out. It will be an effort "
                    "just to stand up.")
-    gs.flags["IN-BED"] = False
 
     if gs.flags.get("HUNGER-LEVEL", 0) > 0:
         gs.flags["HUNGER-LEVEL"] = 4
@@ -599,14 +624,25 @@ def _waking_up(gs) -> bool:
         banner += " You are also incredibly famished. Better get some breakfast!"
     else:
         gs.scheduler.enable(gs.scheduler.queue(make_i_hunger_warnings(gs), 400))
-
     _send(gs, banner)
-    # Re-arm the next night's sleep clock (RESET-TIME, simplified).
-    _SLEEP_RESET_DELAYS = {2: 5800, 3: 5550, 4: 5200, 5: 4800,
-                           6: 4300, 7: 3700, 8: 3000}
-    delay = _SLEEP_RESET_DELAYS.get(gs.day, 3000)
-    gs.scheduler.enable(gs.scheduler.queue(make_i_sleep_warnings(gs), delay))
-    return False
+
+    # An active Floyd comes to find you.
+    floyd = _by_zil_id("FLOYD")
+    from world.scheduler_script import get_game_state_script
+    script = get_game_state_script()
+    fnpc = script.get_floyd() if script else None
+    if (floyd and fnpc and fnpc.introduced and player and player.location
+            and "RLANDBIT" in (floyd.db.obj_flags or [])):
+        floyd.move_to(player.location, quiet=True, move_type="teleport")
+        fnpc.spoke = True
+        if in_bed:
+            _send(gs, "Floyd bounces impatiently at the foot of the bed. \"About "
+                      "time you woke up, you lazy bones! Let's explore around "
+                      "some more!\"")
+        else:
+            _send(gs, "Floyd gives you a nudge with his foot and giggles. \"You "
+                      "sure look silly sleeping on the floor,\" he says.")
+    return False   # still in the bed (if you slept in one) until you get up
 
 
 # ---------------------------------------------------------------------------
@@ -1281,14 +1317,14 @@ def make_i_shuttle(gs: "GameState", state: dict | None = None):
 
     def i_shuttle() -> bool:
         f = gs.flags
+        # ZIL: every firing re-arms as an every-turn demon, so the lever's
+        # delay-1 kick (QUEUE I-SHUTTLE 1) never leaves the car undriven.
+        gs.scheduler.enable(gs.scheduler.queue(i_shuttle, -1))
         if not f.get("SHUTTLE-MOVING"):
             f["SHUTTLE-MOVING"] = True
             _set_door("SHUTTLE-DOOR", is_open=False, visible=True)
             if f.get("LEVER-SETTING") == 1:
                 f["SHUTTLE-VELOCITY"] = f.get("SHUTTLE-VELOCITY", 0) + 5
-                # Convert the lever's delay-1 kick into an every-turn demon
-                # (once) — the -1 demon persists and drives the rest of the trip.
-                gs.scheduler.enable(gs.scheduler.queue(i_shuttle, -1))
                 _send(gs, "\nThe control cabin door slides shut and the shuttle "
                       "car begins to move forward! The display changes to 5.")
             else:

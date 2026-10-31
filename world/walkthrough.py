@@ -144,6 +144,8 @@ class Driver:
         goo = next((o for o in kit.contents), None)
         if goo is not None:
             self._emit(f"eat {goo.key}")
+        elif _carries_in_canteen("HIGH-PROTEIN"):
+            self._emit("drink brown liquid")   # out of goo: the canteen's protein
 
     def run_step(self, step):
         if isinstance(step, Call):
@@ -167,12 +169,7 @@ class Driver:
                         if o.db.zil_id == "FOOD-KIT"), None)
             if kit is None:
                 raise StepError(f"EatIfHungry: no survival kit carried. {step.note}")
-            if not kit.db.is_open:
-                self._emit("open survival kit")
-            goo = next((o for o in kit.contents), None)
-            if goo is None:
-                return   # out of goo; rely on other food / hope to finish
-            self._emit(f"eat {goo.key}")
+            self._eat_if_hungry(step.threshold)
             return
         if isinstance(step, WaitUntil):
             n = 0
@@ -443,6 +440,8 @@ def _elev_up(drv):
 def _elev_down(drv):
     """Tower Core -> Elevator Lobby via the upper car."""
     drv._emit("north")
+    if not drv.gs.flags.get("UPPER-ELEVATOR-ON"):
+        drv._emit("slide upper elevator card through slot")
     drv._emit("push down button")
     _wait_until(drv, lambda: not drv.gs.flags.get("ELEVATOR-IN-TRANSIT"))
     drv._emit("out")
@@ -467,6 +466,9 @@ def _comm_feed(drv):
         drv._eat_if_hungry()
 
 
+# Reseed tag for the comm colour roll; chosen so the sequence is 2 colours long.
+COMM_SEED_TAG = "comm2"
+
 _COMM_COLOR = {1: "red", 2: "blue", 3: "green", 4: "yellow",
                5: "gray", 6: "brown", 7: "black"}
 
@@ -485,9 +487,9 @@ def _run_comm(drv):
     # The colour sequence is rolled on arrival. Reseed so it doesn't depend on
     # how many random rolls earlier rooms happened to make: the day-1 budget
     # only fits a 2-colour sequence before the player collapses short of a bed.
-    random.seed(f"{SEED}:comm2")
-    _comm_feed(drv)                     # drink high-protein now (covers the loop)
+    _comm_feed(drv)
     _elev_up(drv)                       # Lobby -> Tower Core (+4)
+    random.seed(f"{SEED}:{COMM_SEED_TAG}")
     drv._emit("northeast")              # Tower Core -> Comm Room
     _assert_room(drv, "COMM-ROOM")
     drv._emit("look")                   # let the enunciator M-END set the colour
@@ -530,32 +532,17 @@ def _run_comm(drv):
 
 
 # Milestone 3b (maximal): repair the planetary comm coolant system (+6) and bank
-# the Kitchen (+4) and Tower Core (+4) first-visit values. Recross the rift, stop
-# at the kitchen to fill the canteen with high-protein liquid (the extra food the
-# tower round-trips demand), then ride the upper elevator to the comm room and
-# run the colour-sequence chemistry. All upper-complex work — it must happen
-# before we descend past the shuttle, where there is no way back up.
+# the Tower Core (+4) first-visit value. Recross the rift, ride the upper
+# elevator to the comm room and run the colour-sequence chemistry. All
+# upper-complex work — it must happen before we descend past the shuttle, where
+# there is no way back up. The kitchen waits for the morning: day 1's sleep
+# budget only just covers the comm round trips.
 COMM = [
     EatIfHungry(),
     Cmd("east", expect=("Admin Corridor North",), note="leave the office"),
     Cmd("south", expect=("Admin Corridor",), note="recross the rift"),
     Cmd("south", expect=("Admin Corridor South",)),
     Cmd("south", expect=("Corridor Junction",)),
-    Cmd("west", expect=("Dorm Corridor",), note="long-hall transit"),
-    Cmd("west", expect=("Mess Corridor",)),
-    Cmd("south", expect=("Mess Hall",)),
-    Cmd("take canteen"),
-    Cmd("open canteen"),
-    Cmd("slide kitchen card through slot", expect=("slides open",)),
-    Cmd("south", expect=("Kitchen",), note="+4 first-visit VALUE"),
-    Cmd("put canteen in dispenser", expect=("octagonal niche",)),
-    Cmd("push button", expect=("fills almost to the brim",),
-        check=lambda gs: _carries_in_canteen("HIGH-PROTEIN")),
-    Cmd("take canteen"),
-    Cmd("north", expect=("Mess Hall",)),
-    Cmd("north", expect=("Mess Corridor",)),
-    Cmd("east", expect=("Dorm Corridor",)),
-    Cmd("east", expect=("Corridor Junction",)),
     Cmd("east", expect=("Elevator Lobby",)),
     Call(_run_comm, note="ride the tower and solve the coolant chemistry (+6)"),
     Cmd("look", check=lambda gs: gs.flags.get("COMM-FIXED"),
@@ -609,14 +596,18 @@ def _day1_sleep(drv):
     random, so if we get drowsy first we sleep and steal the card on waking.
     """
     stolen = _steal_floyd_card(drv)
+    if drv.gs.day >= 2:
+        # Dropped off in a bunk mid-theft; the card is ours on waking.
+        drv.run_step(Cmd("get out of bed", expect=("own feet",)))
+        return
     if stolen:
         drv.run_step(WaitUntil(lambda gs: gs.flags.get("SLEEPY-LEVEL", 0) > 0,
                                max_waits=320,
                                note="stay up (eating as needed) until drowsy"))
     drv.run_step(Cmd("get in bed", expect=("soft and comfortable",)))
     drv.run_step(WaitUntil(lambda gs: gs.day >= 2, note="sleep through to day 2"))
+    drv.run_step(Cmd("get out of bed", expect=("own feet",)))
     if not stolen:
-        drv.run_step(Cmd("get out of bed"))
         if not _steal_floyd_card(drv):
             raise StepError("drowsy again before Floyd caught up on day 2")
 
@@ -629,8 +620,8 @@ DAY1_SLEEP = [
 
 # Milestone 5: day 2 — descend to the deep complex. Sleeping drops all non-worn
 # gear on the floor (faithful: ZIL WAKING-UP moves it to HERE), so first scoop
-# the essentials back up, then head to the elevator lobby and ride the lower car
-# down to the waiting area, Floyd in tow.
+# the essentials back up, fill the canteen in the kitchen (+4), then head to the
+# elevator lobby and ride the lower car down to the waiting area, Floyd in tow.
 DAY2_DESCENT = [
     Cmd("take survival kit", note="food first — eating needs it back"),
     Cmd("take laser"),
@@ -640,8 +631,22 @@ DAY2_DESCENT = [
     Cmd("take lower elevator card",
         check=lambda gs: _carries(gs.player, "LOWER-ELEVATOR-CARD", "SHUTTLE-CARD",
                                   "LASER", "FOOD-KIT", "GOOD-BEDISTOR", "PLIERS")),
+    Cmd("take kitchen card"),
     EatIfHungry(),
     Cmd("north", expect=("Dorm Corridor",)),
+    Cmd("west", expect=("Mess Corridor",)),
+    Cmd("south", expect=("Mess Hall",)),
+    Cmd("take canteen"),
+    Cmd("open canteen"),
+    Cmd("slide kitchen card through slot", expect=("slides open",)),
+    Cmd("south", expect=("Kitchen",), note="+4 first-visit VALUE"),
+    Cmd("put canteen in dispenser", expect=("octagonal niche",)),
+    Cmd("push button", expect=("fills almost to the brim",),
+        check=lambda gs: _carries_in_canteen("HIGH-PROTEIN")),
+    Cmd("take canteen"),
+    Cmd("north", expect=("Mess Hall",)),
+    Cmd("north", expect=("Mess Corridor",)),
+    Cmd("east", expect=("Dorm Corridor",)),
     Cmd("east", expect=("Corridor Junction",), note="long-hall transit"),
     Cmd("east", expect=("Elevator Lobby",)),
     Cmd("press red button", expect=("vibrating",), note="call the lower car"),
@@ -680,7 +685,8 @@ SHUTTLE = [
         check=lambda gs: not gs.flags.get("ALFIE-BROKEN"), note="clean arrival"),
     Cmd("north", expect=("Lawanda Platform",), note="across the gorge"),
     Cmd("up", expect=("Escalator",)),
-    Cmd("up", expect=("Fork",), check=_floyd_with, note="deep-complex hub"),
+    Cmd("up", expect=("Fork",), note="deep-complex hub"),
+    WaitUntil(_floyd_with, max_waits=20, note="let Floyd catch up"),
 ]
 
 # Milestone 7: repair planetary course control. In the course-control room,
@@ -815,7 +821,7 @@ ESCAPE_AND_CRYO = [
     Cmd("north", expect=("Lab Office",)),
     Cmd("open lab desk", expect=("Opened",)),
     Cmd("take gas mask"),
-    Cmd("wear gas mask", expect=("put on",)),
+    Cmd("wear gas mask", expect=("wearing the gas mask",)),
     Cmd("press fungicide button", expect=("hissing",),
         check=lambda gs: gs.flags.get("LAB-FLOODED")),
     Cmd("open office door"),

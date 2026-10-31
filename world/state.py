@@ -14,10 +14,8 @@ from typing import Callable
 
 
 # eq=False: identity equality, not value equality. Scheduler.tick() drops a
-# fired interrupt with list.remove(intr); a self-requeuing demon adds a second
-# interrupt with the *same* routine object, so value-equality could match (and
-# remove) the wrong slot. Two interrupts are "the same" only if they are the
-# same object.
+# fired interrupt with list.remove(intr); two interrupts are "the same" only if
+# they are the same object.
 @dataclass(eq=False)
 class Interrupt:
     routine: Callable[[], bool]
@@ -37,7 +35,20 @@ class Scheduler:
         self._interrupts: list[Interrupt] = []
 
     def queue(self, routine: Callable[[], bool], ticks: int, is_demon: bool = False) -> Interrupt:
-        """Register an interrupt to fire in `ticks` ticks (-1 = every turn)."""
+        """Register an interrupt to fire in `ticks` ticks (-1 = every turn).
+
+        ZIL QUEUE has one C-TABLE slot per routine: queueing a routine that is
+        already pending resets its timer rather than adding a second copy (so
+        re-sliding an elevator card restarts the 180-tick enable).
+        """
+        name = getattr(routine, "__name__", None)
+        for intr in self._interrupts:
+            if name and getattr(intr.routine, "__name__", None) == name:
+                intr.routine = routine
+                intr.ticks_remaining = ticks
+                intr.is_demon = is_demon
+                intr.enabled = True
+                return intr
         intr = Interrupt(routine=routine, ticks_remaining=ticks, is_demon=is_demon)
         self._interrupts.append(intr)
         return intr
@@ -66,9 +77,12 @@ class Scheduler:
             else:
                 intr.ticks_remaining -= elapsed
                 if intr.ticks_remaining <= 0:
+                    intr.ticks_remaining = 0   # ZIL: <PUT .C ,C-TICK 0> before APPLY
                     if intr.routine():
                         fatal = True
-                    self._interrupts.remove(intr)
+                    # A routine that re-queued itself while firing keeps its slot.
+                    if intr.ticks_remaining == 0 and intr in self._interrupts:
+                        self._interrupts.remove(intr)
         return fatal
 
 
@@ -196,10 +210,17 @@ class GameState:
         MAIN-LOOP (misc.zil:248-261).
         Returns True if a fatal interrupt fired.
         """
-        # While the shuttle is rolling, a turn costs 600/velocity ticks
-        # (misc.zil:240) — faster car, less game time per move.
+        # While the escape pod is in flight every turn costs 54 ticks
+        # (misc.zil:238); while the shuttle is rolling, 600/velocity ticks
+        # (misc.zil:240) — faster car, less game time per move. Unlike ZIL we
+        # keep timeless verbs (SAVE, RESTORE, SCORE) free even then.
         vel = self.flags.get("SHUTTLE-VELOCITY", 0)
-        if vel > 0:
+        if self.c_elapsed == 0:
+            return False
+        if any(getattr(i.routine, "__name__", None) == "i_pod_trip" and i.enabled
+               for i in self.scheduler._interrupts):
+            self.c_elapsed = 54
+        elif vel > 0:
             self.c_elapsed = 600 // vel
 
         if self.c_elapsed == 0:

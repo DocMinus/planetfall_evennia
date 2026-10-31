@@ -83,11 +83,12 @@ class PlanetfallCommand(Command):
         # e.g. SEARCH=32, LISTEN/READ=18, WAIT=40) via _set_elapsed(); honour it
         # for this one command, then it falls back to the 7-tick default.
         override = getattr(self.caller.ndb, "pf_elapsed", None)
-        if override is not None:
-            self.caller.ndb.pf_elapsed = None
-            script.get_gs().c_elapsed = override
-        elif self.timeless:
+        self.caller.ndb.pf_elapsed = None
+        if self.timeless:
+            # Timeless wins even if it reused a timed handler (RESTORE's LOOK).
             script.set_timeless()
+        elif override is not None:
+            script.get_gs().c_elapsed = override
         else:
             script.reset_elapsed()
         script.advance(self.caller)

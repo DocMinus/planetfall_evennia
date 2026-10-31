@@ -24,6 +24,8 @@ Wiring:
 """
 from __future__ import annotations
 
+import random
+import re
 from dataclasses import dataclass
 
 # ZIL reason-argument constants passed to a room's ACTION routine.
@@ -422,7 +424,7 @@ def handle_floyd(ctx: ObjAction) -> bool:
     # ZIL FLOYD-F (compone.zil:2082): searching the de-activated robot turns up
     # his own lower-elevator card — the deterministic "take it from off-Floyd"
     # route (CARD-STOLEN), distinct from the day-2 friendly reveal.
-    if ctx.verb in ("V-SEARCH", "V-LOOK-INSIDE") and not on:
+    if ctx.verb in ("V-SEARCH", "V-LOOK-INSIDE", "V-OPEN") and not on:
         gs = _gs()
         if gs and not gs.flags.get("CARD-REVEALED") and not gs.flags.get("CARD-STOLEN"):
             card = _by_zil_id("LOWER-ELEVATOR-CARD")
@@ -441,6 +443,97 @@ def handle_floyd(ctx: ObjAction) -> bool:
 
     # Anything else falls through to the generic verb handler.
     return False
+
+
+_WALK_WORDS = ("go ", "walk ", "run ", "move ")
+
+
+def order_floyd(caller, order: str) -> None:
+    """FLOYD-F with WINNER = FLOYD (compone.zil:1853) — "floyd, <command>".
+
+    Floyd only acts on a few orders: walking through the robot hole, fetching
+    the board he found there, handing things over, following and dropping.
+    Anything else gets a whine for a game of Hider-and-Seeker.
+    """
+    from world.verb_commands import _DIR_CANON, _strip_articles, resolve_obj
+    floyd = _by_zil_id("FLOYD")
+    if floyd is None or floyd.location is not caller.location:
+        caller.msg("You can't see any floyd here.")
+        return
+    if not _floyd_is_on(floyd):
+        # V-TELL on a non-actor.
+        gs = _gs()
+        tense = "have been" if gs and gs.flags.get("BLOWUP-COUNTER") == 5 else "be"
+        caller.msg(f"Talking to a {floyd.key}? Dr. Quarnsboggle, the Feinstein's "
+                   f"psychiatrist, would {tense} fascinated to hear that.")
+        return
+    fnpc = _floyd_npc()
+    if fnpc:
+        fnpc.spoke = True
+    text = _strip_articles(order.strip().rstrip(".!"))
+    for lead in _WALK_WORDS:
+        if text.startswith(lead):
+            text = text[len(lead):]
+            break
+    here = _here_zil(caller)
+    direction = "in" if text in ("enter", "through hole", "in hole") else _DIR_CANON.get(text)
+    if direction:
+        if here == "REPAIR-ROOM" and direction in ("north", "in"):
+            _floyd_through_hole(caller)
+        elif here == "BIO-LOCK-EAST" and direction == "east":
+            gs = _gs()
+            caller.msg("\"As soon as you open the door, dummy.\""
+                       if gs and gs.flags.get("FLOYD-WAITING") else
+                       "\"Are you kidding? Floyd not going in THERE without a "
+                       "good reason.\"")
+        elif here == "RADIATION-LOCK-EAST" and direction == "east":
+            caller.msg("\"After you.\"")
+        else:
+            caller.msg("Floyd looks slightly embarrassed. \"You know me and my "
+                       "sense of direction.\" Then he looks up at you with wide, "
+                       "trusting eyes. \"Tell Floyd a story?\"")
+        return
+    verb, _, noun = text.partition(" ")
+    if verb == "pick" and noun.startswith("up "):
+        verb, noun = "take", noun[3:]
+    if verb in ("take", "get", "grab") and noun:
+        board = _by_zil_id("GOOD-BOARD")
+        words = set(noun.split())
+        if board is not None and words & {"board", "fromitz", "shiny"}:
+            hole = _by_zil_id("ROBOT-HOLE")
+            if hole is None or board.location is not hole:
+                caller.msg("Floyd looks half-bored and half-annoyed. \"Floyd "
+                           "already did that. How about some leap-frogger?\"")
+            else:
+                handle_good_board(ObjAction(obj=board, caller=caller,
+                                            verb="V-TAKE", nouns=[noun]))
+            return
+    if verb == "give" and noun:
+        m = re.match(r"^(?:me\s+(.+)|(.+?)\s+to\s+me)$", noun)
+        if m:
+            item = resolve_obj(caller, m.group(1) or m.group(2))
+            handle_floyd(ObjAction(obj=floyd, caller=caller, verb="V-ASK-FOR",
+                                   nouns=["floyd", item.key if item else noun]))
+            return
+    if text in ("follow me", "follow"):
+        caller.msg("\"Okay!\"")
+        return
+    if text in ("hello", "hi"):
+        from world.verb_commands import _dispatch
+        _dispatch(caller, "V-HELLO", ["floyd"])
+        return
+    if verb == "drop" and noun:
+        item = resolve_obj(caller, noun)
+        if item is None or item.location is not floyd:
+            caller.msg("\"Floyd does not one of those have!\"")
+        elif random.random() < 0.5:
+            item.move_to(caller.location, quiet=True, move_type="drop")
+            caller.msg(f"Floyd shrugs and drops the {item.key}.")
+        else:
+            caller.msg(f"Floyd clutches the {item.key} even more tightly. "
+                       "\"Floyd won't,\" he says defiantly.")
+        return
+    caller.msg("Floyd whines, \"Enough talking! Let's play Hider-and-Seeker.\"")
 
 
 def _deactivate_floyd(floyd, caller) -> None:
@@ -1618,9 +1711,49 @@ def handle_chemical_dispenser(ctx: ObjAction) -> bool:
             caller.msg(f"The {cur.key if cur else placed} is already resting "
                        "under the spout.")
         elif item:
+            item.move_to(caller.location, quiet=True, move_type="drop")
             gs.flags["SPOUT-PLACED"] = item.db.zil_id
             caller.msg(f"The {item.key} is now sitting under the spout.")
         return True
+    return False
+
+
+def _perform(caller, verb: str, nouns: list) -> None:
+    """ZIL PERFORM — re-run a verb with substituted objects."""
+    from world.verb_commands import _dispatch
+    _dispatch(caller, verb, nouns)
+
+
+def handle_chem_spout_pseudo(ctx: ObjAction) -> bool:
+    """CHEM-SPOUT-PSEUDO (globals.zil:2680) — the machine shop's spout."""
+    caller, v = ctx.caller, ctx.verb
+    if v == "V-PUT-UNDER" and len(ctx.nouns) > 1 and "spout" in ctx.nouns[1]:
+        _perform(caller, "V-PUT-UNDER", [ctx.nouns[0], "chemical dispenser"])
+        return True
+    gs = _gs()
+    placed = gs.flags.get("SPOUT-PLACED") if gs else None
+    if v == "V-LOOK-UNDER" and placed:
+        cur = _by_zil_id(placed)
+        name = cur.key if cur else placed.lower()
+        caller.msg(f"There is a {name} under the spout.")
+        return True
+    return False
+
+
+def handle_spout_pseudo(ctx: ObjAction) -> bool:
+    """SPOUT-PSEUDO (globals.zil:2507) — the kitchen dispenser's spout."""
+    caller, v = ctx.caller, ctx.verb
+    canteen = _by_zil_id("CANTEEN")
+    if v == "V-PUT-UNDER" and ctx.nouns and canteen is not None:
+        from world.verb_commands import resolve_obj
+        if resolve_obj(caller, ctx.nouns[0]) is canteen:
+            _perform(caller, "V-PUT", [ctx.nouns[0], "dispenser unit"])
+            return True
+    if v == "V-LOOK-UNDER" and canteen is not None:
+        disp = _by_zil_id("DISPENSER")
+        if disp is not None and canteen.location is disp:
+            caller.msg("The canteen is sitting under the spout.")
+            return True
     return False
 
 
@@ -2682,6 +2815,8 @@ OBJ_HANDLERS: dict = {
     "HIGH-PROTEIN-F": handle_high_protein,
     "DISPENSER-F": handle_kitchen_dispenser,
     "BUTTON-PSEUDO": handle_kitchen_button,
+    "SPOUT-PSEUDO": handle_spout_pseudo,
+    "CHEM-SPOUT-PSEUDO": handle_chem_spout_pseudo,
     "MEDICINE-F": handle_medicine,
     "LEVER-F": handle_lever,
     "SHUTTLE-DOOR-F": handle_shuttle_door,

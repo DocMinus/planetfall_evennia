@@ -132,6 +132,11 @@ def resolve_obj(caller, noun: str):
     if not noun:
         return None
 
+    # A multi-object command ("drop all except kit") pins each object in turn.
+    forced = getattr(caller.ndb, "pf_forced", None)
+    if forced is not None and noun == _strip_articles(forced.key):
+        return forced
+
     if noun in _PRONOUNS:
         it = getattr(caller.ndb, "last_it", None)
         return it if (it and _accessible(caller, it)) else None
@@ -269,12 +274,15 @@ def build_look(caller, loc, brief_ok=False) -> str:
             lines.append(desc)
     loc.db.first_visit = False
 
+    gs = _gs()
+    spout = gs.flags.get("SPOUT-PLACED") if gs else None   # ZIL DESCRIBE-OBJECT
     visible = [
         obj for obj in loc.contents
         if obj is not caller
         and not isinstance(obj, DefaultExit)
         and "NDESCBIT" not in (obj.db.obj_flags or [])
         and "INVISIBLE" not in (obj.db.obj_flags or [])
+        and not (spout and obj.db.zil_id == spout)
     ]
     if visible:
         lines.append("")
@@ -289,6 +297,7 @@ def build_look(caller, loc, brief_ok=False) -> str:
 
 
 def _h_look(caller, nouns):
+    _set_elapsed(caller, 9)   # ZIL V-LOOK
     caller.msg(build_look(caller, caller.location))
 
 
@@ -297,6 +306,7 @@ def _h_examine(caller, nouns):
     if not obj:
         caller.msg(f"You see no {nouns[0]} here.")
         return
+    _set_elapsed(caller, 32)   # ZIL V-EXAMINE
     if obj.db.fdesc and not obj.db.fdesc_seen:
         caller.msg(obj.db.fdesc)
         obj.db.fdesc_seen = True
@@ -331,6 +341,7 @@ def _h_look_inside(caller, nouns):
 
 
 def _h_inventory(caller, nouns):
+    _set_elapsed(caller, 18)   # ZIL V-INVENTORY
     carried = list(caller.contents)
     if not carried:
         caller.msg("You are carrying nothing.")
@@ -345,10 +356,6 @@ _ALL_WORDS = frozenset({"all", "everything", "both"})
 
 
 def _h_take(caller, nouns):
-    # ZIL (MANY) take scope: "take all" grabs every takeable item on the ground.
-    if nouns and _strip_articles(nouns[0]).strip() in _ALL_WORDS:
-        _take_all(caller)
-        return
     obj = resolve_obj(caller, nouns[0])
     if not obj:
         caller.msg(f"You see no {nouns[0]} here.")
@@ -363,45 +370,33 @@ def _h_take(caller, nouns):
     gs = _gs()
     if gs:
         gs.score_object(obj)   # ZIL SCORE-OBJ: valuable items score on first take
+        if gs.flags.get("SPOUT-PLACED") == obj.db.zil_id:
+            gs.flags["SPOUT-PLACED"] = None   # ZIL ITAKE: off the spout
     caller.msg("Taken.")
 
 
-def _take_all(caller):
-    """ZIL ITAKE over the ON-GROUND/MANY scope — every takeable thing here."""
-    from evennia.objects.objects import DefaultExit
-    room = caller.location
-    if room is None:
-        caller.msg("There is nothing here to take.")
-        return
-    gs = _gs()
-    took = False
-    for obj in list(room.contents):
-        if obj is caller or isinstance(obj, DefaultExit):
-            continue
-        flags = obj.db.obj_flags or []
-        if "TAKEBIT" not in flags or "INVISIBLE" in flags:
-            continue
-        obj.move_to(caller, quiet=True, move_type="get")
-        if gs:
-            gs.score_object(obj)
-        caller.msg(f"{obj.key}: Taken.")
-        took = True
-    if not took:
-        caller.msg("There is nothing here to take.")
+def _held(caller, obj) -> bool:
+    """ZIL HELD? — carried directly or inside something carried (the pocket)."""
+    loc = obj.location
+    return loc is caller or (loc is not None and loc.location is caller)
 
 
 def _h_drop(caller, nouns):
-    noun = _strip_articles(nouns[0])
-    words = _vocab_tokens([noun])
-    obj = None
-    for item in caller.contents:
-        vocab = _vocab_tokens(item.db.synonyms or [], item.db.adjectives or [],
-                              item.key.split())
-        if words & vocab:
-            obj = item
-            break
+    obj = resolve_obj(caller, nouns[0])
+    if obj is not None and not _held(caller, obj):
+        # Best overall match is on the floor; fall back to the best held match
+        # so "drop card" still drops the one you carry.
+        words = _vocab_tokens([_strip_articles(nouns[0])])
+        held = [i for o in caller.contents for i in [o, *o.contents]]
+        scored = [(len(words & _vocab_tokens(i.db.synonyms or [], i.db.adjectives or [],
+                                             i.key.split())), i) for i in held]
+        scored = [s for s in scored if s[0]]
+        obj = max(scored, key=lambda s: s[0])[1] if scored else None
     if not obj:
         caller.msg(f"You're not carrying any {nouns[0]}.")
+        return
+    if "WORNBIT" in (obj.db.obj_flags or []):
+        caller.msg("You'll have to take it off, first.")   # ZIL IDROP
         return
     obj.move_to(caller.location, quiet=True, move_type="drop")
     caller.msg("Dropped.")
@@ -443,7 +438,8 @@ def _h_close(caller, nouns):
 
 
 def _h_wait(caller, nouns):
-    caller.msg("Time passes.")
+    _set_elapsed(caller, 40)   # ZIL V-WAIT: <SETG C-ELAPSED 40>
+    caller.msg("Time passes...")
 
 
 def _h_read(caller, nouns):
@@ -453,6 +449,7 @@ def _h_read(caller, nouns):
         return
     text = obj.db.obj_text
     if text:
+        _set_elapsed(caller, 18)   # ZIL V-READ
         caller.msg(text)
     else:
         caller.msg(f"There's nothing to read on the {obj.key}.")
@@ -465,6 +462,7 @@ def _h_diagnose(caller, nouns):
         caller.msg("Your condition appears normal.")
         return
     gs = script.get_gs()
+    _set_elapsed(caller, 18)   # ZIL V-DIAGNOSE
     caller.msg(f"Day {gs.day}. You feel reasonably well.")
 
 
@@ -663,15 +661,23 @@ def _h_put(caller, nouns):
     if not container:
         caller.msg("Put it where?")
         return
-    if item not in caller.contents:
-        caller.msg(f"You're not carrying the {item.key}.")
-        return
     if "CONTBIT" not in (container.db.obj_flags or []):
         caller.msg(f"You can't put things in the {container.key}.")
         return
     if not container.db.is_open:
-        caller.msg(f"The {container.key} is closed.")
+        caller.msg(f"The {container.key} isn't open.")
         return
+    if item is container:
+        caller.msg("How can you do that?")
+        return
+    if item.location is container:
+        caller.msg(f"The {item.key} is already in the {container.key}.")
+        return
+    if not _held(caller, item):
+        # ZIL V-PUT: TRYTAKE an item you aren't holding (cards from a desk).
+        if "TAKEBIT" not in (item.db.obj_flags or []):
+            caller.msg(f"You can't pick up the {item.key}.")
+            return
     item.move_to(container, quiet=True, move_type="drop")
     gs = _gs()
     if gs:
@@ -709,7 +715,8 @@ def _h_wear(caller, nouns):
     flags = list(obj.db.obj_flags or [])
     flags.append("WORNBIT")
     obj.db.obj_flags = flags
-    caller.msg(f"You put on the {obj.key}.")
+    _set_elapsed(caller, 18)   # ZIL V-WEAR
+    caller.msg(f"You are wearing the {obj.key}.")
 
 
 def _h_take_off(caller, nouns):
@@ -721,7 +728,8 @@ def _h_take_off(caller, nouns):
         caller.msg("You're not wearing that.")
         return
     obj.db.obj_flags = [f for f in (obj.db.obj_flags or []) if f != "WORNBIT"]
-    caller.msg(f"You remove the {obj.key}.")
+    _set_elapsed(caller, 18)   # ZIL V-TAKE-OFF
+    caller.msg(f"You are no longer wearing the {obj.key}.")
 
 
 def _h_lamp_on(caller, nouns):
@@ -838,7 +846,7 @@ def _h_walk(caller, nouns):
     from evennia.objects.objects import DefaultExit
     # ZIL SAFETY-WEB-F / BED M-BEG: you must leave the vehicle before walking.
     gs = _gs()
-    if gs and gs.flags.get("IN-WEB"):
+    if gs and (gs.flags.get("IN-WEB") or gs.flags.get("IN-BED")):
         caller.msg("You'll have to stand up, first.")
         return
     word = _strip_articles(nouns[0]).strip().lower() if nouns else ""
@@ -1558,6 +1566,7 @@ def _h_find(caller, nouns):
     if obj is None:
         caller.msg("Beats me.")
         return
+    _set_elapsed(caller, 18)   # ZIL V-FIND
     loc = obj.location
     if obj.location is caller:
         caller.msg("You have it.")
@@ -1880,7 +1889,7 @@ HANDLERS: dict = {
 # Command factory
 # ---------------------------------------------------------------------------
 
-def _dispatch_pseudo(caller, handler_name: str, nouns: list) -> bool:
+def _dispatch_pseudo(caller, handler_name: str, nouns: list, idx: int = 0) -> bool:
     """ZIL PSEUDO: dispatch a room-local noun to its named routine.
 
     Rooms carry db.pseudo = {WORD: HANDLER-NAME}; if the direct-object noun
@@ -1891,7 +1900,7 @@ def _dispatch_pseudo(caller, handler_name: str, nouns: list) -> bool:
     pseudo = (room.db.pseudo or {}) if room else {}
     if not pseudo:
         return False
-    words = {w.upper() for w in _strip_articles(nouns[0]).split()}
+    words = {w.upper() for w in _strip_articles(nouns[idx]).split()}
     for word, hname in pseudo.items():
         if word.upper() in words:
             from world.action_handlers import OBJ_HANDLERS, ObjAction
@@ -1903,14 +1912,133 @@ def _dispatch_pseudo(caller, handler_name: str, nouns: list) -> bool:
     return False
 
 
+def _dispatch(caller, handler_name: str, nouns: list) -> None:
+    """Run one parsed command: object ACTIONs first, then the generic handler."""
+    from world.action_handlers import dispatch_object
+    # ZIL BED-F M-BEG: from the bed you can't reach anything but the bed.
+    gs = _gs()
+    if (gs and gs.flags.get("IN-BED") and nouns
+            and handler_name in ("V-TAKE", "V-OPEN", "V-CLOSE", "V-RUB")):
+        target = resolve_obj(caller, nouns[0])
+        if target is None or target.db.zil_id != "BED":
+            caller.msg("You can't reach it from here.")
+            return
+    # ZIL action precedence: the direct object's (PRSO) ACTION gets first
+    # crack at the verb, then the indirect object's (PRSI) — e.g. SLOT-F fires
+    # when the slot is the PRSI of SLIDE/PUT. If either consumes the verb, skip
+    # the generic handler.
+    if nouns:
+        obj = resolve_obj(caller, nouns[0])
+        if obj and dispatch_object(obj, caller, handler_name, nouns):
+            return
+        # ZIL PSEUDO objects: a room-local noun (e.g. the cryo elevator's
+        # BUTTON) handled by a named routine, not a real object. Try only when
+        # no real object matched.
+        if obj is None and _dispatch_pseudo(caller, handler_name, nouns):
+            return
+        if len(nouns) > 1:
+            prsi = resolve_obj(caller, nouns[1])
+            if prsi and dispatch_object(prsi, caller, handler_name, nouns):
+                return
+            if prsi is None and _dispatch_pseudo(caller, handler_name, nouns, idx=1):
+                return
+    HANDLERS.get(handler_name, _h_stub)(caller, nouns)
+
+
+# Verbs whose omitted object is the room (syntax.zil FIND RMUNGBIT).
+_ROOM_OBJECT_HANDLERS = frozenset({"V-STAND", "V-DISEMBARK"})
+
+# Verbs whose direct object is MANY in syntax.zil: they accept "all",
+# "all except X" and "X and Y".
+_MANY_HANDLERS = frozenset({"V-TAKE", "V-DROP", "V-PUT", "V-PUT-ON",
+                            "V-PUT-UNDER", "V-GIVE"})
+_EXCEPT_RE = re.compile(r"\s+(?:except|but)\s+")
+_AND_RE = re.compile(r"\s*,\s*(?:and\s+)?|\s+and\s+")
+
+
+def _expand_many(caller, handler_name: str, noun: str):
+    """Expand a multi-object noun phrase, or return None for a single object.
+
+    ZIL MANY: "all" is everything takeable here (TAKE) or everything held
+    (DROP/PUT/GIVE), optionally minus an "except"/"but" list; "X and Y" /
+    "X, Y" names each object. Unresolvable names are reported and skipped.
+    """
+    noun = _strip_articles(noun)
+    head, _, rest = noun.partition(" ")
+    if head in _ALL_WORDS:
+        m = _EXCEPT_RE.match(" " + rest) if rest else None
+        if rest and not m:
+            return None
+        if handler_name == "V-TAKE":
+            from evennia.objects.objects import DefaultExit
+            room = caller.location
+            objs = [o for o in (room.contents if room else [])
+                    if o is not caller and not isinstance(o, DefaultExit)
+                    and "TAKEBIT" in (o.db.obj_flags or [])
+                    and "INVISIBLE" not in (o.db.obj_flags or [])]
+        else:
+            objs = list(caller.contents)
+        if m:
+            skip = {resolve_obj(caller, n) for n in _AND_RE.split(rest[m.end() - 1:])}
+            objs = [o for o in objs if o not in skip]
+        return objs
+    if not _AND_RE.search(noun):
+        return None
+    objs = []
+    for part in _AND_RE.split(noun):
+        obj = resolve_obj(caller, part) if part else None
+        if obj is None:
+            caller.msg(f"You can't see any {part} here.")
+        elif obj not in objs:
+            objs.append(obj)
+    return objs
+
+
+def _dispatch_many(caller, handler_name: str, nouns: list, objs: list) -> None:
+    """Run the verb once per object, prefixing each reply "name: " like ZIL."""
+    if not objs:
+        caller.msg("There is nothing here to take." if handler_name == "V-TAKE"
+                   else "You aren't carrying anything.")
+        return
+    orig_msg = caller.msg
+    shadowed = "msg" in vars(caller)   # e.g. a test harness capturing output
+    for obj in objs:
+        first = [True]
+
+        def _prefixed(text=None, _obj=obj, _first=first, **kwargs):
+            if _first[0] and isinstance(text, str):
+                _first[0] = False
+                text = f"{_obj.key}: {text}"
+            return orig_msg(text, **kwargs)
+
+        caller.msg = _prefixed
+        caller.ndb.pf_forced = obj
+        try:
+            _dispatch(caller, handler_name, [_strip_articles(obj.key)] + list(nouns[1:]))
+        finally:
+            caller.ndb.pf_forced = None
+            if shadowed:
+                caller.msg = orig_msg
+            else:
+                del caller.msg
+
+
 def make_command(verb: str, entries: list, aliases: list, timeless: bool = False) -> type:
     """Return a PlanetfallCommand subclass for the given verb."""
     # Most specific (longest) pattern tried first
     sorted_entries = sorted(entries, key=lambda e: len(e[0]), reverse=True)
 
     def func(self):
-        from world.action_handlers import dispatch_object
         args = self.args.strip()
+        # ZIL GWIM: "get up" / "get out" leave off an object found by
+        # (FIND RMUNGBIT) — the room itself — so they mean STAND/DISEMBARK.
+        # Checked first, or plain "take OBJECT" would claim "up" as a noun.
+        for pattern, handler_name in self._pf_entries:
+            if (handler_name in _ROOM_OBJECT_HANDLERS and pattern[-1:] == ["OBJECT"]
+                    and _match_pattern(args, pattern[:-1]) == []):
+                self.caller.ndb.last_command = self.raw_string.strip()
+                HANDLERS.get(handler_name, _h_stub)(self.caller, [])
+                return
         for pattern, handler_name in self._pf_entries:
             nouns = _match_pattern(args, pattern)
             if nouns is not None:
@@ -1919,24 +2047,12 @@ def make_command(verb: str, entries: list, aliases: list, timeless: bool = False
                 # original verb rather than chasing its own tail.
                 if handler_name != "V-AGAIN":
                     self.caller.ndb.last_command = self.raw_string.strip()
-                # ZIL action precedence: the direct object's (PRSO) ACTION gets
-                # first crack at the verb, then the indirect object's (PRSI) —
-                # e.g. SLOT-F fires when the slot is the PRSI of SLIDE/PUT. If
-                # either consumes the verb, skip the generic handler.
-                if nouns:
-                    obj = resolve_obj(self.caller, nouns[0])
-                    if obj and dispatch_object(obj, self.caller, handler_name, nouns):
-                        return
-                    # ZIL PSEUDO objects: a room-local noun (e.g. the cryo
-                    # elevator's BUTTON) handled by a named routine, not a real
-                    # object. Try only when no real object matched.
-                    if obj is None and _dispatch_pseudo(self.caller, handler_name, nouns):
-                        return
-                    if len(nouns) > 1:
-                        prsi = resolve_obj(self.caller, nouns[1])
-                        if prsi and dispatch_object(prsi, self.caller, handler_name, nouns):
-                            return
-                HANDLERS.get(handler_name, _h_stub)(self.caller, nouns)
+                many = (_expand_many(self.caller, handler_name, nouns[0])
+                        if nouns and handler_name in _MANY_HANDLERS else None)
+                if many is None:
+                    _dispatch(self.caller, handler_name, nouns)
+                else:
+                    _dispatch_many(self.caller, handler_name, nouns, many)
                 return
         self.caller.msg("I don't understand what you mean.")
 
@@ -1989,9 +2105,22 @@ def build_all_commands() -> list:
     ]
 
 
+class CmdOrderFloyd(PlanetfallCommand):
+    """
+    Give Floyd an order: FLOYD, <command>  (e.g. "floyd, go north").
+    """
+    key = "floyd,"
+    aliases = ["floyd", "robot,"]
+
+    def func(self):
+        from world.action_handlers import order_floyd
+        self.caller.ndb.last_command = self.raw_string.strip()
+        order_floyd(self.caller, self.args.strip().lstrip(",").strip())
+
+
 # Built once at import time; registered by CharacterCmdSet. The direction
 # fallbacks are appended so a directionless room reports "You can't go that
 # way." rather than Evennia's command-not-found suggestions.
 ALL_COMMANDS: list = build_all_commands() + [
     _make_direction_command(d, a) for d, a in _DIRECTION_COMMANDS.items()
-]
+] + [CmdOrderFloyd]

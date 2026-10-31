@@ -30,28 +30,35 @@ development notes.
 
 ---
 
+## Resources: Maps and Walkthroughs
+
+Maps and walkthroughs collected from around the web are in [planetfall_resources/](planetfall_resources/), including a walkthrough adapted for this port: [WALKTHROUGH_this_port.txt](planetfall_resources/WALKTHROUGH_this_port.txt).
+
+---
+
 ## Playing
 
-| Command | Effect |
-|---------|--------|
-| `look` / `l` | Describe the current room |
-| `examine <thing>` | Examine an object or NPC |
-| `inventory` / `i` | List what you're carrying |
-| `take <thing>` / `drop <thing>` | Pick up / drop an object |
+| Command                          | Effect                            |
+| -------------------------------- | --------------------------------- |
+| `look` / `l`                     | Describe the current room         |
+| `examine <thing>`                | Examine an object or NPC          |
+| `inventory` / `i`                | List what you're carrying         |
+| `take <thing>` / `drop <thing>`  | Pick up / drop an object          |
 | `open <thing>` / `close <thing>` | Open or close a door or container |
-| `put <thing> in <container>` | Put an object inside another |
-| `read <thing>` | Read an object's text |
-| `wait` / `z` | Pass a turn |
-| `score` / `diagnose` | Show your score / health |
-| `north` / `n`, `south` / `s` … | Move in a direction |
-| `again` / `g` | Repeat the last command |
-| `save` / `restore` / `restart` | As in the original game |
+| `put <thing> in <container>`     | Put an object inside another      |
+| `read <thing>`                   | Read an object's text             |
+| `wait` / `z`                     | Pass a turn                       |
+| `score` / `diagnose`             | Show your score / health          |
+| `north` / `n`, `south` / `s` …   | Move in a direction               |
+| `again` / `g`                    | Repeat the last command           |
+| `save` / `restore` / `restart`   | As in the original game           |
 
 Synonyms from the original game work, as do multi-object forms
 (`drop all except kit`) and orders to Floyd (`floyd, go north`).
 
-Stuck? [WALKTHROUGH.txt](WALKTHROUGH.txt) is a compact command-by-command
-solution (adapted from Paul D. Smith's classic walkthrough).
+Stuck? [WALKTHROUGH_this_port.txt](planetfall_resources/WALKTHROUGH_this_port.txt)
+is a compact command-by-command solution (adapted from Paul D. Smith's
+classic walkthrough).
 
 ---
 
