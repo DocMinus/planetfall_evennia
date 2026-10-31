@@ -1,13 +1,17 @@
-# Planetfall — Evennia Port
+# Planetfall — Python/Evennia Port
 
 An unofficial fan port of **Planetfall** (1983, Infocom) to
 [Evennia](https://www.evennia.com) 6.0, a Python/Django MUD framework.
 The game world (105 rooms, 137 objects, 8 NPCs, 200+ verb patterns) is
 derived from the original ZIL source code via a custom extraction pipeline.
 
-> **Single-player only.** Evennia is a multiplayer framework, but this port
-> runs as a local single-player game: one persistent player in one shared
-> world. It does not support concurrent multiplayer.
+> **This is not simply a 1:1 port or a redo of the zil engine. A full adaption
+> in Python (with help of Evennia), including bugfixes that never were
+> done in the original.**
+
+**Single-player only.** Evennia is a multiplayer framework, but this port
+runs as a local single-player game: one persistent player in one shared
+world. It does not support concurrent multiplayer.
 
 ---
 
@@ -21,7 +25,7 @@ make rebuild    # build the game database
 make play       # start the server and open the game in your browser
 ```
 
-The game opens at `http://localhost:4001/` on the PLANETFALL title screen —
+The game opens in your webbrowser `http://localhost:4001/` on the PLANETFALL title screen —
 press **RETURN** to begin. Progress persists between sessions. To stop the
 server: `make stop`.
 
@@ -54,7 +58,9 @@ Maps and walkthroughs collected from around the web are in [planetfall_resources
 | `save` / `restore` / `restart`   | As in the original game           |
 
 Synonyms from the original game work, as do multi-object forms
-(`drop all except kit`) and orders to Floyd (`floyd, go north`).
+(`drop all except kit`) and orders to Floyd (`floyd, go north`). When a word
+fits more than one thing, the game asks which you mean; answer with just the
+word that tells them apart (`red`, `the kitchen one`).
 
 Stuck? [WALKTHROUGH_this_port.txt](planetfall_resources/WALKTHROUGH_this_port.txt)
 is a compact command-by-command solution (adapted from Paul D. Smith's

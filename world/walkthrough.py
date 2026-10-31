@@ -749,7 +749,7 @@ BIO_FORAY = [
     WaitUntil(lambda gs: gs.flags.get("COMPUTER-FLAG"),
               note="Floyd recognises the broken computer"),
     Cmd("northeast", expect=("Main Lab",)),
-    Cmd("open west door", expect=("door opens",)),
+    Cmd("open bio-lock door", expect=("door opens",)),
     Cmd("southeast", expect=("Bio Lock West",)),
     Cmd("east", expect=("Bio Lock East",)),
     WaitUntil(lambda gs: gs.flags.get("FLOYD-WAITING"),
@@ -826,7 +826,7 @@ ESCAPE_AND_CRYO = [
         check=lambda gs: gs.flags.get("LAB-FLOODED")),
     Cmd("open office door"),
     Cmd("west", expect=("Bio Lab",), note="cross the (flooded) lab, masked"),
-    Cmd("open east door"),
+    Cmd("open lab door"),
     Cmd("west", expect=("Bio Lock East",)),
     Cmd("west", expect=("Bio Lock West",)),
     # The lock doors close on a timer and are interlocked: the far door has

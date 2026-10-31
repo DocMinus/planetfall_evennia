@@ -1625,6 +1625,12 @@ def handle_systems_monitors(room, character, rarg):
     """SYSTEMS-MONITORS-F (compone.zil:1125) — the three-system status board."""
     if rarg != M_LOOK:
         return False
+    return ("This is a large room filled with tables full of strange "
+            "equipment. " + _describe_monitors())
+
+
+def _describe_monitors() -> str:
+    """DESCRIBE-MONITORS (compone.zil:1131)."""
     gs = _gs()
     d = _flag(gs, "DEFENSE-FIXED")
     c = _flag(gs, "COURSE-CONTROL-FIXED")
@@ -1640,8 +1646,7 @@ def handle_systems_monitors(room, character, rarg):
     if not m: bad.append("KUMUUNIKAASHUNZ")
     bad.append("PRAJEKT KUNTROOL")
     all_fixed = d and c and m
-    return ("This is a large room filled with tables full of strange "
-            "equipment. The far wall is filled with a number of monitors. Of "
+    return ("The far wall is filled with a number of monitors. Of "
             f"these, the ones labelled {', '.join(green)} are green, but the "
             f"one{'' if all_fixed else 's'} labelled {', '.join(bad)} "
             f"indicate{'s' if all_fixed else ''} a malfunctioning condition.")
@@ -1754,6 +1759,354 @@ def handle_spout_pseudo(ctx: ObjAction) -> bool:
         if disp is not None and canteen.location is disp:
             caller.msg("The canteen is sitting under the spout.")
             return True
+    return False
+
+
+# ---------------------------------------------------------------------------
+# Room PSEUDO routines (globals.zil:2371 "Oh, Boy! Pseudo objects!")
+# ---------------------------------------------------------------------------
+
+# Routines that only answer a fixed line for some verbs: name -> {verb: text}.
+_PSEUDO_TEXT = {
+    "DOOR-PSEUDO": {("V-OPEN", "V-UNLOCK"): "No way, Jose."},
+    "WALKWAY-PSEUDO": {("V-EXAMINE", "V-LAMP-ON"):
+        "The walkway, which hastened the trip down that long corridor, is no "
+        "longer in service."},
+    "BENCH-PSEUDO": {("V-CLIMB-ON", "V-BOARD"): "The benches look uncomfortable."},
+    "CATWALK-PSEUDO": {("V-CLIMB-ON", "V-CLIMB-UP", "V-CLIMB-FOO"):
+        "The catwalks are too high for you to access."},
+    "EQUIPMENT-PSEUDO": {("V-EXAMINE", "V-RUB", "V-LAMP-ON", "V-LAMP-OFF"):
+        "The equipment here is so complicated that you couldn't even begin to "
+        "figure out how to operate it."},
+    "LOGO-PSEUDO": {("V-READ", "V-EXAMINE"):
+        "The logo shows a flame burning over a sleep chamber of some type. "
+        "Under that is the phrase \"Prajekt Kuntrool.\""},
+    "KEYBOARD-PSEUDO": {("V-EXAMINE",):
+        "It is a standard numeric keyboard with ten keys labelled from 0 "
+        "through 9."},
+    "TOILET-PSEUDO": {("V-EXAMINE",): "The fixtures are all dry and dusty.",
+                      ("V-FLUSH",): "The water seems to be turned off."},
+    "TAPES-PSEUDO": {("V-READ", "V-PLAY", "V-TAKE"):
+        "Hardly the time or place for reading recreational tapes.",
+        ("V-EXAMINE",):
+        "Let's see...here are some musical selections, here are some "
+        "bestselling romantic novels, here is a biography of a famous Double "
+        "Fannucci champion..."},
+    "PARTITION-PSEUDO": {("V-EXAMINE",):
+        "The partitions are very plain, and were obviously intended to "
+        "separate this huge room into smaller areas."},
+    "CUBBYHOLE-PSEUDO": {("V-EXAMINE", "V-LOOK-INSIDE"):
+        "The cubbyholes look like the kind that are used to hold maps or "
+        "blueprints. They are all empty now."},
+    "MAPS-PSEUDO": {("V-EXAMINE",): "Examining the maps reveals no new information."},
+    "DEVICES-PSEUDO": {("V-EXAMINE",):
+        "They are components of disassembled robots, beyond repair."},
+    "CARPET-PSEUDO": {("V-EXAMINE",): "It's pretty dusty."},
+    "CABINETS-PSEUDO": {("V-EXAMINE", "V-OPEN"): "The cabinets are locked.",
+                        ("V-UNLOCK",): "You don't have the correct key."},
+    "PLATE-PSEUDO": {("V-EXAMINE",):
+        "The plates seem to be featureless metal squares."},
+    "SUPPLIES-PSEUDO": {("V-TAKE",): "These supplies are of absolutely no use."},
+    "DESK-PSEUDO": {("V-OPEN",): "All the drawers are empty.",
+                    ("V-EXAMINE",): "It is bare except for the microfilm reader."},
+    "CASTLE-PSEUDO": {("V-EXAMINE",): "The castle is ancient and crumbling."},
+    "PLAQUE-PSEUDO": {("V-READ", "V-EXAMINE"):
+        "\nSEENIK VISTA\n\nXis stuneeng vuu uf xee Kalamontee Valee kuvurz "
+        "oovur fortee skwaar miilz uf xat faamus tuurist spot. Xee larj "
+        "bildeeng at xee bend in xee Gulmaan Rivur iz xee formur pravincul "
+        "kapitul bildeeng."},
+    "FENCE-PSEUDO": {("V-CLIMB-UP", "V-CLIMB-FOO", "V-LEAP"): "You can't."},
+    "DIAGRAM-PSEUDO": {("V-READ",):
+        "Not unless you've taken a special twelve-year course in ninth-order "
+        "molecular physics."},
+}
+
+
+def _pseudo_text(ctx: ObjAction) -> bool:
+    for verbs, text in _PSEUDO_TEXT[ctx.obj.db.action].items():
+        if ctx.verb in verbs:
+            ctx.caller.msg(text)
+            return True
+    return False
+
+
+def _pseudo_is_prsi(ctx: ObjAction) -> bool:
+    """Is the pseudo the indirect object (ZIL <EQUAL? ,PRSI ,PSEUDO-OBJECT>)?"""
+    return (len(ctx.nouns) > 1
+            and ctx.obj.key in ctx.nouns[1].lower().split())
+
+
+def _yuks(caller) -> None:
+    from world.verb_commands import _YUKS
+    caller.msg(random.choice(_YUKS))
+
+
+def _walk(caller, direction: str) -> None:
+    from world.verb_commands import _do_walk
+    _do_walk(caller, direction)
+
+
+def handle_translator_pseudo(ctx: ObjAction) -> bool:
+    """TRANSLATOR-PSEUDO (globals.zil:2373) — the ambassador's translator."""
+    caller, v = ctx.caller, ctx.verb
+    if not _here_has(caller, "AMBASSADOR"):
+        caller.msg("What translator?")
+        return True
+    if v == "V-TAKE":
+        caller.msg("The ambassador whimpers and slaps your wrist.")
+        return True
+    if v == "V-MUNG":
+        caller.msg("Are you trying to create an interplanetary incident?")
+        return True
+    return False
+
+
+_SLIME_SENSES = {"V-EAT": "tastes", "V-TASTE": "tastes", "V-TAKE": "feels",
+                 "V-RUB": "feels", "V-EXAMINE": "looks", "V-SMELL": "smells"}
+
+
+def handle_slime_pseudo(ctx: ObjAction) -> bool:
+    """SLIME-PSEUDO (globals.zil:2384) — the ambassador's trail on Deck Nine."""
+    caller, v = ctx.caller, ctx.verb
+    gs = _gs()
+    if not (_here_has(caller, "AMBASSADOR") or _flag(gs, "AMBASSADOR-LEAVE", 0) > 0):
+        caller.msg("What slime?")
+        return True
+    if v in _SLIME_SENSES:   # ZIL LIKE-SLIME
+        caller.msg(f"It {_SLIME_SENSES[v]} like slime. Aren't you glad you "
+                   "didn't step in it?")
+        return True
+    if v in ("V-SCRUB", "V-REMOVE"):
+        text = "Whew. You've cleaned up maybe one ten-thousandth of the slime."
+        if not _here_has(caller, "BLATHER"):
+            text += (" If you hurry, it might be all cleaned up before Ensign "
+                     "Blather gets here.")
+        caller.msg(text)
+        return True
+    return False
+
+
+def handle_graffiti_pseudo(ctx: ObjAction) -> bool:
+    """GRAFFITI-PSEUDO (globals.zil:2410) — the Brig's limerick."""
+    if ctx.verb != "V-READ":
+        return False
+    from world.verb_commands import _set_elapsed
+    _set_elapsed(ctx.caller, 28)
+    ctx.caller.msg(
+        "All the graffiti seem to be about Blather. One of the least obscene "
+        "items reads:\n\n"
+        "There once was a krip, name of Blather\n"
+        "Who told a young Ensign named Smather\n"
+        "\"I'll make you inherit\n"
+        "A trotting demerit\n"
+        "And ship you off to those stinking fawg-infested tar-pools of "
+        "Krather.\"\n\n"
+        "It's not a very good limerick, is it?")
+    return True
+
+
+def handle_monitors_pseudo(ctx: ObjAction) -> bool:
+    """MONITORS-PSEUDO (globals.zil:2447) — read the status board."""
+    if ctx.verb not in ("V-EXAMINE", "V-READ"):
+        return False
+    ctx.caller.msg(_describe_monitors())
+    return True
+
+
+def handle_mural_pseudo(ctx: ObjAction) -> bool:
+    """MURAL-PSEUDO (globals.zil:2451) — the ProjCon Office mural (gone once
+    the computer is fixed and the mutants come through it)."""
+    caller, v = ctx.caller, ctx.verb
+    if _flag(_gs(), "COMPUTER-FIXED"):
+        caller.msg("You can't see that anymore.")   # ZIL ANYMORE
+        return True
+    if v == "V-EXAMINE":
+        caller.msg("It's a gaudy work of orange and purple abstract shapes, "
+                   "reminiscent of the early works of Burstini Bonz. It doesn't "
+                   "appear to fit the decor of the room at all. The mural seems "
+                   "to ripple now and then, as though a breeze were blowing "
+                   "behind it.")
+        return True
+    if v == "V-MUNG":
+        caller.msg("My sentiments also, but let's be civil.")
+        return True
+    if v in ("V-MOVE", "V-LOOK-BEHIND"):
+        caller.msg("It won't budge.")
+        return True
+    return False
+
+
+def handle_crack_pseudo(ctx: ObjAction) -> bool:
+    """CRACK-PSEUDO (globals.zil:2478) — the crack between the two labs."""
+    caller, v = ctx.caller, ctx.verb
+    if v == "V-EXAMINE":
+        caller.msg("The crack is too small to go through, but large enough to "
+                   "look through.")
+        return True
+    if v == "V-LOOK-INSIDE":
+        if caller.location.db.zil_id == "RADIATION-LAB":
+            caller.msg("You see a dimly lit Bio Lab. Sinister shapes lurk about "
+                       "within.")
+        else:
+            caller.msg("You see a laboratory suffused with a pale blue glow.")
+        return True
+    return False
+
+
+def handle_void_pseudo(ctx: ObjAction) -> bool:
+    """VOID-PSEUDO (globals.zil:2490) — the drop beside the access strip."""
+    caller, v = ctx.caller, ctx.verb
+    if v == "V-PUT" and _pseudo_is_prsi(ctx):
+        _perform(caller, "V-THROW-OFF", [ctx.nouns[0], "strip"])
+        return True
+    if v == "V-ZAP" and _pseudo_is_prsi(ctx):
+        from world.verb_commands import resolve_obj
+        prso = resolve_obj(caller, ctx.nouns[0])
+        if prso is not None and prso.db.zil_id == "LASER":
+            _perform(caller, "V-ZAP", [ctx.nouns[0]])
+            return True
+    if v in ("V-THROUGH", "V-LEAP"):
+        gs = _gs()
+        if gs:
+            gs.die("Plummet.")
+        return True
+    if v in ("V-LOOK-INSIDE", "V-EXAMINE"):
+        caller.msg("The void extends downward into the gloom far below.")
+        return True
+    return False
+
+
+def handle_games_pseudo(ctx: ObjAction) -> bool:
+    """GAMES-PSEUDO (globals.zil:2522) — the Rec Area's game shelves."""
+    if ctx.verb == "V-PLAY":
+        games = _by_zil_id("GLOBAL-GAMES")
+        return handle_global_games(ObjAction(obj=games, caller=ctx.caller,
+                                             verb="V-PLAY", nouns=ctx.nouns))
+    if ctx.verb == "V-EXAMINE":
+        ctx.caller.msg("All the usual games -- Chess, Cribbage, Galactic "
+                       "Overlord, Double Fannucci...")
+        return True
+    return False
+
+
+def handle_cables_pseudo(ctx: ObjAction) -> bool:
+    """CABLES-PSEUDO (globals.zil:2564) — the Comm Room's power cables."""
+    if ctx.verb in ("V-EXAMINE", "V-FOLLOW"):
+        ctx.caller.msg("These heavy cables merely run from the two consoles up "
+                       "into the ceiling.")
+        return True
+    if ctx.verb == "V-MUNG":
+        gs = _gs()
+        if gs:
+            gs.die("So, that's what it's like to have twenty million volts run "
+                   "through your body!")
+        return True
+    return False
+
+
+def handle_structure_pseudo(ctx: ObjAction) -> bool:
+    """STRUCTURE-PSEUDO (globals.zil:2573) — the tower atop the Crag."""
+    if ctx.verb == "V-EXAMINE":
+        ctx.caller.msg("You'd be able to tell more about it if you climbed up "
+                       "to it.")
+        return True
+    if ctx.verb == "V-CLIMB-UP":
+        _walk(ctx.caller, "up")
+        return True
+    return False
+
+
+def handle_escalator_pseudo(ctx: ObjAction) -> bool:
+    """ESCALATOR-PSEUDO (globals.zil:2619) — the dead escalator."""
+    caller, v = ctx.caller, ctx.verb
+    here = caller.location.db.zil_id
+    if v in ("V-CLIMB-UP", "V-CLIMB-FOO"):
+        if here == "FORK":
+            caller.msg("You're already at the top of the escalator.")
+        else:
+            _walk(caller, "up")
+        return True
+    if v == "V-CLIMB-DOWN":
+        if here == "LAWANDA-PLATFORM":
+            caller.msg("You're already at the bottom of the escalator.")
+        else:
+            _walk(caller, "down")
+        return True
+    if v == "V-LAMP-ON":
+        _yuks(caller)
+        return True
+    return False
+
+
+def handle_reactor_button_pseudo(ctx: ObjAction) -> bool:
+    """REACTOR-BUTTON-PSEUDO (globals.zil:2635) — open the reactor elevator."""
+    if ctx.verb != "V-PUSH":
+        return False
+    door = _by_zil_id("REACTOR-ELEVATOR-DOOR")
+    if door:
+        door.db.is_open = True
+    gs = _gs()
+    if gs:
+        _queue(gs, "make_i_reactor_door_close", 30)
+    ctx.caller.msg("The metal doors slide open, revealing a small room to the "
+                   "east.")
+    return True
+
+
+def handle_cleft_pseudo(ctx: ObjAction) -> bool:
+    """CLEFT-PSEUDO (globals.zil:2691) — climb the cleft up the Crag."""
+    if ctx.verb in ("V-CLIMB-UP", "V-CLIMB-FOO"):
+        _walk(ctx.caller, "up")
+        return True
+    return False
+
+
+def handle_rubble_pseudo(ctx: ObjAction) -> bool:
+    """RUBBLE-PSEUDO (globals.zil:2695)."""
+    if ctx.verb == "V-MOVE":
+        _yuks(ctx.caller)
+        return True
+    return False
+
+
+def handle_lock_pseudo(ctx: ObjAction) -> bool:
+    """LOCK-PSEUDO (globals.zil:2713) — the helicopter's lock."""
+    if ctx.verb not in ("V-OPEN", "V-UNLOCK"):
+        return False
+    if len(ctx.nouns) > 1:
+        ctx.caller.msg("That won't unlock it.")
+    else:
+        ctx.caller.msg("But you don't have the orange key!")
+    return True
+
+
+def handle_enunciator_pseudo(ctx: ObjAction) -> bool:
+    """ENUNCIATOR-PSEUDO (globals.zil:2725) — the Comm Room's enunciator."""
+    if ctx.verb in ("V-LOOK-INSIDE", "V-PUSH", "V-MOVE"):
+        _yuks(ctx.caller)
+        return True
+    return False
+
+
+def handle_near_booth_pseudo(ctx: ObjAction) -> bool:
+    """NEAR-BOOTH-PSEUDO (globals.zil:2729) — a teleport booth next door."""
+    if ctx.verb in ("V-DROP", "V-EXIT", "V-DISEMBARK"):
+        ctx.caller.msg("You're not in the booth!")
+        return True
+    if ctx.verb in ("V-THROUGH", "V-BOARD", "V-WALK-TO"):
+        _walk(ctx.caller, "in")
+        return True
+    return False
+
+
+def handle_in_booth_pseudo(ctx: ObjAction) -> bool:
+    """IN-BOOTH-PSEUDO (globals.zil:2735) — the teleport booth you're in."""
+    if ctx.verb in ("V-THROUGH", "V-BOARD", "V-WALK-TO"):
+        ctx.caller.msg("You're already in the booth!")
+        return True
+    if ctx.verb in ("V-DROP", "V-EXIT", "V-DISEMBARK"):
+        _walk(ctx.caller, "out")
+        return True
     return False
 
 
@@ -2360,14 +2713,16 @@ def handle_cryo_button(ctx: ObjAction) -> bool:
                    "elevator begins to move downward.")
         return True
     if gs and gs.flags.get("CRYO-SCORE-FLAG") and door and door.db.is_open:
-        gs.die("Stunning. After days of surviving a hostile, plague-ridden "
-               "planet and coming within one move of completing Planetfall, you "
-               "blow it all in one amazingly dumb input. The elevator returns to "
-               "the upper level, where the waiting mutants make short work of "
-               "you.")
+        gs.die("Stunning. After days of surviving on a hostile, plague-ridden "
+               "planet, solving several of Infocom's toughest puzzles, and "
+               "coming within one move of completing Planetfall, you blow it "
+               "all in one amazingly dumb input.\n\nThe doors close and the "
+               "elevator rises quickly to the top of the shaft. The doors open, "
+               "and the mutants, which were waiting impatiently in the ProjCon "
+               "Office for just such an occurence, happily saunter in and begin "
+               "munching.")
         return True
-    caller.msg("Nothing happens.")
-    return True
+    return False
 
 
 def handle_fungicide_button(ctx: ObjAction) -> bool:
@@ -2528,6 +2883,9 @@ def handle_kitchen_button(ctx: ObjAction) -> bool:
     disp = _by_zil_id("DISPENSER")
     canteen = _by_zil_id("CANTEEN")
     hp = _by_zil_id("HIGH-PROTEIN")
+    if disp is not None and _bit(disp, "MUNGEDBIT"):
+        caller.msg("The dispenser sputters a few times.")
+        return True
     if disp is None or canteen is None or canteen.location is not disp:
         caller.msg("A thick, brownish liquid pours from the spout and splashes "
                    "to the floor, where it quickly evaporates.")
@@ -2538,8 +2896,11 @@ def handle_kitchen_button(ctx: ObjAction) -> bool:
                    "on the floor which quickly dries up.")
         return True
     if hp and hp.location is canteen:
+        uniform = _by_zil_id("PATROL-UNIFORM")
+        stain = (" and staining your uniform"
+                 if uniform and _bit(uniform, "WORNBIT") else "")
         caller.msg("The brown liquid splashes over the mouth of the "
-                   "already-filled canteen, creating a mess.")
+                   f"already-filled canteen, creating a mess{stain}.")
         return True
     if hp:
         hp.move_to(canteen, quiet=True, move_type="move")
@@ -2816,6 +3177,25 @@ OBJ_HANDLERS: dict = {
     "DISPENSER-F": handle_kitchen_dispenser,
     "BUTTON-PSEUDO": handle_kitchen_button,
     "SPOUT-PSEUDO": handle_spout_pseudo,
+    **{name: _pseudo_text for name in _PSEUDO_TEXT},
+    "TRANSLATOR-PSEUDO": handle_translator_pseudo,
+    "SLIME-PSEUDO": handle_slime_pseudo,
+    "GRAFFITI-PSEUDO": handle_graffiti_pseudo,
+    "MONITORS-PSEUDO": handle_monitors_pseudo,
+    "MURAL-PSEUDO": handle_mural_pseudo,
+    "CRACK-PSEUDO": handle_crack_pseudo,
+    "VOID-PSEUDO": handle_void_pseudo,
+    "GAMES-PSEUDO": handle_games_pseudo,
+    "CABLES-PSEUDO": handle_cables_pseudo,
+    "STRUCTURE-PSEUDO": handle_structure_pseudo,
+    "ESCALATOR-PSEUDO": handle_escalator_pseudo,
+    "REACTOR-BUTTON-PSEUDO": handle_reactor_button_pseudo,
+    "CLEFT-PSEUDO": handle_cleft_pseudo,
+    "RUBBLE-PSEUDO": handle_rubble_pseudo,
+    "LOCK-PSEUDO": handle_lock_pseudo,
+    "ENUNCIATOR-PSEUDO": handle_enunciator_pseudo,
+    "NEAR-BOOTH-PSEUDO": handle_near_booth_pseudo,
+    "IN-BOOTH-PSEUDO": handle_in_booth_pseudo,
     "CHEM-SPOUT-PSEUDO": handle_chem_spout_pseudo,
     "MEDICINE-F": handle_medicine,
     "LEVER-F": handle_lever,

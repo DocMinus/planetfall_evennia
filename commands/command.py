@@ -68,7 +68,10 @@ class PlanetfallCommand(Command):
                 "The game is over. Please RESTORE a saved game or QUIT."
             )
             return True
-        return False
+        # An answer to "Which ... do you mean?" reruns the asking command
+        # (which ticks the clock itself); anything else drops the question.
+        from world.verb_commands import orphan_merge
+        return orphan_merge(self.caller, self.raw_string)
 
     def at_post_cmd(self) -> None:
         # A handler that already advanced the clock itself (e.g. V-WALK, which

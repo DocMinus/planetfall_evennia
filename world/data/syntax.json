@@ -4,84 +4,96 @@
     "pattern": [],
     "object_filters": [],
     "handler": "V-BRIEF",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "SUPER",
     "pattern": [],
     "object_filters": [],
     "handler": "V-SUPER-BRIEF",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "DIAGNOSE",
     "pattern": [],
     "object_filters": [],
     "handler": "V-DIAGNOSE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "INVENTORY",
     "pattern": [],
     "object_filters": [],
     "handler": "V-INVENTORY",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "QUIT",
     "pattern": [],
     "object_filters": [],
     "handler": "V-QUIT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "RESTAR",
     "pattern": [],
     "object_filters": [],
     "handler": "V-RESTART",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "RESTOR",
     "pattern": [],
     "object_filters": [],
     "handler": "V-RESTORE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "SAVE",
     "pattern": [],
     "object_filters": [],
     "handler": "V-SAVE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "SCORE",
     "pattern": [],
     "object_filters": [],
     "handler": "V-SCORE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "SCRIPT",
     "pattern": [],
     "object_filters": [],
     "handler": "V-SCRIPT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "UNSCRIPT",
     "pattern": [],
     "object_filters": [],
     "handler": "V-UNSCRIPT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "$VERIFY",
     "pattern": [],
     "object_filters": [],
     "handler": "V-$VERIFY",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "$VERIFY",
@@ -90,21 +102,26 @@
     ],
     "object_filters": [],
     "handler": "V-$VERIFY",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "VERSION",
     "pattern": [],
     "object_filters": [],
     "handler": "V-VERSION",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "VERBOSE",
     "pattern": [],
     "object_filters": [],
     "handler": "V-VERBOSE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "\\#",
@@ -148,14 +165,16 @@
     "pattern": [],
     "object_filters": [],
     "handler": "V-AGAIN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "ANSWER",
     "pattern": [],
     "object_filters": [],
     "handler": "V-ANSWER",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "ANSWER",
@@ -164,7 +183,10 @@
     ],
     "object_filters": [],
     "handler": "V-REPLY",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "APPLY",
@@ -175,7 +197,11 @@
     ],
     "object_filters": [],
     "handler": "V-PUT",
-    "pre_handler": "PRE-PUT"
+    "pre_handler": "PRE-PUT",
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "ATTACK",
@@ -193,7 +219,13 @@
       ]
     ],
     "handler": "V-ATTACK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "ATTACK",
@@ -208,7 +240,13 @@
       ]
     ],
     "handler": "V-ATTACK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      [
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "BOARD",
@@ -226,14 +264,21 @@
       ]
     ],
     "handler": "V-BOARD",
-    "pre_handler": "PRE-BOARD"
+    "pre_handler": "PRE-BOARD",
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "CLIMB",
     "pattern": [],
     "object_filters": [],
     "handler": "V-GO-UP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "CLIMB",
@@ -252,7 +297,13 @@
       ]
     ],
     "handler": "V-CLIMB-ON",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "CLIMB",
@@ -267,7 +318,10 @@
       ]
     ],
     "handler": "V-CLIMB-UP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "CLIMB",
@@ -277,7 +331,10 @@
     ],
     "object_filters": [],
     "handler": "V-CLIMB-UP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "CLIMB",
@@ -287,7 +344,10 @@
     ],
     "object_filters": [],
     "handler": "V-THROUGH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "CLIMB",
@@ -306,7 +366,13 @@
       ]
     ],
     "handler": "V-CLIMB-DOWN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "CLIMB",
@@ -324,7 +390,13 @@
       ]
     ],
     "handler": "V-CLIMB-FOO",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "CLIMB",
@@ -343,14 +415,21 @@
       ]
     ],
     "handler": "V-BOARD",
-    "pre_handler": "PRE-BOARD"
+    "pre_handler": "PRE-BOARD",
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "SIT",
     "pattern": [],
     "object_filters": [],
     "handler": "V-SIT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "SIT",
@@ -369,7 +448,13 @@
       ]
     ],
     "handler": "V-CLIMB-ON",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "SIT",
@@ -384,7 +469,10 @@
       ]
     ],
     "handler": "V-SIT-DOWN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SIT",
@@ -403,7 +491,13 @@
       ]
     ],
     "handler": "V-BOARD",
-    "pre_handler": "PRE-BOARD"
+    "pre_handler": "PRE-BOARD",
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "SIT",
@@ -421,7 +515,16 @@
       ]
     ],
     "handler": "V-PUT",
-    "pre_handler": "PRE-PUT"
+    "pre_handler": "PRE-PUT",
+    "slot_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE",
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "SIT",
@@ -439,7 +542,16 @@
       ]
     ],
     "handler": "V-PUT-UNDER",
-    "pre_handler": "PRE-PUT-UNDER"
+    "pre_handler": "PRE-PUT-UNDER",
+    "slot_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE",
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "SIT",
@@ -454,7 +566,13 @@
       ]
     ],
     "handler": "V-ATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "SIT",
@@ -469,7 +587,13 @@
       ]
     ],
     "handler": "V-ATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "SIT",
@@ -480,14 +604,19 @@
     ],
     "object_filters": [],
     "handler": "V-SPAN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "STAND",
     "pattern": [],
     "object_filters": [],
     "handler": "V-STAND",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "STAND",
@@ -502,7 +631,10 @@
       ]
     ],
     "handler": "V-STAND",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "STAND",
@@ -512,7 +644,10 @@
     ],
     "object_filters": [],
     "handler": "V-STAND-ON",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "CLOSE",
@@ -528,14 +663,23 @@
       ]
     ],
     "handler": "V-CLOSE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "CURSE",
     "pattern": [],
     "object_filters": [],
     "handler": "V-CURSE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "DISEMBARK",
@@ -553,7 +697,13 @@
       ]
     ],
     "handler": "V-DISEMBARK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "DROP",
@@ -568,7 +718,14 @@
       ]
     ],
     "handler": "V-DROP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "DROP",
@@ -585,7 +742,15 @@
       ]
     ],
     "handler": "V-PUT",
-    "pre_handler": "PRE-PUT"
+    "pre_handler": "PRE-PUT",
+    "slot_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "DROP",
@@ -602,7 +767,15 @@
       ]
     ],
     "handler": "V-PUT",
-    "pre_handler": "PRE-PUT"
+    "pre_handler": "PRE-PUT",
+    "slot_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "DROP",
@@ -619,7 +792,15 @@
       ]
     ],
     "handler": "V-PUT-ON",
-    "pre_handler": "PRE-PUT"
+    "pre_handler": "PRE-PUT",
+    "slot_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "EAT",
@@ -636,7 +817,12 @@
       ]
     ],
     "handler": "V-EAT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "EAT",
@@ -650,14 +836,20 @@
       ]
     ],
     "handler": "V-EAT-FROM",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "ENTER",
     "pattern": [],
     "object_filters": [],
     "handler": "V-ENTER",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "ENTER",
@@ -666,14 +858,18 @@
     ],
     "object_filters": [],
     "handler": "V-THROUGH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "EXIT",
     "pattern": [],
     "object_filters": [],
     "handler": "V-EXIT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "EXIT",
@@ -682,7 +878,10 @@
     ],
     "object_filters": [],
     "handler": "V-EXIT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "EXAMINE",
@@ -699,7 +898,16 @@
       ]
     ],
     "handler": "V-EXAMINE",
-    "pre_handler": "PRE-EXAMINE"
+    "pre_handler": "PRE-EXAMINE",
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "MANY"
+      ]
+    ]
   },
   {
     "verb": "EXAMINE",
@@ -717,7 +925,16 @@
       ]
     ],
     "handler": "V-LOOK-INSIDE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "IN-ROOM",
+        "ON-GROUND",
+        "MANY"
+      ]
+    ]
   },
   {
     "verb": "EXAMINE",
@@ -735,7 +952,16 @@
       ]
     ],
     "handler": "V-LOOK-INSIDE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "IN-ROOM",
+        "ON-GROUND",
+        "MANY"
+      ]
+    ]
   },
   {
     "verb": "FIND",
@@ -744,7 +970,10 @@
     ],
     "object_filters": [],
     "handler": "V-FIND",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "FIRE",
@@ -759,7 +988,13 @@
       ]
     ],
     "handler": "V-SZAP",
-    "pre_handler": "PRE-SZAP"
+    "pre_handler": "PRE-SZAP",
+    "slot_filters": [
+      [],
+      [
+        "HELD"
+      ]
+    ]
   },
   {
     "verb": "FIRE",
@@ -768,7 +1003,10 @@
     ],
     "object_filters": [],
     "handler": "V-ZAP",
-    "pre_handler": "PRE-ZAP"
+    "pre_handler": "PRE-ZAP",
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "FIRE",
@@ -778,7 +1016,10 @@
     ],
     "object_filters": [],
     "handler": "V-ZAP",
-    "pre_handler": "PRE-ZAP"
+    "pre_handler": "PRE-ZAP",
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "FIRE",
@@ -793,7 +1034,13 @@
       ]
     ],
     "handler": "V-ZAP",
-    "pre_handler": "PRE-ZAP"
+    "pre_handler": "PRE-ZAP",
+    "slot_filters": [
+      [
+        "HELD"
+      ],
+      []
+    ]
   },
   {
     "verb": "FOLLOW",
@@ -807,7 +1054,10 @@
       ]
     ],
     "handler": "V-FOLLOW",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "FLUSH",
@@ -816,14 +1066,18 @@
     ],
     "object_filters": [],
     "handler": "V-FLUSH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "FLY",
     "pattern": [],
     "object_filters": [],
     "handler": "V-FLY",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "FLY",
@@ -832,7 +1086,10 @@
     ],
     "object_filters": [],
     "handler": "V-FLY",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "GIVE",
@@ -853,7 +1110,15 @@
       ]
     ],
     "handler": "V-GIVE",
-    "pre_handler": "PRE-GIVE"
+    "pre_handler": "PRE-GIVE",
+    "slot_filters": [
+      [
+        "MANY",
+        "HELD",
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "GIVE",
@@ -876,14 +1141,25 @@
       ]
     ],
     "handler": "V-SGIVE",
-    "pre_handler": "PRE-SGIVE"
+    "pre_handler": "PRE-SGIVE",
+    "slot_filters": [
+      [
+        "ON-GROUND"
+      ],
+      [
+        "MANY",
+        "HELD",
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "HELLO",
     "pattern": [],
     "object_filters": [],
     "handler": "V-HELLO",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "HELLO",
@@ -892,21 +1168,26 @@
     ],
     "object_filters": [],
     "handler": "V-HELLO",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "HELP",
     "pattern": [],
     "object_filters": [],
     "handler": "V-HELP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "JUMP",
     "pattern": [],
     "object_filters": [],
     "handler": "V-LEAP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "JUMP",
@@ -916,7 +1197,10 @@
     ],
     "object_filters": [],
     "handler": "V-LEAP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "JUMP",
@@ -926,7 +1210,10 @@
     ],
     "object_filters": [],
     "handler": "V-LEAP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "JUMP",
@@ -936,7 +1223,10 @@
     ],
     "object_filters": [],
     "handler": "V-LEAP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "JUMP",
@@ -946,7 +1236,10 @@
     ],
     "object_filters": [],
     "handler": "V-LEAP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "JUMP",
@@ -956,7 +1249,10 @@
     ],
     "object_filters": [],
     "handler": "V-LEAP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "KICK",
@@ -965,7 +1261,10 @@
     ],
     "object_filters": [],
     "handler": "V-KICK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "KISS",
@@ -983,7 +1282,13 @@
       ]
     ],
     "handler": "V-KISS",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "KNOCK",
@@ -993,7 +1298,10 @@
     ],
     "object_filters": [],
     "handler": "V-KNOCK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "KNOCK",
@@ -1003,7 +1311,10 @@
     ],
     "object_filters": [],
     "handler": "V-KNOCK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "KNOCK",
@@ -1022,14 +1333,21 @@
       ]
     ],
     "handler": "V-ATTACK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "LEAVE",
     "pattern": [],
     "object_filters": [],
     "handler": "V-LEAVE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "LEAVE",
@@ -1038,7 +1356,10 @@
     ],
     "object_filters": [],
     "handler": "V-DROP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "LISTEN",
@@ -1048,7 +1369,10 @@
     ],
     "object_filters": [],
     "handler": "V-LISTEN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "LOCK",
@@ -1067,14 +1391,24 @@
       ]
     ],
     "handler": "V-LOCK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ],
+      [
+        "HELD"
+      ]
+    ]
   },
   {
     "verb": "LOOK",
     "pattern": [],
     "object_filters": [],
     "handler": "V-LOOK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "LOOK",
@@ -1083,7 +1417,10 @@
     ],
     "object_filters": [],
     "handler": "V-LOOK-CRETIN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "LOOK",
@@ -1098,7 +1435,10 @@
       ]
     ],
     "handler": "V-LOOK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "LOOK",
@@ -1116,7 +1456,16 @@
       ]
     ],
     "handler": "V-EXAMINE",
-    "pre_handler": "PRE-EXAMINE"
+    "pre_handler": "PRE-EXAMINE",
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "MANY"
+      ]
+    ]
   },
   {
     "verb": "LOOK",
@@ -1134,7 +1483,16 @@
       ]
     ],
     "handler": "V-EXAMINE",
-    "pre_handler": "PRE-EXAMINE"
+    "pre_handler": "PRE-EXAMINE",
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "MANY"
+      ]
+    ]
   },
   {
     "verb": "LOOK",
@@ -1144,7 +1502,10 @@
     ],
     "object_filters": [],
     "handler": "V-LOOK-INSIDE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "LOOK",
@@ -1154,7 +1515,10 @@
     ],
     "object_filters": [],
     "handler": "V-LOOK-UNDER",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "LOOK",
@@ -1164,7 +1528,10 @@
     ],
     "object_filters": [],
     "handler": "V-LOOK-BEHIND",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "LOOK",
@@ -1182,7 +1549,16 @@
       ]
     ],
     "handler": "V-LOOK-INSIDE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "MANY"
+      ]
+    ]
   },
   {
     "verb": "LOOK",
@@ -1200,7 +1576,16 @@
       ]
     ],
     "handler": "V-LOOK-INSIDE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "MANY"
+      ]
+    ]
   },
   {
     "verb": "LOOK",
@@ -1210,7 +1595,10 @@
     ],
     "object_filters": [],
     "handler": "V-FIND",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "LOOK",
@@ -1225,7 +1613,10 @@
       ]
     ],
     "handler": "V-LOOK-DOWN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SEARCH",
@@ -1234,7 +1625,10 @@
     ],
     "object_filters": [],
     "handler": "V-SEARCH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SEARCH",
@@ -1244,7 +1638,10 @@
     ],
     "object_filters": [],
     "handler": "V-SEARCH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SEARCH",
@@ -1254,7 +1651,10 @@
     ],
     "object_filters": [],
     "handler": "V-FIND",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SEARCH",
@@ -1264,7 +1664,10 @@
     ],
     "object_filters": [],
     "handler": "V-SEARCH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "MOVE",
@@ -1278,7 +1681,13 @@
       ]
     ],
     "handler": "V-MOVE",
-    "pre_handler": "PRE-MOVE"
+    "pre_handler": "PRE-MOVE",
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "MOVE",
@@ -1288,7 +1697,10 @@
     ],
     "object_filters": [],
     "handler": "V-PUSH-UP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "MOVE",
@@ -1298,7 +1710,10 @@
     ],
     "object_filters": [],
     "handler": "V-PUSH-DOWN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "POINT",
@@ -1313,7 +1728,13 @@
       ]
     ],
     "handler": "V-POINT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "POINT",
@@ -1328,7 +1749,13 @@
       ]
     ],
     "handler": "V-POINT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "POINT",
@@ -1349,7 +1776,18 @@
       ]
     ],
     "handler": "V-POINT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "PULL",
@@ -1358,7 +1796,10 @@
     ],
     "object_filters": [],
     "handler": "V-PULL",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PULL",
@@ -1368,7 +1809,10 @@
     ],
     "object_filters": [],
     "handler": "V-PUSH-DOWN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PULL",
@@ -1378,7 +1822,10 @@
     ],
     "object_filters": [],
     "handler": "V-PUSH-UP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PULL",
@@ -1388,7 +1835,10 @@
     ],
     "object_filters": [],
     "handler": "V-PULL",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PULL",
@@ -1403,7 +1853,13 @@
       ]
     ],
     "handler": "V-ZATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      [
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "DESTROY",
@@ -1419,7 +1875,15 @@
       ]
     ],
     "handler": "V-MUNG",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM",
+        "HELD",
+        "CARRIED"
+      ]
+    ]
   },
   {
     "verb": "DESTROY",
@@ -1440,7 +1904,18 @@
       ]
     ],
     "handler": "V-MUNG",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM",
+        "HELD",
+        "CARRIED"
+      ],
+      [
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "DESTROY",
@@ -1457,7 +1932,15 @@
       ]
     ],
     "handler": "V-MUNG",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM",
+        "HELD",
+        "CARRIED"
+      ]
+    ]
   },
   {
     "verb": "OPEN",
@@ -1473,7 +1956,15 @@
       ]
     ],
     "handler": "V-OPEN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "OPEN",
@@ -1494,7 +1985,15 @@
       ]
     ],
     "handler": "V-OPEN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "OPEN",
@@ -1509,7 +2008,13 @@
       ]
     ],
     "handler": "V-OPEN-WITH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      [
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "PICK",
@@ -1528,7 +2033,13 @@
       ]
     ],
     "handler": "V-TAKE",
-    "pre_handler": "PRE-TAKE"
+    "pre_handler": "PRE-TAKE",
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "MANY"
+      ]
+    ]
   },
   {
     "verb": "PICK",
@@ -1544,7 +2055,13 @@
       ]
     ],
     "handler": "V-ZATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      [
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "PLAY",
@@ -1553,7 +2070,10 @@
     ],
     "object_filters": [],
     "handler": "V-PLAY",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PLAY",
@@ -1568,7 +2088,10 @@
       ]
     ],
     "handler": "V-PLAY-WITH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PLAY",
@@ -1584,7 +2107,11 @@
       ]
     ],
     "handler": "V-PLAY",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "PUSH",
@@ -1593,7 +2120,10 @@
     ],
     "object_filters": [],
     "handler": "V-PUSH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PUSH",
@@ -1603,7 +2133,10 @@
     ],
     "object_filters": [],
     "handler": "V-PUSH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PUSH",
@@ -1613,7 +2146,10 @@
     ],
     "object_filters": [],
     "handler": "V-PUSH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PUSH",
@@ -1623,7 +2159,10 @@
     ],
     "object_filters": [],
     "handler": "V-PUSH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PUSH",
@@ -1633,7 +2172,10 @@
     ],
     "object_filters": [],
     "handler": "V-PUSH-UP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PUSH",
@@ -1643,7 +2185,10 @@
     ],
     "object_filters": [],
     "handler": "V-PUSH-DOWN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "PUSH",
@@ -1654,7 +2199,11 @@
     ],
     "object_filters": [],
     "handler": "V-PUT-UNDER",
-    "pre_handler": "PRE-PUT-UNDER"
+    "pre_handler": "PRE-PUT-UNDER",
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "PUT",
@@ -1672,7 +2221,16 @@
       ]
     ],
     "handler": "V-PUT",
-    "pre_handler": "PRE-PUT"
+    "pre_handler": "PRE-PUT",
+    "slot_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE",
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "PUT",
@@ -1688,7 +2246,14 @@
       ]
     ],
     "handler": "V-PUT-ON",
-    "pre_handler": "PRE-PUT"
+    "pre_handler": "PRE-PUT",
+    "slot_filters": [
+      [
+        "HELD",
+        "MANY"
+      ],
+      []
+    ]
   },
   {
     "verb": "PUT",
@@ -1704,7 +2269,14 @@
       ]
     ],
     "handler": "V-DROP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "PUT",
@@ -1722,7 +2294,16 @@
       ]
     ],
     "handler": "V-PUT-UNDER",
-    "pre_handler": "PRE-PUT-UNDER"
+    "pre_handler": "PRE-PUT-UNDER",
+    "slot_filters": [
+      [
+        "HELD",
+        "MANY",
+        "HAVE",
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "PUT",
@@ -1737,7 +2318,13 @@
       ]
     ],
     "handler": "V-WEAR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HAVE",
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "PUT",
@@ -1752,7 +2339,13 @@
       ]
     ],
     "handler": "V-ATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "PUT",
@@ -1767,7 +2360,13 @@
       ]
     ],
     "handler": "V-ATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "PUT",
@@ -1778,7 +2377,11 @@
     ],
     "object_filters": [],
     "handler": "V-SPAN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "PUT",
@@ -1795,7 +2398,15 @@
       ]
     ],
     "handler": "V-SLIDE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "PUT",
@@ -1804,7 +2415,10 @@
     ],
     "object_filters": [],
     "handler": "V-INSERT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "RAPE",
@@ -1818,7 +2432,10 @@
       ]
     ],
     "handler": "V-RAPE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "REACH",
@@ -1833,7 +2450,10 @@
       ]
     ],
     "handler": "V-REACH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "REACH",
@@ -1843,7 +2463,10 @@
     ],
     "object_filters": [],
     "handler": "V-REACH-FOR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "READ",
@@ -1860,7 +2483,12 @@
       ]
     ],
     "handler": "V-READ",
-    "pre_handler": "PRE-READ"
+    "pre_handler": "PRE-READ",
+    "slot_filters": [
+      [
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "RUB",
@@ -1869,7 +2497,10 @@
     ],
     "object_filters": [],
     "handler": "V-RUB",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "RUB",
@@ -1884,7 +2515,13 @@
       ]
     ],
     "handler": "V-ZATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      [
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "RUB",
@@ -1899,7 +2536,13 @@
       ]
     ],
     "handler": "V-ATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "SCRUB",
@@ -1908,7 +2551,10 @@
     ],
     "object_filters": [],
     "handler": "V-SCRUB",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SCRUB",
@@ -1918,7 +2564,10 @@
     ],
     "object_filters": [],
     "handler": "V-SCRUB",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SCRUB",
@@ -1933,14 +2582,21 @@
       ]
     ],
     "handler": "V-SCRUB",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      [
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "SLEEP",
     "pattern": [],
     "object_filters": [],
     "handler": "V-SLEEP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "SHAKE",
@@ -1949,7 +2605,10 @@
     ],
     "object_filters": [],
     "handler": "V-SHAKE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SHAKE",
@@ -1965,7 +2624,11 @@
       ]
     ],
     "handler": "V-SHAKE-WITH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "SLIDE",
@@ -1976,7 +2639,11 @@
     ],
     "object_filters": [],
     "handler": "V-PUT-UNDER",
-    "pre_handler": "PRE-PUT-UNDER"
+    "pre_handler": "PRE-PUT-UNDER",
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "SLIDE",
@@ -1993,7 +2660,15 @@
       ]
     ],
     "handler": "V-SLIDE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "SLIDE",
@@ -2004,14 +2679,19 @@
     ],
     "object_filters": [],
     "handler": "V-SPAN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "SKIP",
     "pattern": [],
     "object_filters": [],
     "handler": "V-SKIP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "SMELL",
@@ -2020,7 +2700,10 @@
     ],
     "object_filters": [],
     "handler": "V-SMELL",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "STEP",
@@ -2030,7 +2713,10 @@
     ],
     "object_filters": [],
     "handler": "V-STEP-ON",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "STEP",
@@ -2040,7 +2726,10 @@
     ],
     "object_filters": [],
     "handler": "V-STEP-ON",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "STRIKE",
@@ -2067,7 +2756,20 @@
       ]
     ],
     "handler": "V-ATTACK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ],
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "STRIKE",
@@ -2085,14 +2787,21 @@
       ]
     ],
     "handler": "V-ATTACK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "SWIM",
     "pattern": [],
     "object_filters": [],
     "handler": "V-SWIM",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "SWIM",
@@ -2101,7 +2810,10 @@
     ],
     "object_filters": [],
     "handler": "V-SWIM-DIR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SWIM",
@@ -2111,7 +2823,10 @@
     ],
     "object_filters": [],
     "handler": "V-SWIM-DIR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SWIM",
@@ -2121,7 +2836,10 @@
     ],
     "object_filters": [],
     "handler": "V-SWIM",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SWIM",
@@ -2136,7 +2854,10 @@
       ]
     ],
     "handler": "V-SWIM-UP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SWIM",
@@ -2151,7 +2872,10 @@
       ]
     ],
     "handler": "V-SWIM-DIR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "TAKE",
@@ -2169,7 +2893,13 @@
       ]
     ],
     "handler": "V-TAKE",
-    "pre_handler": "PRE-TAKE"
+    "pre_handler": "PRE-TAKE",
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "MANY"
+      ]
+    ]
   },
   {
     "verb": "TAKE",
@@ -2188,7 +2918,13 @@
       ]
     ],
     "handler": "V-BOARD",
-    "pre_handler": "PRE-BOARD"
+    "pre_handler": "PRE-BOARD",
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "TAKE",
@@ -2207,7 +2943,13 @@
       ]
     ],
     "handler": "V-DISEMBARK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "TAKE",
@@ -2226,7 +2968,13 @@
       ]
     ],
     "handler": "V-CLIMB-ON",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "TAKE",
@@ -2246,7 +2994,14 @@
       ]
     ],
     "handler": "V-TAKE",
-    "pre_handler": "PRE-TAKE"
+    "pre_handler": "PRE-TAKE",
+    "slot_filters": [
+      [
+        "CARRIED",
+        "IN-ROOM"
+      ],
+      []
+    ]
   },
   {
     "verb": "TAKE",
@@ -2266,7 +3021,14 @@
       ]
     ],
     "handler": "V-TAKE",
-    "pre_handler": "PRE-TAKE"
+    "pre_handler": "PRE-TAKE",
+    "slot_filters": [
+      [
+        "CARRIED",
+        "IN-ROOM"
+      ],
+      []
+    ]
   },
   {
     "verb": "TAKE",
@@ -2293,7 +3055,18 @@
       ]
     ],
     "handler": "V-TAKE",
-    "pre_handler": "PRE-TAKE"
+    "pre_handler": "PRE-TAKE",
+    "slot_filters": [
+      [
+        "MANY",
+        "IN-ROOM",
+        "CARRIED"
+      ],
+      [
+        "ON-GROUND",
+        "HELD"
+      ]
+    ]
   },
   {
     "verb": "TAKE",
@@ -2313,7 +3086,14 @@
       ]
     ],
     "handler": "V-TAKE-OFF",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "MANY"
+      ]
+    ]
   },
   {
     "verb": "TAKE",
@@ -2328,7 +3108,10 @@
       ]
     ],
     "handler": "V-STAND",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "TAKE",
@@ -2343,7 +3126,13 @@
       ]
     ],
     "handler": "V-ATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "TAKE",
@@ -2358,7 +3147,13 @@
       ]
     ],
     "handler": "V-ATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "TAKE",
@@ -2373,7 +3168,13 @@
       ]
     ],
     "handler": "V-ZATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      [
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "REMOVE",
@@ -2382,7 +3183,10 @@
     ],
     "object_filters": [],
     "handler": "V-REMOVE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "REMOVE",
@@ -2393,7 +3197,11 @@
     ],
     "object_filters": [],
     "handler": "V-TAKE",
-    "pre_handler": "PRE-TAKE"
+    "pre_handler": "PRE-TAKE",
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "REMOVE",
@@ -2408,7 +3216,13 @@
       ]
     ],
     "handler": "V-ZATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      [
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "TELL",
@@ -2425,7 +3239,12 @@
       ]
     ],
     "handler": "V-TELL",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "TELL",
@@ -2444,7 +3263,13 @@
       ]
     ],
     "handler": "V-ASK-FOR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "IN-ROOM"
+      ],
+      []
+    ]
   },
   {
     "verb": "SMILE",
@@ -2459,14 +3284,18 @@
       ]
     ],
     "handler": "V-SMILE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SMILE",
     "pattern": [],
     "object_filters": [],
     "handler": "V-SMILE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "SALUTE",
@@ -2475,7 +3304,10 @@
     ],
     "object_filters": [],
     "handler": "V-SALUTE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "SAY",
@@ -2493,14 +3325,20 @@
       ]
     ],
     "handler": "V-TALK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "SAY",
     "pattern": [],
     "object_filters": [],
     "handler": "V-SAY",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "THROW",
@@ -2521,7 +3359,18 @@
       ]
     ],
     "handler": "V-THROW",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "THROW",
@@ -2542,7 +3391,18 @@
       ]
     ],
     "handler": "V-THROW",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "THROW",
@@ -2559,7 +3419,15 @@
       ]
     ],
     "handler": "V-THROW-OFF",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "THROW",
@@ -2576,7 +3444,15 @@
       ]
     ],
     "handler": "V-PUT",
-    "pre_handler": "PRE-PUT"
+    "pre_handler": "PRE-PUT",
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "THROW",
@@ -2593,7 +3469,15 @@
       ]
     ],
     "handler": "V-PUT",
-    "pre_handler": "PRE-PUT"
+    "pre_handler": "PRE-PUT",
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "THROW",
@@ -2610,7 +3494,15 @@
       ]
     ],
     "handler": "V-THROW-OFF",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "THROW",
@@ -2625,7 +3517,14 @@
       ]
     ],
     "handler": "V-THROW",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "TURN",
@@ -2650,7 +3549,22 @@
       ]
     ],
     "handler": "V-TURN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ],
+      [
+        "ON-GROUND",
+        "IN-ROOM",
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "TURN",
@@ -2671,7 +3585,15 @@
       ]
     ],
     "handler": "V-LAMP-ON",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "TURN",
@@ -2692,7 +3614,15 @@
       ]
     ],
     "handler": "V-LAMP-OFF",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "TURN",
@@ -2708,7 +3638,14 @@
       ]
     ],
     "handler": "V-SET",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ],
+      []
+    ]
   },
   {
     "verb": "TURN",
@@ -2722,7 +3659,13 @@
       ]
     ],
     "handler": "V-SET",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "ACTIVATE",
@@ -2736,7 +3679,10 @@
       ]
     ],
     "handler": "V-LAMP-ON",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "TYPE",
@@ -2745,7 +3691,10 @@
     ],
     "object_filters": [],
     "handler": "V-TYPE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "TYPE",
@@ -2755,7 +3704,10 @@
     ],
     "object_filters": [],
     "handler": "V-TYPE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "UNLOCK",
@@ -2782,14 +3734,28 @@
       ]
     ],
     "handler": "V-UNLOCK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ],
+      [
+        "HELD",
+        "CARRIED",
+        "ON-GROUND",
+        "IN-ROOM",
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "WAIT",
     "pattern": [],
     "object_filters": [],
     "handler": "V-WAIT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "WAKE",
@@ -2807,7 +3773,13 @@
       ]
     ],
     "handler": "V-ALARM",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "WAKE",
@@ -2826,7 +3798,13 @@
       ]
     ],
     "handler": "V-ALARM",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "WALK",
@@ -2835,7 +3813,10 @@
     ],
     "object_filters": [],
     "handler": "V-WALK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "WALK",
@@ -2845,7 +3826,10 @@
     ],
     "object_filters": [],
     "handler": "V-THROUGH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "WALK",
@@ -2855,7 +3839,10 @@
     ],
     "object_filters": [],
     "handler": "V-THROUGH",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "WALK",
@@ -2865,7 +3852,10 @@
     ],
     "object_filters": [],
     "handler": "V-WALK-AROUND",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "WALK",
@@ -2884,7 +3874,13 @@
       ]
     ],
     "handler": "V-CLIMB-UP",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "WALK",
@@ -2903,7 +3899,13 @@
       ]
     ],
     "handler": "V-CLIMB-DOWN",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "ON-GROUND",
+        "IN-ROOM"
+      ]
+    ]
   },
   {
     "verb": "WALK",
@@ -2913,7 +3915,10 @@
     ],
     "object_filters": [],
     "handler": "V-WALK-TO",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "WALK",
@@ -2923,7 +3928,10 @@
     ],
     "object_filters": [],
     "handler": "V-EXIT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "WALK",
@@ -2940,7 +3948,15 @@
       ]
     ],
     "handler": "V-SLIDE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED",
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "WAVE",
@@ -2954,7 +3970,13 @@
       ]
     ],
     "handler": "V-WAVE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED"
+      ]
+    ]
   },
   {
     "verb": "WAVE",
@@ -2970,7 +3992,14 @@
       ]
     ],
     "handler": "V-WAVE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HELD",
+        "CARRIED"
+      ],
+      []
+    ]
   },
   {
     "verb": "WAVE",
@@ -2985,7 +4014,13 @@
       ]
     ],
     "handler": "V-ATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "WAVE",
@@ -3000,7 +4035,13 @@
       ]
     ],
     "handler": "V-ATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "TAKE"
+      ],
+      []
+    ]
   },
   {
     "verb": "WEAR",
@@ -3014,14 +4055,21 @@
       ]
     ],
     "handler": "V-WEAR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HAVE",
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "YELL",
     "pattern": [],
     "object_filters": [],
     "handler": "V-YELL",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "YELL",
@@ -3036,21 +4084,26 @@
       ]
     ],
     "handler": "V-SCOLD",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "ZORK",
     "pattern": [],
     "object_filters": [],
     "handler": "V-ZORK",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "YES",
     "pattern": [],
     "object_filters": [],
     "handler": "V-YES",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "YES",
@@ -3059,21 +4112,26 @@
     ],
     "object_filters": [],
     "handler": "V-YES",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "NO",
     "pattern": [],
     "object_filters": [],
     "handler": "V-NO",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "MAYBE",
     "pattern": [],
     "object_filters": [],
     "handler": "V-MAYBE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "POUR",
@@ -3082,7 +4140,10 @@
     ],
     "object_filters": [],
     "handler": "V-POUR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "POUR",
@@ -3093,7 +4154,11 @@
     ],
     "object_filters": [],
     "handler": "V-POUR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "POUR",
@@ -3104,7 +4169,11 @@
     ],
     "object_filters": [],
     "handler": "V-POUR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "POUR",
@@ -3115,7 +4184,11 @@
     ],
     "object_filters": [],
     "handler": "V-POUR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "POUR",
@@ -3126,7 +4199,11 @@
     ],
     "object_filters": [],
     "handler": "V-POUR",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      []
+    ]
   },
   {
     "verb": "EMPTY",
@@ -3139,7 +4216,12 @@
       ]
     ],
     "handler": "V-EMPTY",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "EMPTY",
@@ -3154,7 +4236,13 @@
       ]
     ],
     "handler": "V-EMPTY",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "ATTRACT",
@@ -3169,7 +4257,13 @@
       ]
     ],
     "handler": "V-ZATTRACT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      [
+        "TAKE"
+      ]
+    ]
   },
   {
     "verb": "FIX",
@@ -3178,7 +4272,10 @@
     ],
     "object_filters": [],
     "handler": "V-FIX-IT",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "OIL",
@@ -3187,7 +4284,10 @@
     ],
     "object_filters": [],
     "handler": "V-OIL",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "OIL",
@@ -3202,7 +4302,13 @@
       ]
     ],
     "handler": "V-OIL",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [],
+      [
+        "HAVE"
+      ]
+    ]
   },
   {
     "verb": "SHOW",
@@ -3221,7 +4327,13 @@
       ]
     ],
     "handler": "V-SHOW",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      [
+        "HAVE"
+      ],
+      []
+    ]
   },
   {
     "verb": "TASTE",
@@ -3230,21 +4342,26 @@
     ],
     "object_filters": [],
     "handler": "V-TASTE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   },
   {
     "verb": "ESCAPE",
     "pattern": [],
     "object_filters": [],
     "handler": "V-ZESCAPE",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "TIME",
     "pattern": [],
     "object_filters": [],
     "handler": "V-TIME",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": []
   },
   {
     "verb": "SCOLD",
@@ -3258,6 +4375,9 @@
       ]
     ],
     "handler": "V-SCOLD",
-    "pre_handler": null
+    "pre_handler": null,
+    "slot_filters": [
+      []
+    ]
   }
 ]

@@ -11,6 +11,8 @@ import json
 import re
 from pathlib import Path
 
+from evennia.commands.cmdhandler import CMD_NOMATCH as _CMD_NOMATCH
+
 from commands.command import PlanetfallCommand
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -103,8 +105,60 @@ def _global_object_ids():
 _GLOBAL_OBJECT_IDS = None
 
 
+class _PseudoAttrs:
+    """A stand-in for Evennia's ``db`` handler: unset attributes read as None."""
+
+    def __init__(self, **attrs):
+        self.__dict__.update(attrs)
+
+    def __getattr__(self, name):
+        return None
+
+
+class PseudoObject:
+    """ZIL PSEUDO-OBJECT — a room-local noun backed only by an ACTION routine.
+
+    A room's ``(PSEUDO "TOILET" TOILET-PSEUDO ...)`` pairs are searched by
+    GLOBAL-CHECK after every real object. On a match the parser points the
+    PSEUDO-OBJECT's ACTION at the routine and copies the typed word into its
+    DESC, so default verbs can still say "the toilet". It is reachable only
+    while you stay in that room (ACCESSIBLE? via LAST-PSEUDO-LOC).
+    """
+
+    location = None
+    contents = ()
+
+    def __init__(self, word: str, routine: str, room):
+        self.key = word
+        self.room = room
+        self.db = _PseudoAttrs(zil_id="PSEUDO-OBJECT", action=routine,
+                               obj_flags=[])
+
+    def move_to(self, *args, **kwargs):
+        return False
+
+
+def _word_match(typed: str, word: str) -> bool:
+    """Z-machine dictionary lookup: words compare on their first six letters
+    (so "benches" finds BENCHE and "enunciator" finds ENUNCI)."""
+    return typed[:6] == word.lower()[:6]
+
+
+def _pseudo_match(caller, noun: str):
+    """ZIL GLOBAL-CHECK's PSEUDO pass for the current room, or None."""
+    room = caller.location
+    pseudo = (room.db.pseudo or {}) if room else {}
+    for typed in reversed(noun.split()):
+        for word, routine in pseudo.items():
+            if _word_match(typed, word):
+                return PseudoObject(typed, routine, room)
+    return None
+
+
 def _accessible(caller, obj) -> bool:
     """ZIL ACCESSIBLE? — inventory, the room, its local-globals, or a global-object."""
+    if isinstance(obj, PseudoObject):
+        return obj.room is caller.location
     if obj.location is caller:
         return True
     if "GLOBAL-OBJECT" in (obj.db.obj_flags or []):
@@ -126,8 +180,6 @@ def resolve_obj(caller, noun: str):
     `caller.ndb.last_it`, so a later "it"/"them"/"him" resolves to it as long
     as it is still accessible (P-IT-OBJECT + P-IT-LOC == HERE).
     """
-    from evennia.objects.objects import DefaultExit
-
     noun = _strip_articles(noun)
     if not noun:
         return None
@@ -136,10 +188,39 @@ def resolve_obj(caller, noun: str):
     forced = getattr(caller.ndb, "pf_forced", None)
     if forced is not None and noun == _strip_articles(forced.key):
         return forced
+    # So does a command whose ambiguous nouns were settled up front.
+    pins = getattr(caller.ndb, "pf_pins", None)
+    if pins and noun in pins:
+        caller.ndb.last_it = pins[noun]   # THIS-IS-IT
+        return pins[noun]
 
     if noun in _PRONOUNS:
         it = getattr(caller.ndb, "last_it", None)
         return it if (it and _accessible(caller, it)) else None
+
+    found = _matches(caller, noun)
+    if not found:
+        return None
+    caller.ndb.last_it = found[0]   # THIS-IS-IT
+    return found[0]
+
+
+def _obj_vocab(obj) -> set:
+    # The display name adds words ZIL never had as vocabulary; "of" (as in
+    # "pair of wide-nosed pliers") would match "get out of bed".
+    return _vocab_tokens(obj.db.synonyms or [], obj.db.adjectives or [],
+                         obj.key.split()) - {"of"}
+
+
+def _matches(caller, noun: str) -> list:
+    """Every in-scope object tied for the best match on `noun`.
+
+    Order is inventory, room, local-globals, global-objects, then the insides
+    of open containers. A local object beats a global one with the same score
+    (ZIL only tries GLOBAL-CHECK when nothing local matched); when nothing at
+    all matches, the room's PSEUDO words are tried last.
+    """
+    from evennia.objects.objects import DefaultExit
 
     words = _vocab_tokens([noun])
     candidates: list = list(caller.contents)
@@ -171,22 +252,45 @@ def resolve_obj(caller, noun: str):
                 if inner not in candidates and not isinstance(inner, DefaultExit):
                     candidates.append(inner)
 
-    best = None
+    # ZIL THIS-IT?: the phrase's last word is the noun (P-NAM) and must be one
+    # of the object's nouns; the words before it are adjectives. Overlap still
+    # scores, so loose phrasings resolve, but a head-noun hit outranks them
+    # ("laser" is the laser, not the laser setting dial).
+    head = _vocab_tokens([noun.split()[-1]])
+    best: list = []
     best_score = 0
     for obj in candidates:
         # ZIL ACCESSIBLE?: an INVISIBLE object can't be referred to until it is
         # revealed (e.g. the key hidden in the crevice).
         if "INVISIBLE" in (obj.db.obj_flags or []):
             continue
-        vocab = _vocab_tokens(obj.db.synonyms or [], obj.db.adjectives or [],
-                              obj.key.split())
-        score = len(words & vocab)
+        score = len(words & _obj_vocab(obj))
+        if score and head & _vocab_tokens(obj.db.synonyms or [], obj.key.split()[-1:]):
+            score += len(words)   # beats any adjectives-only match
         if score > best_score:
-            best = obj
-            best_score = score
-    if best is not None:
-        caller.ndb.last_it = best   # THIS-IS-IT
+            best, best_score = [obj], score
+        elif score and score == best_score:
+            best.append(obj)
+    tier = min((_scope_tier(caller, o) for o in best), default=3)
+    best = [o for o in best if _scope_tier(caller, o) == tier]
+    if tier >= 2:
+        # ZIL GLOBAL-CHECK: room PSEUDO words come before GLOBAL-OBJECTS.
+        pseudo = _pseudo_match(caller, noun)
+        if pseudo:
+            return [pseudo]
     return best
+
+
+def _scope_tier(caller, obj) -> int:
+    """ZIL search order: 0 held or here, 1 the room's local-globals,
+    2 GLOBAL-OBJECTS (floor, hands, doorway, ...)."""
+    if "GLOBAL-OBJECT" in (obj.db.obj_flags or []):
+        return 2
+    loc = caller.location
+    if obj.location in (caller, loc) or (
+            obj.location is not None and obj.location.location in (caller, loc)):
+        return 0
+    return 1
 
 
 # ---------------------------------------------------------------------------
@@ -776,6 +880,9 @@ def _h_again(caller, nouns):
     if not last or last.strip().lower() in ("g", "again"):
         caller.msg("You can't repeat that.")
         return
+    # Keep any "Which ...?" answer, for objects still in reach.
+    pins = getattr(caller.ndb, "last_pins", None) or {}
+    caller.ndb.pf_preset = {k: o for k, o in pins.items() if o in _matches(caller, k)}
     caller.execute_cmd(last)
 
 
@@ -1889,29 +1996,6 @@ HANDLERS: dict = {
 # Command factory
 # ---------------------------------------------------------------------------
 
-def _dispatch_pseudo(caller, handler_name: str, nouns: list, idx: int = 0) -> bool:
-    """ZIL PSEUDO: dispatch a room-local noun to its named routine.
-
-    Rooms carry db.pseudo = {WORD: HANDLER-NAME}; if the direct-object noun
-    contains that word, hand the verb to OBJ_HANDLERS[HANDLER-NAME] with a
-    null PRSO. Returns True if the pseudo consumed the verb.
-    """
-    room = caller.location
-    pseudo = (room.db.pseudo or {}) if room else {}
-    if not pseudo:
-        return False
-    words = {w.upper() for w in _strip_articles(nouns[idx]).split()}
-    for word, hname in pseudo.items():
-        if word.upper() in words:
-            from world.action_handlers import OBJ_HANDLERS, ObjAction
-            ph = OBJ_HANDLERS.get(hname)
-            if ph is not None:
-                return bool(ph(ObjAction(obj=None, caller=caller,
-                                         verb=handler_name, nouns=nouns)))
-            return False
-    return False
-
-
 def _dispatch(caller, handler_name: str, nouns: list) -> None:
     """Run one parsed command: object ACTIONs first, then the generic handler."""
     from world.action_handlers import dispatch_object
@@ -1926,21 +2010,15 @@ def _dispatch(caller, handler_name: str, nouns: list) -> None:
     # ZIL action precedence: the direct object's (PRSO) ACTION gets first
     # crack at the verb, then the indirect object's (PRSI) — e.g. SLOT-F fires
     # when the slot is the PRSI of SLIDE/PUT. If either consumes the verb, skip
-    # the generic handler.
+    # the generic handler. Room PSEUDO words resolve to a PseudoObject whose
+    # ACTION is the room's routine, so they dispatch the same way.
     if nouns:
         obj = resolve_obj(caller, nouns[0])
         if obj and dispatch_object(obj, caller, handler_name, nouns):
             return
-        # ZIL PSEUDO objects: a room-local noun (e.g. the cryo elevator's
-        # BUTTON) handled by a named routine, not a real object. Try only when
-        # no real object matched.
-        if obj is None and _dispatch_pseudo(caller, handler_name, nouns):
-            return
         if len(nouns) > 1:
             prsi = resolve_obj(caller, nouns[1])
             if prsi and dispatch_object(prsi, caller, handler_name, nouns):
-                return
-            if prsi is None and _dispatch_pseudo(caller, handler_name, nouns, idx=1):
                 return
     HANDLERS.get(handler_name, _h_stub)(caller, nouns)
 
@@ -2023,6 +2101,101 @@ def _dispatch_many(caller, handler_name: str, nouns: list, objs: list) -> None:
                 del caller.msg
 
 
+# Verbs whose noun slots hold words or directions rather than objects.
+_NO_WHICH_HANDLERS = frozenset({"V-WALK", "V-SAY", "V-TYPE", "V-ANSWER",
+                                "V-REPLY", "V-TELL", "V-AGAIN"})
+# ZIL syntax location bits (P-SLOCBITS) that narrow an ambiguous match.
+_LOC_BITS = frozenset({"HELD", "CARRIED", "ON-GROUND", "IN-ROOM"})
+
+
+def _loc_ok(caller, obj, bits) -> bool:
+    """Does `obj` sit where a syntax slot's location bits say to look?"""
+    loc, here = obj.location, caller.location
+    if loc is caller:
+        return "HELD" in bits
+    if loc is not None and loc.location is caller:
+        return "CARRIED" in bits
+    if loc is not None and loc is here:
+        return "ON-GROUND" in bits
+    if loc is not None and loc.location is here:
+        return "IN-ROOM" in bits
+    return False
+
+
+def _which_print(caller, noun: str, objs: list) -> None:
+    """ZIL WHICH-PRINT — "Which liquid do you mean, the X or the Y?"."""
+    names = [f"the {o.key}" for o in objs]
+    if len(names) == 2:
+        listed = f"{names[0]} or {names[1]}"
+    else:
+        listed = ", ".join(names[:-1]) + ", or " + names[-1]
+    caller.msg(f"Which {noun} do you mean, {listed}?")
+
+
+def _settle_nouns(caller, raw: str, handler_name: str, nouns: list,
+                  filters: list, skip_first: bool) -> dict | None:
+    """ZIL GET-OBJECT for each noun slot: pin the one object each names.
+
+    When several objects tie, the syntax slot's location bits (HELD for DROP,
+    ON-GROUND for TAKE, ...) get a chance to narrow them. Still more than one
+    and the parser asks which, remembering the command so a bare reply ("the
+    chemical one") finishes it (ZIL ORPHAN). Returns the pins, or None after
+    asking.
+    """
+    pins = dict(getattr(caller.ndb, "pf_preset", None) or {})
+    caller.ndb.pf_preset = None
+    if handler_name in _NO_WHICH_HANDLERS:
+        return pins
+    for idx, noun in enumerate(nouns):
+        key = _strip_articles(noun)
+        if (idx == 0 and skip_first) or not key or key in pins or key in _PRONOUNS:
+            continue
+        found = _matches(caller, key)
+        if len(found) > 1:
+            bits = _LOC_BITS.intersection(filters[idx] if idx < len(filters) else [])
+            narrowed = [o for o in found if _loc_ok(caller, o, bits)] if bits else []
+            found = narrowed or found
+        if len(found) == 1:
+            pins[key] = found[0]
+        elif found:
+            _which_print(caller, key, found)
+            caller.ndb.pf_orphan = {"cmd": raw, "noun": key, "cands": found,
+                                    "pins": pins}
+            return None
+    return pins
+
+
+def orphan_merge(caller, reply: str) -> bool:
+    """ZIL ORPHAN-MERGE — finish a "Which X do you mean?" command.
+
+    A reply that picks out exactly one of the offered objects ("chemical",
+    "the red one") reruns the original command with that object. Anything
+    else is a new command, and the question is forgotten. A reply whose first
+    word is also a verb still counts when that word describes one of the
+    objects (ZIL retrofix #30, e.g. "lower" for the lower elevator card).
+    """
+    orphan = getattr(caller.ndb, "pf_orphan", None)
+    caller.ndb.pf_orphan = None
+    if not orphan:
+        return False
+    words = [w for w in _strip_articles(reply).split() if w != "one"]
+    if not words:
+        return False
+    cands = orphan["cands"]
+    vocabs = [_obj_vocab(o) for o in cands]
+    if not any(words[0] in v for v in vocabs):
+        return False
+    typed = _vocab_tokens([" ".join(words)])
+    scores = [len(typed & v) for v in vocabs]
+    top = max(scores)
+    winners = [o for o, s in zip(cands, scores) if s == top]
+    if len(winners) != 1:
+        return False
+    caller.ndb.pf_preset = {**orphan["pins"], orphan["noun"]: winners[0]}
+    caller.execute_cmd(orphan["cmd"])
+    return True
+
+
 def make_command(verb: str, entries: list, aliases: list, timeless: bool = False) -> type:
     """Return a PlanetfallCommand subclass for the given verb."""
     # Most specific (longest) pattern tried first
@@ -2030,31 +2203,45 @@ def make_command(verb: str, entries: list, aliases: list, timeless: bool = False
 
     def func(self):
         args = self.args.strip()
+        caller = self.caller
         # ZIL GWIM: "get up" / "get out" leave off an object found by
         # (FIND RMUNGBIT) — the room itself — so they mean STAND/DISEMBARK.
         # Checked first, or plain "take OBJECT" would claim "up" as a noun.
-        for pattern, handler_name in self._pf_entries:
+        for pattern, handler_name, _ in self._pf_entries:
             if (handler_name in _ROOM_OBJECT_HANDLERS and pattern[-1:] == ["OBJECT"]
                     and _match_pattern(args, pattern[:-1]) == []):
-                self.caller.ndb.last_command = self.raw_string.strip()
-                HANDLERS.get(handler_name, _h_stub)(self.caller, [])
+                caller.ndb.last_command = self.raw_string.strip()
+                HANDLERS.get(handler_name, _h_stub)(caller, [])
                 return
-        for pattern, handler_name in self._pf_entries:
+        for pattern, handler_name, filters in self._pf_entries:
             nouns = _match_pattern(args, pattern)
             if nouns is not None:
+                raw = self.raw_string.strip()
+                many = (_expand_many(caller, handler_name, nouns[0])
+                        if nouns and handler_name in _MANY_HANDLERS else None)
+                pins = _settle_nouns(caller, raw, handler_name, nouns, filters,
+                                     skip_first=many is not None)
+                if pins is None:
+                    # Asking "Which ...?" is a parser failure: no time passes.
+                    caller.ndb.pf_clock_handled = True
+                    return
                 # Phase 9: remember the last real command so AGAIN/G can replay
                 # it. AGAIN itself is never recorded, so "g g" still repeats the
                 # original verb rather than chasing its own tail.
                 if handler_name != "V-AGAIN":
-                    self.caller.ndb.last_command = self.raw_string.strip()
-                many = (_expand_many(self.caller, handler_name, nouns[0])
-                        if nouns and handler_name in _MANY_HANDLERS else None)
-                if many is None:
-                    _dispatch(self.caller, handler_name, nouns)
-                else:
-                    _dispatch_many(self.caller, handler_name, nouns, many)
+                    caller.ndb.last_command = raw
+                    caller.ndb.last_pins = pins
+                outer = getattr(caller.ndb, "pf_pins", None)
+                caller.ndb.pf_pins = pins
+                try:
+                    if many is None:
+                        _dispatch(caller, handler_name, nouns)
+                    else:
+                        _dispatch_many(caller, handler_name, nouns, many)
+                finally:
+                    caller.ndb.pf_pins = outer
                 return
-        self.caller.msg("I don't understand what you mean.")
+        caller.msg("I don't understand what you mean.")
 
     verb_key = _VERB_NORMALIZATIONS.get(verb, verb.lower())
     clean_aliases = [a.lower() for a in aliases if a.lower() != verb_key]
@@ -2092,7 +2279,8 @@ def build_all_commands() -> list:
         pattern = entry.get("pattern", [])
         if any(t in _SKIP_TOKENS for t in pattern):
             continue
-        entries_by_verb.setdefault(verb, []).append((pattern, entry["handler"]))
+        entries_by_verb.setdefault(verb, []).append(
+            (pattern, entry["handler"], entry.get("slot_filters") or []))
 
     return [
         make_command(
@@ -2118,9 +2306,43 @@ class CmdOrderFloyd(PlanetfallCommand):
         order_floyd(self.caller, self.args.strip().lstrip(",").strip())
 
 
+_NOUN_WORDS = None
+
+
+def _noun_words() -> set:
+    """Every object's vocabulary (cached: game data never changes)."""
+    global _NOUN_WORDS
+    if _NOUN_WORDS is None:
+        from typeclasses.objects import PlanetfallObject
+        _NOUN_WORDS = set()
+        for o in PlanetfallObject.objects.all():
+            _NOUN_WORDS |= _obj_vocab(o)
+    return _NOUN_WORDS
+
+
+class CmdNoMatch(PlanetfallCommand):
+    """Input that starts with no known verb (Evennia's no-match hook).
+
+    Usually the answer to "Which ... do you mean?", picked up by orphan_merge
+    in at_pre_cmd. Otherwise the ZIL parser's complaint: a known noun with no
+    verb, or a word it doesn't know at all.
+    """
+    key = _CMD_NOMATCH
+    timeless = True
+
+    def func(self):
+        words = _strip_articles(self.raw_string).split()
+        if not words:
+            return
+        if words[0] in _noun_words():
+            self.caller.msg("There was no verb in that sentence!")
+        else:
+            self.caller.msg(f'I don\'t know the word "{words[0]}".')
+
+
 # Built once at import time; registered by CharacterCmdSet. The direction
 # fallbacks are appended so a directionless room reports "You can't go that
 # way." rather than Evennia's command-not-found suggestions.
 ALL_COMMANDS: list = build_all_commands() + [
     _make_direction_command(d, a) for d, a in _DIRECTION_COMMANDS.items()
-] + [CmdOrderFloyd]
+] + [CmdOrderFloyd, CmdNoMatch]

@@ -224,6 +224,97 @@ class TakeAllTest(EvenniaTestCase):
         self.assertTrue({"PLIERS", "FLASK"} <= held)
 
 
+class WhichDoYouMeanTest(EvenniaTestCase):
+    """ZIL GET-OBJECT / WHICH-PRINT / ORPHAN-MERGE: ask, then take the answer."""
+
+    def _at(self, room):
+        from world.walkthrough import _by_zil
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        char.location = _by_zil(room)
+        return Driver(char, gs, verbose=False), gs, char
+
+    def test_ask_then_merge_reply(self):
+        drv, gs, char = self._at("MACHINE-SHOP")
+        before = gs.internal_moves
+        out = drv._emit("push button")
+        self.assertIn("Which button do you mean, the ", out)
+        self.assertIn("the red button", out)
+        self.assertEqual(gs.internal_moves, before, "asking must not use a turn")
+        out = drv._emit("red")
+        self.assertIn("chemical fluid pours out", out)
+        self.assertGreater(gs.internal_moves, before)
+
+    def test_new_command_drops_the_question(self):
+        drv, gs, char = self._at("MACHINE-SHOP")
+        drv._emit("push button")
+        self.assertIn("Machine Shop", drv._emit("look"))
+        self.assertIn("There was no verb", drv._emit("red"))
+
+    def test_location_bits_narrow_and_reply_picks(self):
+        from world.walkthrough import _by_zil
+        drv, gs, char = self._at("MESS-HALL")
+        _by_zil("KITCHEN-CARD").move_to(char, quiet=True)
+        _by_zil("UPPER-ELEVATOR-CARD").move_to(char.location, quiet=True)
+        # TAKE looks on the ground first, so the held card doesn't compete.
+        self.assertIn("Taken.", drv._emit("take card"))
+        self.assertIn(_by_zil("UPPER-ELEVATOR-CARD"), char.contents)
+        self.assertIn("Which card do you mean", drv._emit("drop card"))
+        self.assertIn("Dropped", drv._emit("the kitchen one"))
+        self.assertNotIn(_by_zil("KITCHEN-CARD"), char.contents)
+        self.assertIn(_by_zil("UPPER-ELEVATOR-CARD"), char.contents)
+
+    def test_head_noun_beats_adjective(self):
+        drv, gs, char = self._at("TOOL-ROOM")
+        drv._emit("take laser")
+        held = {o.db.zil_id for o in char.contents}
+        self.assertIn("LASER", held)
+
+    def test_no_verb_and_unknown_word(self):
+        drv, gs, char = self._at("MESS-HALL")
+        self.assertIn("There was no verb in that sentence!", drv._emit("canteen"))
+        self.assertIn('I don\'t know the word "xyzzy".', drv._emit("xyzzy"))
+
+
+class PseudoObjectTest(EvenniaTestCase):
+    """Room PSEUDO words (globals.zil:2371) answer like objects."""
+
+    def _at(self, room):
+        from world.walkthrough import _by_zil
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        char.location = _by_zil(room)
+        return Driver(char, gs, verbose=False), gs
+
+    def test_toilets(self):
+        drv, gs = self._at("SANFAC-A")
+        self.assertIn("dry and dusty", drv._emit("examine toilets"))
+        self.assertIn("turned off", drv._emit("flush it"))
+        out = drv._emit("take toilet")
+        self.assertNotIn("You see no", out)
+
+    def test_six_letter_dictionary_words(self):
+        drv, gs = self._at("MESS-HALL")
+        self.assertIn("uncomfortable", drv._emit("sit on benches"))
+
+    def test_word_only_exists_in_its_room(self):
+        drv, gs = self._at("MESS-CORRIDOR")
+        self.assertNotIn("dusty", drv._emit("examine toilet"))
+
+    def test_reactor_button_opens_then_closes_the_elevator(self):
+        from world.walkthrough import _by_zil
+        drv, gs = self._at("REACTOR-CONTROL")
+        self.assertIn("slide open", drv._emit("push button"))
+        self.assertTrue(_by_zil("REACTOR-ELEVATOR-DOOR").db.is_open)
+        for _ in range(3):
+            drv._emit("wait")
+        self.assertFalse(_by_zil("REACTOR-ELEVATOR-DOOR").db.is_open)
+
+    def test_mural_until_the_computer_is_fixed(self):
+        drv, gs = self._at("PROJCON-OFFICE")
+        self.assertIn("Burstini Bonz", drv._emit("examine mural"))
+        gs.flags["COMPUTER-FIXED"] = True
+        self.assertIn("can't see that anymore", drv._emit("examine mural"))
+
+
 class ClockFidelityTest(EvenniaTestCase):
     """ZIL time costs and one-slot-per-routine QUEUE semantics."""
 

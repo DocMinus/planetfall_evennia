@@ -168,6 +168,7 @@ def make_i_ambassador(gs: "GameState", state: dict | None = None):
             _disable_self(gs, "i_ambassador")
         elif _in_room("AMBASSADOR", "DECK-NINE"):
             state["ambassador_leave"] = state.get("ambassador_leave", 0) + 1
+            gs.flags["AMBASSADOR-LEAVE"] = state["ambassador_leave"]   # SLIME-PSEUDO
             if here == "DECK-NINE":
                 _send(gs, "\nThe ambassador " + random.choice(_AMBASSADOR_QUOTES))
             return False
@@ -1283,6 +1284,26 @@ def make_i_kitchen_door_closes(gs: "GameState", state: dict | None = None):
     i_kitchen_door_closes.__name__ = "i_kitchen_door_closes"
     i_kitchen_door_closes._state = state
     return i_kitchen_door_closes
+
+
+def make_i_reactor_door_close(gs: "GameState", state: dict | None = None):
+    """I-REACTOR-DOOR-CLOSE (compone.zil:1492) — shuts once you're not inside."""
+    state = state if state is not None else {}
+
+    def i_reactor_door_close() -> bool:
+        # ZIL re-queues itself at -1 every fire, so it waits out a stay in the car.
+        gs.scheduler.enable(gs.scheduler.queue(i_reactor_door_close, -1))
+        if _here_id(gs) == "REACTOR-ELEVATOR":
+            return False
+        _set_door("REACTOR-ELEVATOR-DOOR", is_open=False)
+        if _here_id(gs) == "REACTOR-CONTROL":
+            _send(gs, "\nThe elevator door slides shut.")
+        _disable_self(gs, "i_reactor_door_close")
+        return False
+
+    i_reactor_door_close.__name__ = "i_reactor_door_close"
+    i_reactor_door_close._state = state
+    return i_reactor_door_close
 
 
 # ---------------------------------------------------------------------------
