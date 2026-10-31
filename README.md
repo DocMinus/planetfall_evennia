@@ -83,5 +83,6 @@ Built on [Evennia](https://github.com/evennia/evennia) 6.0.0, © the Evennia
 contributors, **BSD 3-Clause Licence**.
 
 The Python code in this repository is released under the **MIT Licence** — see
-`LICENSE` if present, otherwise treat it as freely usable for non-commercial
-purposes with attribution.
+[LICENSE](LICENSE). The licence covers this port's code only; it does not grant
+any rights to Planetfall's original text, story or other Infocom/Activision
+material.
