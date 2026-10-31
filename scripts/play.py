@@ -31,6 +31,8 @@ def main() -> int:
         if _is_up():
             print(f"Ready — opening {URL}")
             webbrowser.open(URL)
+            print("Closing the browser leaves the server running — "
+                  "stop it with `make stop`.")
             return 0
         time.sleep(1)
     print(

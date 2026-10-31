@@ -121,6 +121,14 @@ textarea.inputfield {
   color: var(--pf-amber-dim);
   font-size: 14px;
   letter-spacing: 0.06em;
+  margin-bottom: 1.6em;
+}
+
+#pf-splash-keys {
+  max-width: 80ch;
+  padding: 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
   margin-bottom: 2.4em;
 }
 

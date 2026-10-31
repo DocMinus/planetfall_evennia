@@ -1700,8 +1700,8 @@ def _h_eat_from(caller, nouns):
 def _h_quit(caller, nouns):
     """V-QUIT (verbs.zil:288) — show the score, point at the real exit."""
     _h_score(caller, nouns)
-    caller.msg("\nTo leave the game, use your client's disconnect (or type SAVE "
-               "first to keep your progress).")
+    caller.msg("\nTo leave the game, type SAVE to keep your progress, close "
+               "the browser, then run `make stop` to shut down the server.")
 
 
 def _h_restart(caller, nouns):
