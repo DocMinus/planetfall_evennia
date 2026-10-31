@@ -743,7 +743,7 @@ BIO_FORAY = [
     WaitUntil(lambda gs: gs.flags.get("COMPUTER-FLAG"),
               note="Floyd recognises the broken computer"),
     Cmd("northeast", expect=("Main Lab",)),
-    Cmd("open west door", expect=("Opened",)),
+    Cmd("open west door", expect=("door opens",)),
     Cmd("southeast", expect=("Bio Lock West",)),
     Cmd("east", expect=("Bio Lock East",)),
     WaitUntil(lambda gs: gs.flags.get("FLOYD-WAITING"),
@@ -767,6 +767,9 @@ BIO_FORAY = [
 COMPUTER_FIX = [
     EatIfHungry(),
     Cmd("west", expect=("Bio Lock West",)),
+    # The lock doors close on a timer and are interlocked: the far door has
+    # shut behind us by now, so open the west one from inside the lock.
+    Cmd("open west door", expect=("door opens",)),
     Cmd("west", expect=("Main Lab",)),
     Cmd("south", expect=("Lab Storage",)),
     Cmd("take new battery"),
@@ -820,6 +823,9 @@ ESCAPE_AND_CRYO = [
     Cmd("open east door"),
     Cmd("west", expect=("Bio Lock East",)),
     Cmd("west", expect=("Bio Lock West",)),
+    # The lock doors close on a timer and are interlocked: the far door has
+    # shut behind us by now, so open the west one from inside the lock.
+    Cmd("open west door", expect=("door opens",)),
     Cmd("west", expect=("Main Lab",)),
     Cmd("southwest", expect=("Computer Room",)),
     Cmd("west", expect=("ProjCon Office",)),

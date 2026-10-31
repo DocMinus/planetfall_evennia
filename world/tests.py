@@ -165,6 +165,31 @@ class RoomDeathTrapTest(EvenniaTestCase):
         self.assertTrue(gs.dead)
 
 
+class DoorRulesTest(EvenniaTestCase):
+    """Doors with ZIL ACTION routines refuse the generic OPEN when they should."""
+
+    def _at(self, room):
+        from world.walkthrough import _by_zil
+        char, gs = fresh_game(char_key="WalkthroughTester", reload=True)
+        char.location = _by_zil(room)
+        return Driver(char, gs, verbose=False), gs
+
+    def test_pod_door_needs_an_emergency(self):
+        drv, gs = self._at("DECK-NINE")
+        self.assertIn("no emergency", drv._emit("open pod door"))
+
+    def test_storage_door_is_padlocked(self):
+        drv, gs = self._at("MESS-CORRIDOR")
+        self.assertIn("until the padlock is removed", drv._emit("open storage door"))
+
+    def test_bio_lock_doors_interlock(self):
+        from world.walkthrough import _by_zil
+        drv, gs = self._at("BIO-LOCK-WEST")
+        _by_zil("BIO-DOOR-EAST").db.is_open = True
+        self.assertIn("cannot be open simultaneously", drv._emit("open west door"))
+        self.assertFalse(_by_zil("BIO-DOOR-WEST").db.is_open)
+
+
 class TakeAllTest(EvenniaTestCase):
     """Phase 14b — "take all" grabs every takeable item on the ground."""
 

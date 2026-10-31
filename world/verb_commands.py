@@ -1433,6 +1433,10 @@ def _h_type(caller, nouns):
     gs = _gs()
     here = caller.location.db.zil_id if caller.location else None
     num = next((int(t.strip()) for t in nouns if t.strip().isdigit()), None)
+    if here == "LIBRARY-LOBBY":
+        from world.library import library_type
+        library_type(caller, num)
+        return
     if here != "MINI-BOOTH":
         caller.msg("Type on what???")
         return

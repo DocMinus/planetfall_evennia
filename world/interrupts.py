@@ -1003,7 +1003,7 @@ def make_i_floyd_foray(gs: "GameState", state: dict | None = None):
             if card and lock:
                 card.location = lock
                 cflags = [x for x in (card.db.obj_flags or [])
-                          if x not in ("INVISIBLE",)]
+                          if x not in ("INVISIBLE", "NDESCBIT")]
                 cflags.append("TOUCHBIT")
                 card.db.obj_flags = cflags
             gs.add_score(2)
@@ -1137,6 +1137,31 @@ def make_i_unflood(gs: "GameState", state: dict | None = None):
     i_unflood.__name__ = "i_unflood"
     i_unflood._state = state if state is not None else {}
     return i_unflood
+
+
+def _make_lock_door_closes(name: str, door_id: str, end: str, rooms: tuple):
+    """I-BIO-EAST-CLOSES / I-BIO-WEST-CLOSES (comptwo.zil:1868, 1892)."""
+    def make(gs: "GameState", state: dict | None = None):
+        def closes() -> bool:
+            door = _by_zil_id(door_id)
+            if door and door.db.is_open:
+                door.db.is_open = False
+                if _here_id(gs) in rooms:
+                    _send(gs, f"\nThe door at the {end} end of the bio-lock "
+                          "closes silently.")
+            return False
+        closes.__name__ = name
+        closes._state = state if state is not None else {}
+        return closes
+    return make
+
+
+make_i_bio_east_closes = _make_lock_door_closes(
+    "i_bio_east_closes", "BIO-DOOR-EAST", "eastern",
+    ("BIO-LOCK-EAST", "BIO-LOCK-WEST", "BIO-LAB"))
+make_i_bio_west_closes = _make_lock_door_closes(
+    "i_bio_west_closes", "BIO-DOOR-WEST", "western",
+    ("BIO-LOCK-WEST", "BIO-LOCK-EAST", "MAIN-LAB"))
 
 
 def make_i_nuked_blue(gs: "GameState", state: dict | None = None):

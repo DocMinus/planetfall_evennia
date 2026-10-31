@@ -222,6 +222,9 @@ def handle_bio_door_east(ctx: ObjAction) -> bool:
         if obj.db.is_open:
             caller.msg("It's already open.")
             return True
+        if _ddesc("BIO-DOOR-WEST") == "open":
+            caller.msg(_BOTH_DOORS)
+            return True
         floyd = _by_zil_id("FLOYD")
         if (gs.flags.get("FLOYD-WAITING") and floyd and _floyd_is_on(floyd)
                 and gs.flags.get("FORAY-COUNTER", 0) == 0):
@@ -244,14 +247,17 @@ def handle_bio_door_east(ctx: ObjAction) -> bool:
                    "bio-lock and devour you.")
             return True
         obj.db.is_open = True
-        caller.msg("The door slides open.")
+        _queue(gs, "make_i_bio_east_closes", 30)
+        caller.msg("The door opens.")
         return True
     if v == "V-CLOSE":
         if obj.db.is_open:
             if gs.flags.get("FORAY-COUNTER", 0) == 4:
                 caller.ndb.pf_elapsed = 95   # the long, tense moment
             obj.db.is_open = False
-            caller.msg("The door closes.")
+            caller.msg("The door closes, but not soon enough!"
+                       if _arrival_pending(gs, "i_chase_scene")
+                       else "The door closes.")
         else:
             caller.msg("It's already closed.")
         return True
@@ -3091,6 +3097,707 @@ ROOM_HANDLERS.update({
     "RADIATION-LAB-F": handle_radiation_lab,
     "LAB-OFFICE-F": handle_lab_office,
 })
+
+
+# ---------------------------------------------------------------------------
+# Remaining object routines: doors that must refuse the generic OPEN, plus
+# scenery/flavour responses (globals/compone/comptwo.zil).
+# ---------------------------------------------------------------------------
+
+_ALREADY_OPEN = "It's already open!"           # ZIL ALREADY-OPEN
+_IS_CLOSED = "It is closed!"                   # ZIL IS-CLOSED
+_CANT_CLOSE = "You can't close it yourself."
+_WONT_BUDGE = "It won't budge."
+_BOTH_DOORS = ("A very bored-sounding recorded voice explains that, in order to "
+               "prevent contamination, both lock doors cannot be open "
+               "simultaneously.")
+_FAINT_SOUND = "You hear the faint sound of a relay clicking."
+_EXAMINE_BOARD = ("Like most fromitz boards, it is a twisted maze of silicon "
+                  "circuits. It is square, approximately seventeen centimeters "
+                  "on each side.")
+
+
+def _walk(caller, direction):
+    from world.verb_commands import _do_walk
+    _do_walk(caller, direction)
+
+
+def _here_has(caller, zil_id) -> bool:
+    obj = _by_zil_id(zil_id)
+    return bool(obj and obj.location is caller.location)
+
+
+def _shut_door(obj, caller, v) -> bool:
+    """The CLOSE branch shared by the doors you can't close by hand."""
+    caller.msg(_CANT_CLOSE if obj.db.is_open else _IS_CLOSED)
+    return True
+
+
+def handle_pod_door(ctx: ObjAction) -> bool:
+    """POD-DOOR-F (globals.zil:1102) — only opens in an emergency or after landing."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    flags = gs.flags if gs else {}
+    if v == "V-OPEN":
+        if obj.db.is_open:
+            caller.msg(_ALREADY_OPEN)
+        elif flags.get("TRIP-COUNTER", 0) > 14:
+            obj.db.is_open = True
+            caller.msg("The bulkhead opens and cold ocean water rushes in!")
+        elif flags.get("BLOWUP-COUNTER", 0) > 0:
+            if _here_zil(caller) == "DECK-NINE":
+                caller.msg("Too late. The pod's launching procedure has already "
+                           "begun.")
+            else:
+                caller.msg("Opening the door now would be a phenomenally stupid "
+                           "idea.")
+        else:
+            caller.msg("Why open the door to the emergency escape pod if there's "
+                       "no emergency?")
+        return True
+    if v == "V-CLOSE":
+        return _shut_door(obj, caller, v)
+    if v == "V-THROUGH":
+        _walk(caller, "west" if _here_zil(caller) == "DECK-NINE" else "out")
+        return True
+    return False
+
+
+def handle_gangway_door(ctx: ObjAction) -> bool:
+    """GANGWAY-DOOR-F (globals.zil:1147)."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    if v == "V-OPEN":
+        caller.msg(_ALREADY_OPEN if obj.db.is_open
+                   else "There doesn't seem to be any way to open it.")
+        return True
+    if v == "V-CLOSE":
+        return _shut_door(obj, caller, v)
+    return False
+
+
+def handle_storage_west_door(ctx: ObjAction) -> bool:
+    """STORAGE-WEST-DOOR-F (compone.zil:517) — padlocked until it's removed."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if v == "V-OPEN":
+        if obj.db.is_open:
+            caller.msg(_ALREADY_OPEN)
+        elif gs and gs.flags.get("PADLOCK-REMOVED"):
+            obj.db.is_open = True
+            caller.msg("Opened.")
+        else:
+            caller.msg("The door cannot be opened until the padlock is removed.")
+        return True
+    if v == "V-CLOSE":
+        if obj.db.is_open:
+            obj.db.is_open = False
+            caller.msg("The door is now closed.")
+        else:
+            caller.msg(_IS_CLOSED)
+        return True
+    if v == "V-UNLOCK":
+        padlock = _by_zil_id("PADLOCK")
+        text = "The door itself isn't locked."
+        if not (padlock and padlock.db.is_open):
+            text += " It is the padlock on the door which is locked."
+        caller.msg(text)
+        return True
+    return False
+
+
+def handle_upper_elevator_door(ctx: ObjAction) -> bool:
+    """UPPER-ELEVATOR-DOOR-F (compone.zil:2485) — opened only by the car."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    if v == "V-OPEN":
+        caller.msg(_ALREADY_OPEN if obj.db.is_open else _WONT_BUDGE)
+        return True
+    if v == "V-CLOSE":
+        return _shut_door(obj, caller, v)
+    return False
+
+
+def handle_lower_elevator_door(ctx: ObjAction) -> bool:
+    """LOWER-ELEVATOR-DOOR-F (compone.zil:2505) — open only where the car is."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    if v not in ("V-OPEN", "V-CLOSE"):
+        return False
+    gs = _gs()
+    car_up = bool(gs and gs.flags.get("LOWER-ELEVATOR-UP"))
+    here = _here_zil(caller)
+    open_here = obj.db.is_open and (
+        (here == "ELEVATOR-LOBBY" and car_up)
+        or (here == "WAITING-AREA" and not car_up))
+    if v == "V-OPEN":
+        caller.msg(_ALREADY_OPEN if open_here else _WONT_BUDGE)
+    else:
+        caller.msg(_CANT_CLOSE if open_here else _IS_CLOSED)
+    return True
+
+
+def handle_reactor_elevator_door(ctx: ObjAction) -> bool:
+    """REACTOR-ELEVATOR-DOOR-F (compone.zil:1488)."""
+    if ctx.verb in ("V-OPEN", "V-CLOSE"):
+        ctx.caller.msg(_WONT_BUDGE)
+        return True
+    return False
+
+
+def _lock_door(ctx, other_id, *, closes=None) -> bool:
+    """A bio-/rad-lock door: never open while the far door is open (ZIL
+    BIO-DOOR-WEST-F / RAD-DOOR-*-F). `closes` names the auto-close interrupt."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    if v == "V-OPEN":
+        if obj.db.is_open:
+            caller.msg(_ALREADY_OPEN)
+        elif _ddesc(other_id) == "open":
+            caller.msg(_BOTH_DOORS)
+        else:
+            obj.db.is_open = True
+            if closes:
+                _queue(_gs(), closes, 30)
+            caller.msg("The door opens.")
+        return True
+    if v == "V-CLOSE":
+        if obj.db.is_open:
+            obj.db.is_open = False
+            caller.msg("The door closes.")
+        else:
+            caller.msg(_IS_CLOSED)
+        return True
+    return False
+
+
+def handle_bio_door_west(ctx: ObjAction) -> bool:
+    """BIO-DOOR-WEST-F (comptwo.zil:1875)."""
+    return _lock_door(ctx, "BIO-DOOR-EAST", closes="make_i_bio_west_closes")
+
+
+def handle_rad_door_east(ctx: ObjAction) -> bool:
+    """RAD-DOOR-EAST-F (comptwo.zil:1899)."""
+    return _lock_door(ctx, "RAD-DOOR-WEST")
+
+
+def handle_rad_door_west(ctx: ObjAction) -> bool:
+    """RAD-DOOR-WEST-F (comptwo.zil:1915)."""
+    return _lock_door(ctx, "RAD-DOOR-EAST")
+
+
+def handle_global_pod(ctx: ObjAction) -> bool:
+    """GLOBAL-POD-F (globals.zil:912) — the escape pod as a whole."""
+    caller, v = ctx.caller, ctx.verb
+    here = _here_zil(caller)
+    if v in ("V-THROUGH", "V-BOARD", "V-WALK-TO"):
+        if here == "ESCAPE-POD":
+            caller.msg("You're already in it!")
+        else:
+            _walk(caller, "west")
+        return True
+    if v in ("V-EXIT", "V-DISEMBARK", "V-DROP"):
+        if here == "DECK-NINE":
+            caller.msg("You're not in it!")
+        else:
+            _walk(caller, "out")
+        return True
+    if v == "V-OPEN":
+        door = _by_zil_id("POD-DOOR")
+        if door:
+            return handle_pod_door(ObjAction(obj=door, caller=caller, verb=v,
+                                             nouns=ctx.nouns))
+    return False
+
+
+_SHUTTLE_CABINS = ("ALFIE-CONTROL-EAST", "ALFIE-CONTROL-WEST",
+                   "BETTY-CONTROL-EAST", "BETTY-CONTROL-WEST")
+
+
+def handle_global_shuttle(ctx: ObjAction) -> bool:
+    """GLOBAL-SHUTTLE-F (globals.zil:1555)."""
+    caller, v = ctx.caller, ctx.verb
+    here = _here_zil(caller)
+    inside = here in ("SHUTTLE-CAR-ALFIE", "SHUTTLE-CAR-BETTY") + _SHUTTLE_CABINS
+    if v in ("V-ENTER", "V-THROUGH", "V-WALK-TO", "V-BOARD"):
+        caller.msg("You ARE in the shuttle car." if inside
+                   else "Use 'north' or 'south'.")
+        return True
+    if v in ("V-EXIT", "V-DISEMBARK", "V-DROP"):
+        if here == "SHUTTLE-CAR-ALFIE":
+            _walk(caller, "north")
+        elif here == "SHUTTLE-CAR-BETTY":
+            _walk(caller, "south")
+        elif here in _SHUTTLE_CABINS:
+            caller.msg("You can't exit the shuttle car from here.")
+        else:
+            caller.msg("You're not in the shuttle car!")
+        return True
+    return False
+
+
+def handle_helicopter_object(ctx: ObjAction) -> bool:
+    """HELICOPTER-OBJECT-F (compone.zil:2775)."""
+    caller, v = ctx.caller, ctx.verb
+    here = _here_zil(caller)
+
+    def goto(zil_id):
+        from world.verb_commands import build_look
+        room = _by_zil_id(zil_id)
+        if room:
+            caller.move_to(room, quiet=True)
+            caller.msg(build_look(caller, room, brief_ok=True))
+
+    if v in ("V-THROUGH", "V-BOARD", "V-WALK-TO"):
+        if here == "HELIPAD":
+            goto("HELICOPTER")
+        else:
+            caller.msg("You're in it!")
+        return True
+    if v in ("V-EXIT", "V-DROP", "V-DISEMBARK"):
+        if here == "HELICOPTER":
+            goto("HELIPAD")
+        else:
+            caller.msg("You're not in it!")
+        return True
+    if v == "V-FLY":
+        caller.msg("The controls seem to be locked." if here == "HELICOPTER"
+                   else "You're not even in it!")
+        return True
+    return False
+
+
+_PANEL_ROOMS = ("UPPER-ELEVATOR", "LOWER-ELEVATOR", "BOOTH-1",
+                "REACTOR-ELEVATOR", "BOOTH-2", "BOOTH-3")
+
+
+def handle_controls(ctx: ObjAction) -> bool:
+    """CONTROLS-F (globals.zil:251)."""
+    caller, v = ctx.caller, ctx.verb
+    here = _here_zil(caller)
+    if here in _PANEL_ROOMS:
+        if v == "V-EXAMINE":
+            caller.msg("The control panel is a simple one, as described. Just a "
+                       "small slot and two buttons.")
+            return True
+        return False
+    if v in ("V-RUB", "V-MOVE", "V-TURN", "V-SET", "V-TAKE", "V-EXAMINE",
+             "V-PUSH", "V-PULL"):
+        if here == "HELICOPTER":
+            caller.msg("The controls are covered and locked.")
+        elif here == "ESCAPE-POD":
+            caller.msg("The controls are entirely automated.")
+        else:
+            caller.msg("The controls are incredibly complicated and you "
+                       "shouldn't even be thinking about touching them.")
+        return True
+    if here == "HELICOPTER" and v in ("V-OPEN", "V-UNLOCK"):
+        caller.msg("You don't even have the orange key!")
+        return True
+    return False
+
+
+def handle_safety_web(ctx: ObjAction) -> bool:
+    """SAFETY-WEB-F (globals.zil:958) — the M-OBJECT examine/take branches."""
+    if ctx.verb == "V-EXAMINE":
+        ctx.caller.msg("The safety webbing fills most of the pod. It could "
+                       "accomodate from one to, perhaps, twenty people.")
+        return True
+    if ctx.verb == "V-TAKE":
+        ctx.caller.msg("The safety web seems to be more intended for getting "
+                       "into than grabbing onto.")
+        return True
+    return False
+
+
+def handle_bed(ctx: ObjAction) -> bool:
+    """BED-F (globals.zil:2097) — too comfy to leave; things bounce off it."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    if (v in ("V-DISEMBARK", "V-STAND", "V-EXIT", "V-DROP", "V-LEAVE")
+            and gs and gs.flags.get("IN-BED")
+            and _arrival_pending(gs, "i_fall_asleep")):
+        caller.msg("How could you suggest such a thing when you're so tired and "
+                   "this bed is so comfy?")
+        return True
+    prsi = _prsi(ctx)
+    if v in ("V-PUT", "V-PUT-ON") and prsi is obj:
+        from world.verb_commands import resolve_obj
+        item = resolve_obj(caller, ctx.nouns[0])
+        if item and item is not obj:
+            item.move_to(caller.location, quiet=True, move_type="drop")
+            caller.msg(f"The {item.key} bounces off the bed and lands on the "
+                       "floor.")
+            return True
+    return False
+
+
+def handle_shelves(ctx: ObjAction) -> bool:
+    """SHELVES-F (globals.zil:200)."""
+    if ctx.verb == "V-EXAMINE":
+        ctx.caller.msg("The shelves are pretty dusty.")
+        return True
+    if ctx.verb == "V-PUT-ON" and _prsi(ctx) is ctx.obj:
+        ctx.caller.msg("That would be a waste of time.")
+        return True
+    return False
+
+
+def handle_lights(ctx: ObjAction) -> bool:
+    """LIGHTS-F (globals.zil:215)."""
+    if ctx.verb == "V-EXAMINE" and _here_zil(ctx.caller) == "COMPUTER-ROOM":
+        ctx.caller.msg("The red light would seem to indicate a malfunction in "
+                       "the computer.")
+        return True
+    return False
+
+
+def handle_global_doorway(ctx: ObjAction) -> bool:
+    """GLOBAL-DOORWAY-F (globals.zil:229)."""
+    caller, v = ctx.caller, ctx.verb
+    if v == "V-THROUGH":
+        caller.msg("You should specify a direction to walk.")   # USE-DIRECTIONS
+    elif v in ("V-OPEN", "V-CLOSE"):
+        caller.msg("It's just an opening; you can't open or close it.")
+    elif v == "V-LOOK-INSIDE":
+        caller.msg("Can't see much from here. Try going there.")
+    else:
+        return False
+    return True
+
+
+def handle_global_games(ctx: ObjAction) -> bool:
+    """GLOBAL-GAMES-F (globals.zil:281) — playing games means playing with Floyd."""
+    if ctx.verb != "V-PLAY":
+        return False
+    if _here_has(ctx.caller, "FLOYD"):
+        from world.verb_commands import _h_play_with
+        _h_play_with(ctx.caller, ["floyd"])
+    else:
+        ctx.caller.msg("Okay. Gee, that was fun.")
+    return True
+
+
+def handle_hands(ctx: ObjAction) -> bool:
+    """HANDS-F (globals.zil:297) — shaking hands with whoever is here."""
+    caller = ctx.caller
+    if ctx.verb != "V-SHAKE":
+        return False
+    if _here_has(caller, "AMBASSADOR"):
+        caller.msg("A repulsive idea.")
+    elif _here_has(caller, "BLATHER"):
+        caller.msg("Saluting might be a better idea.")
+    elif _floyd_obj_here(caller):
+        caller.msg("You shake one of Floyd's grasping extensions.")
+    else:
+        caller.msg("There's no one to shake hands with.")
+    return True
+
+
+def handle_sleep(ctx: ObjAction) -> bool:
+    """SLEEP-F (globals.zil:317) — "go to sleep"."""
+    if ctx.verb == "V-WALK-TO":
+        from world.verb_commands import _h_sleep
+        _h_sleep(ctx.caller, [])
+        return True
+    return False
+
+
+def handle_chronometer(ctx: ObjAction) -> bool:
+    """CHRONOMETER-F (globals.zil:542)."""
+    if ctx.verb not in ("V-EXAMINE", "V-READ"):
+        return False
+    gs = _gs()
+    if gs and gs.chronometer_munged:
+        now = getattr(gs, "munged_time", 0)
+    else:
+        now = gs.internal_moves if gs else 0
+    ctx.caller.msg("It is a standard wrist chronometer with a digital display. "
+                   f"According to the chronometer, the current time is {now}. "
+                   "The back is engraved with the message \"Good luck in the "
+                   "Patrol! Love, Mom and Dad.\"")
+    return True
+
+
+def handle_patrol_uniform(ctx: ObjAction) -> bool:
+    """PATROL-UNIFORM-F (globals.zil:583)."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    gs = _gs()
+    landed = bool(gs and gs.flags.get("TRIP-COUNTER") == 15)
+    if v == "V-EXAMINE":
+        text = ("It is a standard-issue one-pocket Stellar Patrol uniform, a "
+                "miracle of modern technology. It will keep its owner warm in "
+                "cold climates and cool in warm locales. It provides protection "
+                "against mild radiation, repels all insects, absorbs sweat, "
+                "promotes healthy skin tone, and on top of everything else, it "
+                "is super-comfy.")
+        if landed:
+            text += (" There are definitely worse things to find yourself "
+                     "wearing when stranded on a strange planet.")
+        caller.msg(text)
+        return True
+    if v == "V-WEAR":
+        lab = _by_zil_id("LAB-UNIFORM")
+        if lab and _bit(lab, "WORNBIT"):
+            caller.msg("It won't fit over the lab uniform.")
+            return True
+        return False
+    if v == "V-TAKE-OFF" and _bit(obj, "WORNBIT"):
+        _set_bit(obj, "WORNBIT", False)
+        text = "You have removed your Patrol uniform."
+        if landed:
+            text += (" You suddenly realize how warm it is. You also feel naked "
+                     "and vulnerable.")
+        if _here_has(caller, "BLATHER"):
+            text += (" \"Removing your uniform while on duty? Five hundred "
+                     "demerits!\"")
+        elif _here_has(caller, "FLOYD"):
+            text += (" Floyd giggles. \"You look funny without any clothes "
+                     "on.\"")
+        caller.msg(text)
+        return True
+    if v in ("V-OPEN", "V-CLOSE"):
+        caller.msg(f"There's no way to open or close the pocket of the "
+                   f"{obj.key}.")
+        return True
+    return False
+
+
+def handle_towel(ctx: ObjAction) -> bool:
+    """TOWEL-F (globals.zil:1008)."""
+    if ctx.verb == "V-EXAMINE":
+        ctx.caller.msg("A pretty ordinary towel. Something is written in its "
+                       "corner.")
+        return True
+    return False
+
+
+def handle_food_kit(ctx: ObjAction) -> bool:
+    """FOOD-KIT-F (globals.zil:1022) — the goo won't pour out."""
+    obj, caller = ctx.obj, ctx.caller
+    if ctx.verb != "V-EMPTY":
+        return False
+    if not obj.db.is_open:
+        caller.msg("The kit is closed!")
+        return True
+    if obj.contents:
+        caller.msg("The goo, being gooey, sticks to the inside of the kit. You "
+                   "would probably have to shake the kit to get the goo out.")
+        return True
+    return False
+
+
+def handle_can(ctx: ObjAction) -> bool:
+    """CAN-F (compone.zil:622) — the Spam and Egz."""
+    if ctx.verb == "V-EXAMINE":
+        ctx.caller.msg("This is a rather normal tin can. It is large and is "
+                       "labelled \"Spam and Egz.\"")
+        return True
+    if ctx.verb == "V-OPEN":
+        ctx.caller.msg("You certainly can't open it with your hands, and you "
+                       "don't seem to have found a can opener yet.")
+        return True
+    return False
+
+
+def handle_desk(ctx: ObjAction) -> bool:
+    """DESK-F (compone.zil:1283)."""
+    if ctx.verb in ("V-SEARCH", "V-EXAMINE"):
+        state = "open" if ctx.obj.db.is_open else "closed"
+        ctx.caller.msg(f"The desk has a drawer which is currently {state}.")
+        return True
+    return False
+
+
+def handle_oil_can(ctx: ObjAction) -> bool:
+    """OIL-CAN-F (compone.zil:1358) — pouring oil means oiling something."""
+    caller, v = ctx.caller, ctx.verb
+    if v == "V-POUR":
+        from world.verb_commands import _h_oil
+        _h_oil(caller, [ctx.nouns[1] if len(ctx.nouns) > 1 else "ground"])
+        return True
+    if v == "V-EMPTY":
+        caller.msg("Pretty much impossible -- you could only do that one drop "
+                   "at a time.")
+        return True
+    return False
+
+
+def handle_carton(ctx: ObjAction) -> bool:
+    """CARTON-F (compone.zil:1380)."""
+    if ctx.verb == "V-CLOSE":
+        ctx.caller.msg("There's no way to close it.")    # NO-CLOSE
+        return True
+    return False
+
+
+def handle_cracked_board(ctx: ObjAction) -> bool:
+    """CRACKED-BOARD-F (compone.zil:1394)."""
+    if ctx.verb == "V-EXAMINE":
+        ctx.caller.msg(f"{_EXAMINE_BOARD} This one looks as though it's been "
+                       "dropped.")
+        return True
+    return False
+
+
+def handle_fried_board(ctx: ObjAction) -> bool:
+    """FRIED-BOARD-F (comptwo.zil:470)."""
+    if ctx.verb == "V-EXAMINE":
+        ctx.caller.msg(f"{_EXAMINE_BOARD} This one is a bit blackened around "
+                       "the edges, though.")
+        return True
+    return False
+
+
+def handle_playback_button(ctx: ObjAction) -> bool:
+    """PLAYBACK-BUTTON-F (compone.zil:2898) — the Feinstein's last message."""
+    if ctx.verb != "V-PUSH":
+        return False
+    ctx.caller.msg(
+        "A voice fills the room ... the voice of the Feinstein's communications "
+        "officer! \"Stellar Patrol Ship Feinstein to planetside ... Please "
+        "respond on frequency 48.5 ... SPS Feinstein to planetside ... Please "
+        "come in ...\" After a pause you hear the officer, in a quieter voice, "
+        "say \"Admiral, no response on any of the standard frequen...\" The "
+        "sentence is cut short by the sound of an explosion and a loud burst of "
+        "static, followed by silence.")
+    return True
+
+
+def handle_spool(ctx: ObjAction) -> bool:
+    """RED-SPOOL-F / GREEN-SPOOL-F (comptwo.zil:138, 644) — take from a live reader."""
+    obj, caller = ctx.obj, ctx.caller
+    reader = _by_zil_id("SPOOL-READER")
+    if (ctx.verb == "V-TAKE" and reader and obj.location is reader
+            and _bit(reader, "ONBIT")):
+        obj.move_to(caller, quiet=True, move_type="get")
+        _set_bit(obj, "TRYTAKEBIT", False)
+        caller.msg("The screen goes blank as you take the spool.")
+        return True
+    return False
+
+
+def handle_print_out(ctx: ObjAction) -> bool:
+    """PRINT-OUT-F (comptwo.zil:1535) — the computer's daily status report."""
+    if ctx.verb not in ("V-READ", "V-EXAMINE"):
+        return False
+    ctx.caller.msg(
+        "The printout is hundreds of pages long. It would take many chrons to "
+        "read it all. The last page looks pretty interesting, though:\n\n"
+        "\"Daalee Statis Reeport:\n"
+        "PREELIMINEREE REESURC:  100.000%\n"
+        "INTURMEEDEEIT REESURC:  100.000%\n"
+        "FIINUL REESURC:         100.000%\n"
+        "DRUG PROODUKSHUN:       100.000%\n"
+        "DRUG TESTEENG:           99.985%\n"
+        "Proojektid tiim tuu reeviivul prooseedzur:  0 daaz, 0.8 kronz\n\n\n"
+        "*** ALURT! ALURT! ***\n"
+        "Malfunkshun in Sekshun 384! Sumuneeng reepaar roobot.\"\n\n"
+        "The printout ends at this point.")
+    return True
+
+
+def handle_mini_card(ctx: ObjAction) -> bool:
+    """MINI-CARD-F (comptwo.zil:1582) — seen through the bio-lock window."""
+    if (_bit(ctx.obj, "NDESCBIT") and ctx.verb in
+            ("V-RUB", "V-MOVE", "V-TURN", "V-SET", "V-TAKE", "V-PUSH",
+             "V-PULL", "V-SMELL")):
+        ctx.caller.msg("It's in the next room.")
+        return True
+    return False
+
+
+def handle_lamp(ctx: ObjAction) -> bool:
+    """LAMP-F (comptwo.zil:2197)."""
+    obj, caller, v = ctx.obj, ctx.caller, ctx.verb
+    if v == "V-LAMP-ON":
+        if _bit(obj, "ONBIT"):
+            caller.msg("It is on.")
+        else:
+            _set_bit(obj, "ONBIT", True)
+            _set_bit(obj, "TOUCHBIT", True)
+            caller.msg("The lamp is now producing a bright light.")
+        return True
+    if v == "V-LAMP-OFF":
+        if _bit(obj, "ONBIT"):
+            _set_bit(obj, "ONBIT", False)
+            caller.msg("The lamp goes dark.")
+        else:
+            caller.msg("It isn't on.")
+        return True
+    return False
+
+
+def _lab_lights_button(ctx, turn_on: bool) -> bool:
+    """LIGHT-BUTTON-F / DARK-BUTTON-F (comptwo.zil:2333, 2341)."""
+    if ctx.verb != "V-PUSH":
+        return False
+    gs = _gs()
+    if gs and bool(gs.flags.get("LAB-LIGHTS-ON")) != turn_on:
+        gs.flags["LAB-LIGHTS-ON"] = turn_on
+        ctx.caller.msg(_FAINT_SOUND)
+    else:
+        ctx.caller.msg("Nothing happens.")
+    return True
+
+
+def handle_relay(ctx: ObjAction) -> bool:
+    """RELAY-F (comptwo.zil:2550) — the speck jamming the contact."""
+    if ctx.verb not in ("V-EXAMINE", "V-LOOK-INSIDE"):
+        return False
+    gs = _gs()
+    text = ("This is a vacuum-sealed micro-relay, encased in red translucent "
+            "plastic.")
+    if not (gs and gs.flags.get("COMPUTER-FIXED")):
+        text += (" Within, you can see that some sort of speck or impurity has "
+                 "wedged itself into the contact point of the relay, preventing "
+                 "it from closing. The speck, presumably of microscopic size, "
+                 "resembles a blue boulder to you in your current size.")
+    ctx.caller.msg(text)
+    return True
+
+
+OBJ_HANDLERS.update({
+    "POD-DOOR-F": handle_pod_door,
+    "GANGWAY-DOOR-F": handle_gangway_door,
+    "STORAGE-WEST-DOOR-F": handle_storage_west_door,
+    "UPPER-ELEVATOR-DOOR-F": handle_upper_elevator_door,
+    "LOWER-ELEVATOR-DOOR-F": handle_lower_elevator_door,
+    "REACTOR-ELEVATOR-DOOR-F": handle_reactor_elevator_door,
+    "BIO-DOOR-WEST-F": handle_bio_door_west,
+    "RAD-DOOR-EAST-F": handle_rad_door_east,
+    "RAD-DOOR-WEST-F": handle_rad_door_west,
+    "GLOBAL-POD-F": handle_global_pod,
+    "GLOBAL-SHUTTLE-F": handle_global_shuttle,
+    "HELICOPTER-OBJECT-F": handle_helicopter_object,
+    "CONTROLS-F": handle_controls,
+    "SAFETY-WEB-F": handle_safety_web,
+    "BED-F": handle_bed,
+    "SHELVES-F": handle_shelves,
+    "LIGHTS-F": handle_lights,
+    "GLOBAL-DOORWAY-F": handle_global_doorway,
+    "GLOBAL-GAMES-F": handle_global_games,
+    "HANDS-F": handle_hands,
+    "SLEEP-F": handle_sleep,
+    "CHRONOMETER-F": handle_chronometer,
+    "PATROL-UNIFORM-F": handle_patrol_uniform,
+    "TOWEL-F": handle_towel,
+    "FOOD-KIT-F": handle_food_kit,
+    "CAN-F": handle_can,
+    "DESK-F": handle_desk,
+    "OIL-CAN-F": handle_oil_can,
+    "CARTON-F": handle_carton,
+    "CRACKED-BOARD-F": handle_cracked_board,
+    "FRIED-BOARD-F": handle_fried_board,
+    "PLAYBACK-BUTTON-F": handle_playback_button,
+    "RED-SPOOL-F": handle_spool,
+    "GREEN-SPOOL-F": handle_spool,
+    "PRINT-OUT-F": handle_print_out,
+    "MINI-CARD-F": handle_mini_card,
+    "LAMP-F": handle_lamp,
+    "LIGHT-BUTTON-F": lambda ctx: _lab_lights_button(ctx, True),
+    "DARK-BUTTON-F": lambda ctx: _lab_lights_button(ctx, False),
+    "RELAY-F": handle_relay,
+})
+
+from world.library import handle_terminal  # noqa: E402  (library computer)
+OBJ_HANDLERS["TERMINAL-F"] = handle_terminal
 
 
 # ---------------------------------------------------------------------------
